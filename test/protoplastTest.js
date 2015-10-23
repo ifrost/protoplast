@@ -49,6 +49,103 @@ describe('Protoplast', function(){
 
         chai.assert.equal(base.test(), 10);
         chai.assert.equal(sub.test(), 20);
-    })
+    });
+
+    it('allows to add after aspect', function() {
+
+        var Foo, foo;
+
+        Foo = Proto.extend(function(proto){
+            proto.init = function(text) {
+                this.text = text;
+            };
+            proto.append = function(text) {
+                this.text += text;
+            }
+        });
+
+        foo = Foo('text');
+        foo.append('text');
+        chai.assert.equal(foo.text, 'texttext');
+
+        Foo.aop('append', {
+            after: function() {
+                this.text += '!';
+            }
+        });
+
+        foo = Foo('text');
+        foo.append('text');
+        chai.assert.equal(foo.text, 'texttext!');
+    });
+
+    it('allows to add before aspect', function() {
+
+        var Foo, foo;
+
+        Foo = Proto.extend(function(proto){
+            proto.init = function(text) {
+                this.text = text;
+            };
+            proto.append = function(text) {
+                this.text += text;
+            }
+        });
+
+        foo = Foo('text');
+        foo.append('text');
+        chai.assert.equal(foo.text, 'texttext');
+
+        Foo.aop('append', {
+            before: function() {
+                this.text += ',';
+            }
+        });
+
+        foo = Foo('text');
+        foo.append('text');
+        chai.assert.equal(foo.text, 'text,text');
+    });
+
+    it('runs aspects on subintances', function(){
+
+        var Text, UCText, text;
+
+        Text = Proto.extend(function(proto){
+            proto.init = function(text) {
+                this.text = text;
+            };
+            proto.append = function(text) {
+                this.text += text;
+            }
+        });
+
+        UCText = Text.extend(function(proto, base){
+            proto.toUpperCase = function() {
+                this.text = this.text.toUpperCase();
+            }
+        });
+        UCText.aop('init', {
+            after: function() {
+                this.toUpperCase();
+            }
+        });
+        UCText.aop('append', {
+            after: function() {
+                this.toUpperCase();
+            }
+        });
+
+        Text.aop('append', {
+            before: function() {
+                this.text += ',';
+            }
+        });
+
+        text = UCText('test');
+        chai.assert.equal(text.text, 'TEST');
+        text.append('test');
+        chai.assert.equal(text.text, 'TEST,TEST');
+    });
 
 });
