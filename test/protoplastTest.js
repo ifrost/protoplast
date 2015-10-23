@@ -148,4 +148,42 @@ describe('Protoplast', function(){
         chai.assert.equal(text.text, 'TEST,TEST');
     });
 
+    it('inject dependencies according to config', function() {
+
+        var Foo, Bar, foo, bar;
+
+        Foo = Proto.extend(function(proto, $super, config){
+            config.bar = 'bar';
+        });
+
+        Bar = Proto.extend(function(proto, $super, config){
+            config.foo = 'foo';
+        });
+
+        Proto.register('foo', foo = Foo());
+        Proto.register('bar', bar = Bar());
+
+        chai.assert.equal(foo.bar(), bar);
+        chai.assert.equal(bar.foo(), foo);
+
+    });
+
+    it('inherits dependencies config from the base prototype', function(){
+
+        var Foo, Foo2, Bar, foo, bar;
+
+        Foo = Proto.extend(function(proto, $super, config){
+            config.bar = 'bar';
+        });
+        Foo2 = Foo.extend(function(){});
+
+        Bar = Proto.extend(function(){});
+
+        Proto.register('foo', foo = Foo2());
+        Proto.register('bar', bar = Bar());
+
+        chai.assert.equal(foo.bar(), bar);
+
+    });
+
 });

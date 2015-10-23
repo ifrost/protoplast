@@ -1,13 +1,31 @@
 (function(exports) {
     "use strict";
 
-    var Proto = {};
+    var _objects = {};
+    function object_resolver(id) {
+        return function() {
+            return _objects[id];
+        }
+    }
+
+    function inject(instance, config) {
+        console.log(config);
+        for (var property in config) {
+            console.log(property);
+            instance[property] = object_resolver(config[property])
+        }
+    }
+
+    var Proto = {__protoplast_config: {}};
     Proto.extend = function(factory) {
-        var proto = Object.create(this), constructor, base = this;
-        factory(proto, this);
+        var proto = Object.create(this), constructor, base = this,
+            config = Object.create(this.__protoplast_config) ;
+        factory(proto, this, config);
+        proto.__protoplast_config = config;
 
         constructor = function() {
             var instance = Object.create(proto);
+            inject(instance, config);
             instance.init.apply(instance, arguments);
             return instance;
         };
@@ -40,6 +58,10 @@
         return constructor;
     };
     Proto.init = function() {};
+
+    Proto.register = function(id, instance) {
+        _objects[id] = instance;
+    };
 
     exports.Proto = Proto;
 
