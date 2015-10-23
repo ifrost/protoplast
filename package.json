@@ -1,0 +1,23 @@
+{
+  "name": "protoplast",
+  "version": "1.0.0",
+  "description": "",
+  "main": "protoplast.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://ifrost@github.com/ifrost/protoplast.git"
+  },
+  "author": "Piotr Jamroz <pm.jamroz@gmail.com> (https://about.me/piotr.jamroz)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ifrost/protoplast/issues"
+  },
+  "homepage": "https://github.com/ifrost/protoplast#readme",
+  "devDependencies": {
+    "chai": "^3.4.0",
+    "mocha": "^2.3.3"
+  }
+}
