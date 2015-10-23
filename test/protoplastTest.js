@@ -6,358 +6,370 @@ describe('Protoplast', function(){
         Proto = Protoplast();
     });
 
-    it('creates a simple prototype', function() {
+    describe('Inheritance', function(){
+        it('creates a simple prototype', function() {
 
-        var Base, base;
+            var Base, base;
 
-        Base = Proto.extend(function(proto){
-            proto.value = 10;
+            Base = Proto.extend(function(proto){
+                proto.value = 10;
+            });
+
+            base = Base();
+
+            chai.assert.equal(base.value, 10);
         });
 
-        base = Base();
+        it('runs init method with passed arguments when object is created', function() {
 
-        chai.assert.equal(base.value, 10);
+            var Base, base;
+
+            Base = Proto.extend(function(proto){
+                proto.init = function(value) {
+                    this.value = value;
+                }
+            });
+
+            base = Base(10);
+
+            chai.assert.equal(base.value, 10);
+        });
+
+        it('allows to run base methods', function() {
+
+            var Base, Sub, base, sub;
+
+            Base = Proto.extend(function(proto){
+                proto.test = function() {
+                    return 10;
+                }
+            });
+
+            Sub = Base.extend(function(proto, $super){
+                proto.test = function() {
+                    return $super.test.call(this) * 2;
+                }
+            });
+
+            base = Base();
+            sub = Sub();
+
+            chai.assert.equal(base.test(), 10);
+            chai.assert.equal(sub.test(), 20);
+        });
     });
 
-    it('runs init method with passed arguments when object is created', function() {
+    describe('AOP', function() {
+        it('allows to add after aspect', function() {
 
-        var Base, base;
+            var Foo, foo;
 
-        Base = Proto.extend(function(proto){
-            proto.init = function(value) {
-                this.value = value;
-            }
+            Foo = Proto.extend(function(proto){
+                proto.init = function(text) {
+                    this.text = text;
+                };
+                proto.append = function(text) {
+                    this.text += text;
+                }
+            });
+
+            foo = Foo('text');
+            foo.append('text');
+            chai.assert.equal(foo.text, 'texttext');
+
+            Foo.aop('append', {
+                after: function() {
+                    this.text += '!';
+                }
+            });
+
+            foo = Foo('text');
+            foo.append('text');
+            chai.assert.equal(foo.text, 'texttext!');
         });
 
-        base = Base(10);
+        it('allows to add before aspect', function() {
 
-        chai.assert.equal(base.value, 10);
+            var Foo, foo;
+
+            Foo = Proto.extend(function(proto){
+                proto.init = function(text) {
+                    this.text = text;
+                };
+                proto.append = function(text) {
+                    this.text += text;
+                }
+            });
+
+            foo = Foo('text');
+            foo.append('text');
+            chai.assert.equal(foo.text, 'texttext');
+
+            Foo.aop('append', {
+                before: function() {
+                    this.text += ',';
+                }
+            });
+
+            foo = Foo('text');
+            foo.append('text');
+            chai.assert.equal(foo.text, 'text,text');
+        });
+
+        it('runs aspects on subinstances', function(){
+
+            var Text, UCText, text;
+
+            Text = Proto.extend(function(proto){
+                proto.init = function(text) {
+                    this.text = text;
+                };
+                proto.append = function(text) {
+                    this.text += text;
+                }
+            });
+
+            UCText = Text.extend(function(proto){
+                proto.toUpperCase = function() {
+                    this.text = this.text.toUpperCase();
+                }
+            });
+            UCText.aop('init', {
+                after: function() {
+                    this.toUpperCase();
+                }
+            });
+            UCText.aop('append', {
+                after: function() {
+                    this.toUpperCase();
+                }
+            });
+
+            Text.aop('append', {
+                before: function() {
+                    this.text += ',';
+                }
+            });
+
+            text = UCText('test');
+            chai.assert.equal(text.text, 'TEST');
+            text.append('test');
+            chai.assert.equal(text.text, 'TEST,TEST');
+        });
     });
 
-    it('allows to run base methods', function() {
+    describe('Dependency Injection', function() {
+        it('inject dependencies according to config', function() {
 
-        var Base, Sub, base, sub;
+            var Foo, Bar, foo, bar;
 
-        Base = Proto.extend(function(proto){
-            proto.test = function() {
-                return 10;
-            }
+            Foo = Proto.extend(function(proto, $super, config){
+                config.inject.bar = 'bar';
+            });
+
+            Bar = Proto.extend(function(proto, $super, config){
+                config.inject.foo = 'foo';
+            });
+
+            Proto.register('foo', foo = Foo());
+            Proto.register('bar', bar = Bar());
+
+            chai.assert.equal(foo.bar(), bar);
+            chai.assert.equal(bar.foo(), foo);
+
         });
 
-        Sub = Base.extend(function(proto, $super){
-            proto.test = function() {
-                return $super.test.call(this) * 2;
-            }
+        it('inherits dependencies config from the base prototype', function(){
+
+            var Foo, Foo2, Bar, foo, bar;
+
+            Foo = Proto.extend(function(proto, $super, config){
+                config.inject.bar = 'bar';
+            });
+            Foo2 = Foo.extend(function(){});
+
+            Bar = Proto.extend(function(){});
+
+            Proto.register('foo', foo = Foo2());
+            Proto.register('bar', bar = Bar());
+
+            chai.assert.equal(foo.bar(), bar);
+
         });
-
-        base = Base();
-        sub = Sub();
-
-        chai.assert.equal(base.test(), 10);
-        chai.assert.equal(sub.test(), 20);
     });
 
-    it('allows to add after aspect', function() {
+    describe('Pub/Sub', function() {
+        it('dispatches messages between objects', function(){
 
-        var Foo, foo;
+            var Source, Destination, source, destination;
 
-        Foo = Proto.extend(function(proto){
-            proto.init = function(text) {
-                this.text = text;
-            };
-            proto.append = function(text) {
-                this.text += text;
-            }
+            Source = Proto.extend(function(proto, $super, config){
+                config.inject.pub = 'pub';
+                proto.send = function(msg) {
+                    this.pub('message', msg)
+                }
+            });
+
+            Destination = Proto.extend(function(proto, $super, config){
+                config.inject.sub = 'sub';
+                proto.init = function() {
+                    this.sub('message').add(this.save_message);
+                };
+                proto.save_message = function(msg) {
+                    this.message = msg;
+                };
+                proto.clear = function() {
+                    this.sub('message').remove();
+                };
+            });
+
+            source = Source();
+            destination = Destination();
+
+            source.send('hello');
+            chai.assert.equal(destination.message, 'hello');
+
+            source.send('hi');
+            chai.assert.equal(destination.message, 'hi');
+
+            destination.clear();
+            source.send('awww');
+            chai.assert.equal(destination.message, 'hi');
         });
-
-        foo = Foo('text');
-        foo.append('text');
-        chai.assert.equal(foo.text, 'texttext');
-
-        Foo.aop('append', {
-            after: function() {
-                this.text += '!';
-            }
-        });
-
-        foo = Foo('text');
-        foo.append('text');
-        chai.assert.equal(foo.text, 'texttext!');
     });
 
-    it('allows to add before aspect', function() {
+    describe('Mixins', function() {
+        it('allows to mixin objects', function() {
 
-        var Foo, foo;
+            var Foo, Bar, FooBar, foobar;
 
-        Foo = Proto.extend(function(proto){
-            proto.init = function(text) {
-                this.text = text;
-            };
-            proto.append = function(text) {
-                this.text += text;
-            }
+            Foo = Proto.extend(function(proto){
+                proto.foo = 'foo';
+            });
+
+            Bar = Proto.extend(function(proto){
+                proto.bar = 'bar';
+            });
+
+            FooBar = Proto.extend(function(proto, $super, config){
+                config.mixin = [Foo, Bar];
+            });
+
+            foobar = FooBar();
+
+            chai.assert.equal(foobar.foo, 'foo');
+            chai.assert.equal(foobar.bar, 'bar');
+
         });
-
-        foo = Foo('text');
-        foo.append('text');
-        chai.assert.equal(foo.text, 'texttext');
-
-        Foo.aop('append', {
-            before: function() {
-                this.text += ',';
-            }
-        });
-
-        foo = Foo('text');
-        foo.append('text');
-        chai.assert.equal(foo.text, 'text,text');
     });
 
-    it('runs aspects on subintances', function(){
+    describe('EventDispatcher', function() {
+        it('allows to create event dispatchers', function() {
 
-        var Text, UCText, text;
+            var Dispatcher, dispatcher, message = '';
 
-        Text = Proto.extend(function(proto){
-            proto.init = function(text) {
-                this.text = text;
-            };
-            proto.append = function(text) {
-                this.text += text;
-            }
-        });
+            Dispatcher = Proto.extend(function(proto, $super, config){
+                config.mixin = [Proto.Dispatcher];
+                proto.hello = function() {
+                    this.dispatch('message', 'hello')
+                }
+            });
 
-        UCText = Text.extend(function(proto){
-            proto.toUpperCase = function() {
-                this.text = this.text.toUpperCase();
-            }
-        });
-        UCText.aop('init', {
-            after: function() {
-                this.toUpperCase();
-            }
-        });
-        UCText.aop('append', {
-            after: function() {
-                this.toUpperCase();
-            }
-        });
+            dispatcher = Dispatcher();
 
-        Text.aop('append', {
-            before: function() {
-                this.text += ',';
-            }
-        });
+            dispatcher.on('message', function(value){
+                message = value;
+            });
+            dispatcher.hello();
 
-        text = UCText('test');
-        chai.assert.equal(text.text, 'TEST');
-        text.append('test');
-        chai.assert.equal(text.text, 'TEST,TEST');
+            chai.assert.equal(message, 'hello');
+        });
     });
 
-    it('inject dependencies according to config', function() {
+    describe('Examples', function() {
+        it('flux example', function() {
 
-        var Foo, Bar, foo, bar;
+            var RootView, View, ActionDispatcher, Repository, view, repository;
 
-        Foo = Proto.extend(function(proto, $super, config){
-            config.inject.bar = 'bar';
+            // create root view that will be injected into repositories
+            RootView = Proto.extend(function(proto) {
+                proto.init = function() {
+                    this.view = View();
+                };
+                proto.data = function(data) {
+                    this.view.show(data.clicks);
+                };
+            });
+
+            // create a clickable component that displays number of clicks
+            View = Proto.extend(function(proto, $super, config){
+                config.inject.pub = 'pub';
+
+                proto.show = function(value) {
+                    this.value = value;
+                };
+
+                proto.click = function() {
+                    this.pub('myview/clicked');
+                }
+            });
+
+            // action dispatcher to convert view actions to domain actions
+            ActionDispatcher = Proto.extend(function(proto, $super, config){
+                config.inject = {sub: 'sub', pub: 'pub'};
+
+                proto.init = function() {
+                    this.sub('myview/clicked').add(this.count_click);
+                };
+
+                proto.count_click = function() {
+                    this.pub('click/increment', 1);
+                };
+            });
+
+            // repository to react to domain actions and pass data to the view
+            Repository = Proto.extend(function(proto, $super, config){
+                config.inject = {sub: 'sub', view: 'view'};
+
+                proto.init = function() {
+                    this.clicks = 0;
+                    this.sub('click/increment').add(this.increment);
+                    this.refresh();
+                };
+
+                proto.increment = function(value) {
+                    this.clicks += value;
+                    this.refresh();
+                };
+
+                proto.refresh = function() {
+                    this.view().data({clicks: this.clicks});
+                }
+
+            });
+
+            // capture view for testing
+            var _view = null;
+            View.aop('init', {
+                after: function() {
+                    _view = this;
+                }
+            });
+
+            Proto.register('view', RootView());
+            ActionDispatcher();
+            repository = Repository();
+
+            chai.assert.equal(repository.clicks, 0);
+            chai.assert.equal(_view.value, 0);
+
+            _view.click();
+            _view.click();
+            _view.click();
+
+            chai.assert.equal(repository.clicks, 3);
+            chai.assert.equal(_view.value, 3);
+
         });
-
-        Bar = Proto.extend(function(proto, $super, config){
-            config.inject.foo = 'foo';
-        });
-
-        Proto.register('foo', foo = Foo());
-        Proto.register('bar', bar = Bar());
-
-        chai.assert.equal(foo.bar(), bar);
-        chai.assert.equal(bar.foo(), foo);
-
     });
-
-    it('inherits dependencies config from the base prototype', function(){
-
-        var Foo, Foo2, Bar, foo, bar;
-
-        Foo = Proto.extend(function(proto, $super, config){
-            config.inject.bar = 'bar';
-        });
-        Foo2 = Foo.extend(function(){});
-
-        Bar = Proto.extend(function(){});
-
-        Proto.register('foo', foo = Foo2());
-        Proto.register('bar', bar = Bar());
-
-        chai.assert.equal(foo.bar(), bar);
-
-    });
-
-    it('dispatches messages between objects', function(){
-
-        var Source, Destination, source, destination;
-
-        Source = Proto.extend(function(proto, $super, config){
-            config.inject.pub = 'pub';
-            proto.send = function(msg) {
-                this.pub('message', msg)
-            }
-        });
-
-        Destination = Proto.extend(function(proto, $super, config){
-            config.inject.sub = 'sub';
-            proto.init = function() {
-                this.sub('message').add(this.save_message);
-            };
-            proto.save_message = function(msg) {
-                this.message = msg;
-            };
-            proto.clear = function() {
-                this.sub('message').remove();
-            };
-        });
-
-        source = Source();
-        destination = Destination();
-
-        source.send('hello');
-        chai.assert.equal(destination.message, 'hello');
-
-        source.send('hi');
-        chai.assert.equal(destination.message, 'hi');
-
-        destination.clear();
-        source.send('awww');
-        chai.assert.equal(destination.message, 'hi');
-
-    });
-
-    it('flux example', function() {
-
-        var RootView, View, ActionDispatcher, Repository, view, repository;
-
-        // create root view that will be injected into repositories
-        RootView = Proto.extend(function(proto) {
-            proto.init = function() {
-                this.view = View();
-            };
-            proto.data = function(data) {
-                this.view.show(data.clicks);
-            };
-        });
-
-        // create a clickable component that displays number of clicks
-        View = Proto.extend(function(proto, $super, config){
-            config.inject.pub = 'pub';
-
-            proto.show = function(value) {
-               this.value = value;
-            };
-
-            proto.click = function() {
-                this.pub('myview/clicked');
-            }
-        });
-
-        // action dispatcher to convert view actions to domain actions
-        ActionDispatcher = Proto.extend(function(proto, $super, config){
-            config.inject = {sub: 'sub', pub: 'pub'};
-
-            proto.init = function() {
-                this.sub('myview/clicked').add(this.count_click);
-            };
-
-            proto.count_click = function() {
-                this.pub('click/increment', 1);
-            };
-        });
-
-        // repository to react to domain actions and pass data to the view
-        Repository = Proto.extend(function(proto, $super, config){
-            config.inject = {sub: 'sub', view: 'view'};
-
-            proto.init = function() {
-                this.clicks = 0;
-                this.sub('click/increment').add(this.increment);
-                this.refresh();
-            };
-
-            proto.increment = function(value) {
-                this.clicks += value;
-                this.refresh();
-            };
-
-            proto.refresh = function() {
-                this.view().data({clicks: this.clicks});
-            }
-
-        });
-
-        // capture view for testing
-        var _view = null;
-        View.aop('init', {
-            after: function() {
-                _view = this;
-            }
-        });
-
-        Proto.register('view', RootView());
-        ActionDispatcher();
-        repository = Repository();
-
-        chai.assert.equal(repository.clicks, 0);
-        chai.assert.equal(_view.value, 0);
-
-        _view.click();
-        _view.click();
-        _view.click();
-
-        chai.assert.equal(repository.clicks, 3);
-        chai.assert.equal(_view.value, 3);
-
-    });
-
-    it('allows to mixin objects', function() {
-
-        var Foo, Bar, FooBar, foobar;
-
-        Foo = Proto.extend(function(proto){
-            proto.foo = 'foo';
-        });
-
-        Bar = Proto.extend(function(proto){
-            proto.bar = 'bar';
-        });
-
-        FooBar = Proto.extend(function(proto, $super, config){
-            config.mixin = [Foo, Bar];
-        });
-
-        foobar = FooBar();
-
-        chai.assert.equal(foobar.foo, 'foo');
-        chai.assert.equal(foobar.bar, 'bar');
-
-    });
-
-    it('allows to create event dispatchers', function() {
-
-        var Dispatcher, dispatcher, message = '';
-
-        Dispatcher = Proto.extend(function(proto, $super, config){
-            config.mixin = [Proto.Dispatcher];
-            proto.hello = function() {
-                this.dispatch('message', 'hello')
-            }
-        });
-
-        dispatcher = Dispatcher();
-
-        dispatcher.on('message', function(value){
-            message = value;
-        });
-        dispatcher.hello();
-
-        chai.assert.equal(message, 'hello');
-    });
-
 });
