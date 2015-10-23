@@ -4,15 +4,13 @@
     var _objects = {};
     function object_resolver(id) {
         return function() {
-            return _objects[id];
+            return _objects[id] instanceof Function ? _objects[id].apply(this, arguments) : _objects[id];
         }
     }
 
     function inject(instance, config) {
-        console.log(config);
         for (var property in config) {
-            console.log(property);
-            instance[property] = object_resolver(config[property])
+            instance[property] = object_resolver(config[property]).bind(instance)
         }
     }
 
@@ -62,6 +60,27 @@
     Proto.register = function(id, instance) {
         _objects[id] = instance;
     };
+
+    var _topics = {};
+    Proto.register('pub', function(topic, message) {
+        (_topics[topic] || []).forEach(function(config){
+            config.handler.call(config.context, message);
+        })
+    });
+    Proto.register('sub', function(topic){
+        var self = this;
+        _topics[topic] = _topics[topic] || [];
+        return {
+            add: function(handler) {
+                _topics[topic].push({handler: handler, context: self});
+            },
+            remove: function(handler) {
+                _topics[topic] = _topics[topic].filter(function(config){
+                    return handler ? config.handler !== handler : config.context !== self
+                });
+            }
+        }
+    });
 
     exports.Proto = Proto;
 

@@ -186,4 +186,43 @@ describe('Protoplast', function(){
 
     });
 
+    it.only('dispatches messages between objects', function(){
+
+        var Source, Destination, source, destination;
+
+        Source = Proto.extend(function(proto, $super, config){
+            config.pub = 'pub';
+            proto.send = function(msg) {
+                this.pub('message', msg)
+            }
+        });
+
+        Destination = Proto.extend(function(proto, $super, config){
+            config.sub = 'sub';
+            proto.init = function() {
+                this.sub('message').add(this.save_message);
+            };
+            proto.save_message = function(msg) {
+                this.message = msg;
+            };
+            proto.clear = function() {
+                this.sub('message').remove();
+            };
+        });
+
+        source = Source();
+        destination = Destination();
+
+        source.send('hello');
+        chai.assert.equal(destination.message, 'hello');
+
+        source.send('hi');
+        chai.assert.equal(destination.message, 'hi');
+
+        destination.clear();
+        source.send('awww');
+        chai.assert.equal(destination.message, 'hi');
+
+    });
+
 });
