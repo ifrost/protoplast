@@ -1,5 +1,11 @@
 describe('Protoplast', function(){
 
+    var Proto;
+
+    beforeEach(function(){
+        Proto = Protoplast();
+    });
+
     it('creates a simple prototype', function() {
 
         var Base, base;
@@ -153,11 +159,11 @@ describe('Protoplast', function(){
         var Foo, Bar, foo, bar;
 
         Foo = Proto.extend(function(proto, $super, config){
-            config.bar = 'bar';
+            config.inject.bar = 'bar';
         });
 
         Bar = Proto.extend(function(proto, $super, config){
-            config.foo = 'foo';
+            config.inject.foo = 'foo';
         });
 
         Proto.register('foo', foo = Foo());
@@ -173,7 +179,7 @@ describe('Protoplast', function(){
         var Foo, Foo2, Bar, foo, bar;
 
         Foo = Proto.extend(function(proto, $super, config){
-            config.bar = 'bar';
+            config.inject.bar = 'bar';
         });
         Foo2 = Foo.extend(function(){});
 
@@ -191,14 +197,14 @@ describe('Protoplast', function(){
         var Source, Destination, source, destination;
 
         Source = Proto.extend(function(proto, $super, config){
-            config.pub = 'pub';
+            config.inject.pub = 'pub';
             proto.send = function(msg) {
                 this.pub('message', msg)
             }
         });
 
         Destination = Proto.extend(function(proto, $super, config){
-            config.sub = 'sub';
+            config.inject.sub = 'sub';
             proto.init = function() {
                 this.sub('message').add(this.save_message);
             };
@@ -241,7 +247,7 @@ describe('Protoplast', function(){
 
         // create a clickable component that displays number of clicks
         View = Proto.extend(function(proto, $super, config){
-            config.pub = 'pub';
+            config.inject.pub = 'pub';
 
             proto.show = function(value) {
                this.value = value;
@@ -254,8 +260,7 @@ describe('Protoplast', function(){
 
         // action dispatcher to convert view actions to domain actions
         ActionDispatcher = Proto.extend(function(proto, $super, config){
-            config.sub = 'sub';
-            config.pub = 'pub';
+            config.inject = {sub: 'sub', pub: 'pub'};
 
             proto.init = function() {
                 this.sub('myview/clicked').add(this.count_click);
@@ -268,8 +273,7 @@ describe('Protoplast', function(){
 
         // repository to react to domain actions and pass data to the view
         Repository = Proto.extend(function(proto, $super, config){
-            config.sub = 'sub';
-            config.view = 'view';
+            config.inject = {sub: 'sub', view: 'view'};
 
             proto.init = function() {
                 this.clicks = 0;
@@ -310,6 +314,50 @@ describe('Protoplast', function(){
         chai.assert.equal(repository.clicks, 3);
         chai.assert.equal(_view.value, 3);
 
+    });
+
+    it('allows to mixin objects', function() {
+
+        var Foo, Bar, FooBar, foobar;
+
+        Foo = Proto.extend(function(proto){
+            proto.foo = 'foo';
+        });
+
+        Bar = Proto.extend(function(proto){
+            proto.bar = 'bar';
+        });
+
+        FooBar = Proto.extend(function(proto, $super, config){
+            config.mixin = [Foo, Bar];
+        });
+
+        foobar = FooBar();
+
+        chai.assert.equal(foobar.foo, 'foo');
+        chai.assert.equal(foobar.bar, 'bar');
+
+    });
+
+    it('allows to create event dispatchers', function() {
+
+        var Dispatcher, dispatcher, message = '';
+
+        Dispatcher = Proto.extend(function(proto, $super, config){
+            config.mixin = [Proto.Dispatcher];
+            proto.hello = function() {
+                this.dispatch('message', 'hello')
+            }
+        });
+
+        dispatcher = Dispatcher();
+
+        dispatcher.on('message', function(value){
+            message = value;
+        });
+        dispatcher.hello();
+
+        chai.assert.equal(message, 'hello');
     });
 
 });
