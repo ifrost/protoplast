@@ -10,15 +10,19 @@
          * @type {Object}
          */
         var Proto = {},
-            processors = {config: [], instance: [], constructor: [], proto: []};
+            processors = {};
 
-        processors.default_config = plugins.map(function(plugin){return plugin.default_config_processor}).filter(Boolean);
-        processors.merge_config = plugins.map(function(plugin){return plugin.merge_config_processor}).filter(Boolean);
-        processors.pre_init = plugins.map(function(plugin){return plugin.pre_init_processor}).filter(Boolean);
-        processors.post_init = plugins.map(function(plugin){return plugin.post_init_processor}).filter(Boolean);
-        processors.constructor = plugins.map(function(plugin){return plugin.constructor_processor}).filter(Boolean);
-        processors.proto = plugins.map(function(plugin){return plugin.proto_processor}).filter(Boolean);
-        processors.protoplast = plugins.map(function(plugin){return plugin.protoplast_processor}).filter(Boolean);
+        function concat_processors(plugins, processor_name) {
+            return plugins.map(function(plugin){return plugin[processor_name]}).filter(Boolean);
+        }
+
+        processors.default_config = concat_processors(plugins, 'default_config_processor');
+        processors.merge_config = concat_processors(plugins, 'merge_config_processor');
+        processors.pre_init = concat_processors(plugins, 'pre_init_processor');
+        processors.post_init = concat_processors(plugins, 'post_init_processor');
+        processors.constructor = concat_processors(plugins, 'constructor_processor');
+        processors.proto = concat_processors(plugins, 'proto_processor');
+        processors.protoplast = concat_processors(plugins, 'protoplast_processor');
 
         Proto.__config = {};
         Proto.init = function () {};

@@ -18,6 +18,9 @@
   "homepage": "https://github.com/ifrost/protoplast#readme",
   "devDependencies": {
     "chai": "^3.4.0",
+    "gulp": "^3.9.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-minify": "0.0.5",
     "mocha": "^2.3.3",
     "sinon": "^1.17.2"
   }
