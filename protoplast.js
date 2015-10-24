@@ -130,17 +130,17 @@
 
 
         Proto.register('pub', function (topic, message) {
-            Proto._dispatcher.dispatch(topic, message);
+            Proto.dispatcher.dispatch(topic, message);
         });
 
         Proto.register('sub', function (topic) {
             var self = this;
             return {
                 add: function (handler) {
-                    Proto._dispatcher.on(topic, handler, self);
+                    Proto.dispatcher.on(topic, handler, self);
                 },
                 remove: function (handler) {
-                    Proto._dispatcher.off(topic, handler, self);
+                    Proto.dispatcher.off(topic, handler, self);
                 }
             }
         });
@@ -172,7 +172,7 @@
             };
         });
 
-        Proto._dispatcher = Proto.Dispatcher();
+        Proto.dispatcher = Proto.Dispatcher();
 
         return Proto;
     }
