@@ -11,7 +11,9 @@
      */
     function mix(destination, source) {
         for (var property in source) {
-            destination[property] = source[property];
+            if (property !== 'init') {
+                destination[property] = source[property];
+            }
         }
         return destination;
     }

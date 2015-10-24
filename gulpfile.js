@@ -10,7 +10,7 @@ gulp.task('clean', function () {
 
 gulp.task('concat', ['clean'], function() {
     return gulp.src(['protoplast.js','plugins/*.js'])
-        .pipe(concat('protplast.js'))
+        .pipe(concat('protoplast.js'))
         .pipe(gulp.dest('./dist'));
 });
 

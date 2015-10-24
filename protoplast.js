@@ -70,8 +70,8 @@
         plugins: {},
         get_all_plugins: function() {
             var plugins = [];
-            for (var plugin in this.plugins) {
-                plugins.push(plugin);
+            for (var plugin_name in this.plugins) {
+                plugins.push(this.plugins[plugin_name]);
             }
             return plugins;
         }
