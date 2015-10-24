@@ -1,23 +1,22 @@
 var gulp = require('gulp'),
+    clean = require('gulp-clean'),
     concat = require('gulp-concat'),
-    minify = require('gulp-minify');
+    uglify = require('gulp-uglifyjs');
 
-gulp.task('concat-plugins', function() {
-    return gulp.src('./plugins/*.js')
-        .pipe(concat('plugins.js'))
-        .pipe(gulp.dest('./dist/'));
+gulp.task('clean', function () {
+    gulp.src('./dist/*', {read: false})
+        .pipe(clean());
 });
 
-gulp.task('concat-protoplast', function(){
-    gulp.src(['./dist/plugins.js', './protoplast.js'])
-        .pipe(concat('protoplast.js'))
+gulp.task('concat', ['clean'], function() {
+    return gulp.src(['protoplast.js','plugins/*.js'])
+        .pipe(concat('protplast.js'))
         .pipe(gulp.dest('./dist'));
 });
 
-gulp.task('minify', function(){
-    gulp.src('./dist/protoplast.js')
-        .pipe(minify())
-        .pipe(gulp.dest('./dist'));
+gulp.task('build', ['concat'], function(){
+    gulp.src('dist/*')
+        .pipe(uglify('protoplast.min.js'))
+        .pipe(gulp.dest('dist'));
 });
 
-gulp.task('build', ['concat-plugins', 'concat-protoplast', 'minify']);

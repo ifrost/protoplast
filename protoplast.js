@@ -67,7 +67,14 @@
 
     exports.Protoplast = {
         create: protoplast_factory,
-        plugins: {}
+        plugins: {},
+        get_all_plugins: function() {
+            var plugins = [];
+            for (var plugin in this.plugins) {
+                plugins.push(plugin);
+            }
+            return plugins;
+        }
     };
 
 })(this);
