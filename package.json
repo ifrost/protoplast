@@ -18,6 +18,7 @@
   "homepage": "https://github.com/ifrost/protoplast#readme",
   "devDependencies": {
     "chai": "^3.4.0",
-    "mocha": "^2.3.3"
+    "mocha": "^2.3.3",
+    "sinon": "^1.17.2"
   }
 }

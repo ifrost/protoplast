@@ -1,69 +1,28 @@
 (function(exports) {
     "use strict";
 
-    function createProtoplast() {
+    function protoplast_factory(plugins) {
 
-        /**
-         * List of object in the context
-         * @type {Object}
-         * @private
-         */
-        var _objects = {};
-
-        /**
-         * Resolves dependency. If dependency is a function - delegates directly, otherwise tries to
-         * retrieve the dependency
-         * @param {String} id
-         * @returns {Function}
-         */
-        function object_resolver(id) {
-            return function () {
-                return _objects[id] instanceof Function ? _objects[id].apply(this, arguments) : _objects[id];
-            }
-        }
-
-        /**
-         * Performs dependency injection based on the config
-         * @param {Object} instance
-         * @param {Object} config - {property:dependencyId,...}
-         */
-        function inject(instance, config) {
-            for (var property in config) {
-                instance[property] = object_resolver(config[property]).bind(instance)
-            }
-        }
-
-        /**
-         * Mixes all mixins into the instance
-         * @param {Object} instance
-         * @param {Object[]} mixins
-         * @returns {Object}
-         */
-        function mixin(instance, mixins) {
-            mixins.forEach(function (Mixin) {
-                mix(instance, Mixin());
-            });
-            return instance;
-        }
-
-        /**
-         * Mixes source properites into destination object
-         * @param {Object} destination
-         * @param {Object} source
-         * @returns {Object}
-         */
-        function mix(destination, source) {
-            for (var property in source) {
-                destination[property] = source[property];
-            }
-            return destination;
-        }
+        plugins = plugins || [];
 
         /**
          * Base protoplast
          * @type {Object}
          */
-        var Proto = {__config: {inject: {}, mixin: []}};
+        var Proto = {},
+            processors = {config: [], instance: [], constructor: [], proto: []};
+
+        processors.default_config = plugins.map(function(plugin){return plugin.default_config_processor}).filter(Boolean);
+        processors.merge_config = plugins.map(function(plugin){return plugin.merge_config_processor}).filter(Boolean);
+        processors.pre_init = plugins.map(function(plugin){return plugin.pre_init_processor}).filter(Boolean);
+        processors.post_init = plugins.map(function(plugin){return plugin.post_init_processor}).filter(Boolean);
+        processors.constructor = plugins.map(function(plugin){return plugin.constructor_processor}).filter(Boolean);
+        processors.proto = plugins.map(function(plugin){return plugin.proto_processor}).filter(Boolean);
+        processors.protoplast = plugins.map(function(plugin){return plugin.protoplast_processor}).filter(Boolean);
+
+        Proto.__config = {};
+        Proto.init = function () {};
+        processors.default_config.forEach(function(processor){processor.call(null, Proto.__config)});
 
         /**
          * Creates a new prototype that extends current prototype
@@ -72,111 +31,39 @@
          */
         Proto.extend = function (factory) {
             var proto = Object.create(this), constructor, base = this,
-                config = {inject: {}, mixin: []};
+                config = {}, factory_result;
 
-            factory(proto, this, config);
+            factory = factory || function(){};
 
-            // merge configs
-            proto.__config = {
-                inject: mix(config.inject, this.__config.inject),
-                mixin: config.mixin.concat(this.__config.mixin)
-            };
+            processors.default_config.forEach(function(processor){processor.call(null, config)});
+            factory_result = factory(proto, this, config);
+
+            processors.proto.forEach(function(processor){processor.call(null, proto, factory_result, base, Proto)});
+
+            processors.merge_config.forEach(function(processor){processor.call(null, config, proto.__config);});
+            proto.__config = config;
 
             constructor = function () {
-                var instance = Object.create(proto);
-                inject(instance, proto.__config.inject);
-                mixin(instance, proto.__config.mixin);
-                instance.init.apply(instance, arguments);
+                var instance = Object.create(proto),
+                    args = Array.prototype.slice.call(arguments);
+                processors.pre_init.forEach(function(processor){processor.call(null, instance, args, proto, base, Proto)});
+                instance.init.apply(instance, args);
+                processors.post_init.forEach(function(processor){processor.call(null, instance, args, proto, base, Proto)});
                 return instance;
             };
 
             constructor.extend = Proto.extend.bind(proto);
-
-            constructor.aop = function (method, aspects) {
-                if (proto[method] instanceof Function) {
-
-                    // create a simple override delegating to the base class
-                    // to make sure the base method is called if it was wrapped
-                    // with an aspect
-                    if (!proto.hasOwnProperty(method)) {
-                        proto[method] = function () {
-                            base[method].apply(this, arguments);
-                        }
-                    }
-
-                    var origin = proto[method];
-
-                    proto[method] = function () {
-                        if (aspects.before) aspects.before.apply(this, arguments);
-                        var result = origin.apply(this, arguments);
-                        if (aspects.after) result = aspects.after.apply(this, arguments);
-                        return result;
-                    }
-                }
-            };
-
+            constructor.__proto = proto;
+            processors.constructor.forEach(function(processor){processor.call(null, constructor, proto, base, Proto)});
             return constructor;
         };
-        Proto.init = function () {};
-
-        /**
-         * Registers object in the DI context
-         * @param {String} id
-         * @param {Object} instance
-         */
-        Proto.register = function (id, instance) {
-            _objects[id] = instance;
-        };
-
-
-        Proto.register('pub', function (topic, message) {
-            Proto.dispatcher.dispatch(topic, message);
-        });
-
-        Proto.register('sub', function (topic) {
-            var self = this;
-            return {
-                add: function (handler) {
-                    Proto.dispatcher.on(topic, handler, self);
-                },
-                remove: function (handler) {
-                    Proto.dispatcher.off(topic, handler, self);
-                }
-            }
-        });
-
-        /**
-         * EventDispatcher implementation, can be used as mixin or base protoype
-         * @type {Function}
-         */
-        Proto.Dispatcher = Proto.extend(function (proto) {
-
-            proto.dispatch = function (topic, message) {
-                this._topics = this._topics || {};
-                (this._topics[topic] || []).forEach(function (config) {
-                    config.handler.call(config.context, message);
-                })
-            };
-
-            proto.on = function (topic, handler, context) {
-                this._topics = this._topics || {};
-                this._topics[topic] = this._topics[topic] || [];
-                this._topics[topic].push({handler: handler, context: context});
-            };
-
-            proto.off = function (topic, handler, context) {
-                this._topics = this._topics || {};
-                this._topics[topic] = this._topics[topic].filter(function (config) {
-                    return handler ? config.handler !== handler : config.context !== context
-                })
-            };
-        });
-
-        Proto.dispatcher = Proto.Dispatcher();
-
+        processors.protoplast.forEach(function(processor){processor.call(null, Proto)});
         return Proto;
     }
 
-    exports.Protoplast = createProtoplast;
+    exports.Protoplast = {
+        create: protoplast_factory,
+        plugins: {}
+    };
 
 })(this);

@@ -1,9 +1,94 @@
+describe('Protoplast Plugins', function() {
+
+    var Proto, execution_chain, custom_plugin, init, Base, Foo;
+
+    beforeEach(function() {
+        custom_plugin = {
+            default_config_processor: sinon.spy(function(config){
+                return config.custom = [];
+            }),
+            merge_config_processor: sinon.spy(),
+            pre_init_processor: sinon.spy(),
+            post_init_processor: sinon.spy(),
+            constructor_processor: sinon.spy(),
+            proto_processor: sinon.spy(),
+            protoplast_processor: sinon.spy()
+        };
+
+        execution_chain = [];
+        init = sinon.spy();
+
+        Proto = Protoplast.create([custom_plugin]);
+
+        Base = Proto.extend(function(proto, base, config){
+            config.custom.push('base');
+            proto.init = init
+        });
+
+        Foo = Base.extend(function(proto, base, config){
+            config.custom.push('foo');
+            proto.init = function() {
+                base.init.call(this, arguments);
+            };
+
+            return 'foo-factory-result';
+        });
+    });
+
+    it('Initialization Flow', function() {
+        sinon.assert.called(custom_plugin.default_config_processor);
+        sinon.assert.called(custom_plugin.merge_config_processor);
+        sinon.assert.called(custom_plugin.proto_processor);
+        sinon.assert.called(custom_plugin.protoplast_processor);
+        sinon.assert.called(custom_plugin.constructor_processor);
+
+        sinon.assert.notCalled(custom_plugin.pre_init_processor);
+        sinon.assert.notCalled(custom_plugin.post_init_processor);
+
+        Foo();
+
+        sinon.assert.called(custom_plugin.pre_init_processor);
+        sinon.assert.called(custom_plugin.post_init_processor);
+    });
+
+    it('Default Config Processor', function(){
+
+
+    });
+
+    it('Merge Config Processor', function(){
+        sinon.assert.calledTwice(custom_plugin.merge_config_processor);
+
+        chai.assert.deepEqual(custom_plugin.merge_config_processor.firstCall.args, [{custom: ['base']}, {custom: []}]);
+        chai.assert.deepEqual(custom_plugin.merge_config_processor.secondCall.args, [{custom: ['foo']}, {custom: ['base']}])
+    });
+
+    it('Pre/Post Init Processor', function(){
+        var foo = Foo('test');
+        sinon.assert.callOrder(custom_plugin.pre_init_processor,init,custom_plugin.post_init_processor);
+        chai.assert.deepEqual(custom_plugin.pre_init_processor.lastCall.args, [foo, ['test'], Foo.__proto, Base.__proto, Proto]);
+    });
+
+    it('Proto Processor', function(){
+        chai.assert.deepEqual(custom_plugin.proto_processor.lastCall.args, [Foo.__proto, 'foo-factory-result', Base.__proto, Proto]);
+    });
+
+    it('Constructor Processor', function(){
+        chai.assert.deepEqual(custom_plugin.constructor_processor.lastCall.args, [Foo, Foo.__proto, Base.__proto, Proto]);
+    });
+
+    it('Protoplast Processor', function(){
+        chai.assert.deepEqual(custom_plugin.protoplast_processor.lastCall.args, [Proto]);
+    });
+});
+
 describe('Protoplast', function(){
 
     var Proto;
 
     beforeEach(function(){
-        Proto = Protoplast();
+        var plugins = Protoplast.plugins;
+        Proto = Protoplast.create([plugins.aop, plugins.di, plugins.dispatcher, plugins.mixin, plugins.pubsub]);
     });
 
     describe('Inheritance', function(){
