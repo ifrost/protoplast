@@ -8,6 +8,7 @@
             this.sub('todos/add').add(this.add_todo, this);
             this.sub('todos/edit').add(this.edit_todo, this);
             this.sub('todos/toggle').add(this.toggle_todo, this);
+            this.sub('todos/toggle_all').add(this.toggle_all, this);
             this.sub('todos/remove').add(this.remove_todo, this);
             this.sub('todos/clear_done').add(this.clear_done, this);
         };
@@ -18,6 +19,10 @@
 
         proto.toggle_todo = function(todo) {
             this.get_todos().toggle(todo);
+        };
+
+        proto.toggle_all = function(value) {
+            this.get_todos().toggle_all(value);
         };
 
         proto.remove_todo = function(todo) {

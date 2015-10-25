@@ -3,7 +3,7 @@
 
     window.TodosModel = window.Model.extend(function(proto, base, config){
 
-        config.update_after = ['add', 'remove', 'toggle'];
+        config.update_after = ['add', 'remove', 'toggle', 'toggle_all'];
 
         proto.init = function() {
             this._todos = [];
@@ -24,6 +24,12 @@
 
         proto.toggle = function(todo) {
             todo.done = !todo.done;
+        };
+
+        proto.toggle_all = function(value) {
+            this._todos.forEach(function(todo){
+                todo.done = value;
+            });
         };
 
         proto.refresh = function() {
