@@ -2,8 +2,11 @@
     'use strict';
 
     window.Router = window.Proto.extend(function(proto, base, config){
-        config.inject.pub = 'pub';
-        config.inject.get_view_state = 'viewstate';
+
+        config.inject = {
+            pub: 'pub',
+            get_view_state: 'viewstate'
+        };
 
         var url_to_state = {
             '/': window.ViewStateModel.ALL,

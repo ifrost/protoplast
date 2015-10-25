@@ -39,8 +39,6 @@
 
             factory = factory || function(){};
 
-            processors.default_config.forEach(function(processor){processor.call(null, config)});
-
             factory_result = factory(proto, this, config);
 
             processors.merge_config.forEach(function(processor){processor.call(null, config, proto.__config);});

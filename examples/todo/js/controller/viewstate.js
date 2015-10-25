@@ -3,7 +3,7 @@
 
     window.ViewStateController = window.Controller.extend(function(proto, base, config){
 
-        config.inject.get_view_state = 'viewstate';
+        config.inject = {get_view_state: 'viewstate'};
 
         proto.init = function() {
             this.sub('view/change').add(this.change_view_state);

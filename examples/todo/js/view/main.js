@@ -3,7 +3,7 @@
 
     window.MainView = window.View.extend(function(proto, base, config){
 
-        config.inject.get_todos = 'todos';
+        config.inject = {get_todos: 'todos'};
 
         proto.init = function(parent) {
             this.root = parent.append('section').classed('main', true);

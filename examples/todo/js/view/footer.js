@@ -3,8 +3,10 @@
 
     window.FooterView = window.View.extend(function(proto, base, config){
 
-        config.inject.get_todos = 'todos';
-        config.inject.get_view_state = 'viewstate';
+        config.inject = {
+            get_todos: 'todos',
+            get_view_state: 'viewstate'
+        };
 
         proto.init = function(parent) {
             this.root = parent.append('footer').classed('footer', true);

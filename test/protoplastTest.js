@@ -4,9 +4,6 @@ describe('Protoplast Plugins', function() {
 
     beforeEach(function() {
         custom_plugin = {
-            default_config_processor: sinon.spy(function(config){
-                return config.custom = [];
-            }),
             merge_config_processor: sinon.spy(),
             pre_init_processor: sinon.spy(),
             post_init_processor: sinon.spy(),
@@ -21,12 +18,12 @@ describe('Protoplast Plugins', function() {
         Proto = Protoplast.create([custom_plugin]);
 
         Base = Proto.extend(function(proto, base, config){
-            config.custom.push('base');
+            config.custom = ['base'];
             proto.init = init
         });
 
         Foo = Base.extend(function(proto, base, config){
-            config.custom.push('foo');
+            config.custom = ['foo'];
             proto.init = function() {
                 base.init.call(this, arguments);
             };
@@ -36,7 +33,6 @@ describe('Protoplast Plugins', function() {
     });
 
     it('Initialization Flow', function() {
-        sinon.assert.called(custom_plugin.default_config_processor);
         sinon.assert.called(custom_plugin.merge_config_processor);
         sinon.assert.called(custom_plugin.proto_processor);
         sinon.assert.called(custom_plugin.protoplast_processor);
@@ -51,15 +47,10 @@ describe('Protoplast Plugins', function() {
         sinon.assert.called(custom_plugin.post_init_processor);
     });
 
-    it('Default Config Processor', function(){
-
-
-    });
-
     it('Merge Config Processor', function(){
         sinon.assert.calledTwice(custom_plugin.merge_config_processor);
 
-        chai.assert.deepEqual(custom_plugin.merge_config_processor.firstCall.args, [{custom: ['base']}, {custom: []}]);
+        chai.assert.deepEqual(custom_plugin.merge_config_processor.firstCall.args, [{custom: ['base']}, {}]);
         chai.assert.deepEqual(custom_plugin.merge_config_processor.secondCall.args, [{custom: ['foo']}, {custom: ['base']}])
     });
 
@@ -249,11 +240,11 @@ describe('Protoplast', function(){
             var Foo, Bar, foo, bar;
 
             Foo = Proto.extend(function(proto, $super, config){
-                config.inject.bar = 'bar';
+                config.inject = {bar: 'bar'};
             });
 
             Bar = Proto.extend(function(proto, $super, config){
-                config.inject.foo = 'foo';
+                config.inject = {foo: 'foo'};
             });
 
             Proto.register('foo', foo = Foo());
@@ -269,7 +260,7 @@ describe('Protoplast', function(){
             var Foo, Foo2, Bar, foo, bar;
 
             Foo = Proto.extend(function(proto, $super, config){
-                config.inject.bar = 'bar';
+                config.inject = {bar: 'bar'};
             });
             Foo2 = Foo.extend(function(){});
 
@@ -289,14 +280,14 @@ describe('Protoplast', function(){
             var Source, Destination, source, destination;
 
             Source = Proto.extend(function(proto, $super, config){
-                config.inject.pub = 'pub';
+                config.inject = {pub: 'pub'};
                 proto.send = function(msg) {
                     this.pub('message', msg)
                 }
             });
 
             Destination = Proto.extend(function(proto, $super, config){
-                config.inject.sub = 'sub';
+                config.inject = {sub: 'sub'};
                 proto.init = function() {
                     this.sub('message').add(this.save_message);
                 };
@@ -388,7 +379,7 @@ describe('Protoplast', function(){
 
             // create a clickable component that displays number of clicks
             View = Proto.extend(function(proto, $super, config){
-                config.inject.pub = 'pub';
+                config.inject = {pub: 'pub'};
 
                 proto.show = function(value) {
                     this.value = value;

@@ -39,15 +39,12 @@
 
             factory = factory || function(){};
 
-            processors.default_config.forEach(function(processor){processor.call(null, config)});
-
             factory_result = factory(proto, this, config);
 
             processors.merge_config.forEach(function(processor){processor.call(null, config, proto.__config);});
             proto.__config = config;
 
             processors.proto.forEach(function(processor){processor.call(null, proto, factory_result, base, Proto)});
-
 
             constructor = function () {
                 var instance = Object.create(proto),
@@ -162,11 +159,8 @@
     }
 
     Protoplast.plugins.di = {
-        default_config_processor: function(config) {
-            config.inject = {};
-        },
         merge_config_processor: function(target, base) {
-            target.inject = mix(target.inject, base.inject)
+            target.inject = mix(target.inject || {}, base.inject || {})
         },
         pre_init_processor: function(instance, args, proto) {
             inject(instance, proto.__config.inject);
@@ -256,11 +250,8 @@
     }
 
     Protoplast.plugins.mixin = {
-        default_config_processor: function(config) {
-            config.mixin = [];
-        },
         merge_config_processor: function(target, base) {
-            target.mixin = target.mixin.concat(base.mixin)
+            target.mixin = (target.mixin || []).concat(base.mixin || [])
         },
         pre_init_processor: function(instance, args, proto) {
             mixin(instance, proto.__config.mixin);

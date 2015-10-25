@@ -47,11 +47,8 @@
     }
 
     Protoplast.plugins.di = {
-        default_config_processor: function(config) {
-            config.inject = {};
-        },
         merge_config_processor: function(target, base) {
-            target.inject = mix(target.inject, base.inject)
+            target.inject = mix(target.inject || {}, base.inject || {})
         },
         pre_init_processor: function(instance, args, proto) {
             inject(instance, proto.__config.inject);

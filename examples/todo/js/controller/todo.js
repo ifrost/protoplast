@@ -2,7 +2,7 @@
     'use strict';
 
     window.TodoController = window.Controller.extend(function(proto, base, config){
-        config.inject.get_todos = 'todos';
+        config.inject = {get_todos: 'todos'};
 
         proto.init = function() {
             this.sub('todos/add').add(this.add_todo, this);

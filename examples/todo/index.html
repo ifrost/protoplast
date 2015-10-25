@@ -17,11 +17,8 @@
 		<script>
 
 			var model_plugin = {
-				default_config_processor: function(config) {
-					config.update_after = [];
-				},
 				merge_config_processor: function(target, base) {
-					target.update_after = target.update_after.concat(base.update_after);
+					target.update_after = (target.update_after || []).concat(base.update_after || []);
 				},
 				constructor_processor: function(constructor, proto) {
 					proto.__config.update_after.forEach(function(method){
