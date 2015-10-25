@@ -53,12 +53,9 @@
             // enter
             var new_li = enter.append('li');
             new_li
-                .style('opacity', 0)
-                .style('height', '0px')
-                .transition()
-                .duration(200)
-                .style('opacity', 1)
-                .style('height', '58px');
+                .style({opacity: 0, height: '0px'})
+                .transition().duration(200)
+                .style({opacity: 1, height: '58px'});
             var new_div = new_li.append('div').classed('view', true);
 
             new_div

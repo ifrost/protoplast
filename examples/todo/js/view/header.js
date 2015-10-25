@@ -11,7 +11,7 @@
                 .classed('new-todo', true)
                 .attr('placeholder', 'What needs to be done?')
                 .property('autofocus', true)
-                .on('keypress', function(event){
+                .on('keypress', function(){
                     if (d3.event.keyCode === 13) {
                         this.submit_todo();
                     }

@@ -5,6 +5,12 @@
         config.inject.pub = 'pub';
         config.inject.get_view_state = 'viewstate';
 
+        var url_to_state = {
+            '/': window.ViewStateModel.ALL,
+            '/active': window.ViewStateModel.UNDONE,
+            '/completed': window.ViewStateModel.DONE
+        };
+
         proto.init = function() {
             window.addEventListener('hashchange', this.route.bind(this));
             window.addEventListener('load', this.route.bind(this));
@@ -12,14 +18,8 @@
 
         proto.route = function() {
             var url = location.hash.slice(1) || '/';
-            if (url === '/') {
-                this.pub('view/change', window.ViewStateModel.ALL);
-            }
-            else if (url === '/active') {
-                this.pub('view/change', window.ViewStateModel.UNDONE);
-            }
-            else if (url === '/completed') {
-                this.pub('view/change', window.ViewStateModel.DONE);
+            if (url_to_state[url]) {
+                this.pub('view/change', url_to_state[url]);
             }
         }
 
