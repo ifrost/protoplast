@@ -11,7 +11,7 @@
             window.localStorage.setItem(this.id, json);
         };
 
-        proto.store_read = function(value) {
+        proto.store_read = function() {
             var json = window.localStorage.getItem(this.id);
             return JSON.parse(json);
         }

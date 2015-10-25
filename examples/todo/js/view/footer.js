@@ -15,7 +15,7 @@
             this.filter_undone = this.filters.append('li').append('a').attr('href', '#/active').text('Active');
             this.filter_done = this.filters.append('li').append('a').attr('href', '#/completed').text('Completed');
 
-            this.root
+            this.clear_all = this.root
                 .append('button')
                 .classed('clear-completed', true)
                 .text('Clear completed')
@@ -37,10 +37,12 @@
         proto.update_counter = function() {
             var count_undone = this.get_todos().undone().length,
                 count_all = this.get_todos().all().length,
+                count_done = this.get_todos().done().length,
                 items = count_undone === 1 ? 'item' : 'items';
 
             this.counter.html('<strong>' + count_undone + '</strong> ' + items + ' left');
             this.root.style('display', count_all ? 'block' : 'none');
+            this.clear_all.style('display', count_done ? 'block' : 'none')
         };
 
     });

@@ -12,11 +12,17 @@
             this.get_view_state().on('updated', this.render, this);
 
             var self = this;
-            d3.select(window).on('click', function(){
-                if (!d3.select(d3.event.target).classed('edit')) {
-                    self.exit_edit_mode();
-                }
-            });
+            d3.select(window)
+                .on('click', function() {
+                    if (!d3.select(d3.event.target).classed('edit')) {
+                        self.exit_edit_mode();
+                    }
+                })
+                .on('keyup', function() {
+                    if (d3.event.keyCode === 27) {
+                        self.exit_edit_mode();
+                    }
+                });
 
             this.render();
         };
