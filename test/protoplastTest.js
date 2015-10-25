@@ -232,6 +232,35 @@ describe('Protoplast', function(){
             text.append('test');
             chai.assert.equal(text.text, 'TEST,TEST');
         });
+
+        it('runs wraps all methods with aspects', function() {
+            var Foo, foo, before = sinon.spy(), after = sinon.spy();
+
+            Foo = Proto.extend(function(proto){
+                proto.a = function() {};
+                proto.b = function() {};
+            });
+
+            Foo.aop(['a','b'], {
+                after: after,
+                before: before
+            });
+
+            foo = Foo();
+
+            sinon.assert.notCalled(after);
+            sinon.assert.notCalled(before);
+
+            foo.a();
+
+            sinon.assert.calledOnce(after);
+            sinon.assert.calledOnce(before);
+
+            foo.b();
+
+            sinon.assert.calledTwice(after);
+            sinon.assert.calledTwice(before);
+        });
     });
 
     describe('Dependency Injection', function() {
