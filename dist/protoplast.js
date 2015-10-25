@@ -40,12 +40,14 @@
             factory = factory || function(){};
 
             processors.default_config.forEach(function(processor){processor.call(null, config)});
-            factory_result = factory(proto, this, config);
 
-            processors.proto.forEach(function(processor){processor.call(null, proto, factory_result, base, Proto)});
+            factory_result = factory(proto, this, config);
 
             processors.merge_config.forEach(function(processor){processor.call(null, config, proto.__config);});
             proto.__config = config;
+
+            processors.proto.forEach(function(processor){processor.call(null, proto, factory_result, base, Proto)});
+
 
             constructor = function () {
                 var instance = Object.create(proto),
@@ -100,16 +102,10 @@
                     var origin = proto[method];
 
                     proto[method] = function () {
-                        var block = false;
-                        if (aspects.before) block = aspects.before.apply(this, arguments);
-                        if (!block) {
-                            var result = origin.apply(this, arguments);
-                            if (aspects.after) result = aspects.after.apply(this, arguments);
-                            return result;
-                        }
-                        else {
-                            return block.result;
-                        }
+                        if (aspects.before) aspects.before.apply(this, arguments);
+                        var result = origin.apply(this, arguments);
+                        if (aspects.after) result = aspects.after.apply(this, arguments);
+                        return result;
                     }
                 }
             };

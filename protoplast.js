@@ -40,12 +40,13 @@
             factory = factory || function(){};
 
             processors.default_config.forEach(function(processor){processor.call(null, config)});
-            factory_result = factory(proto, this, config);
 
-            processors.proto.forEach(function(processor){processor.call(null, proto, factory_result, base, Proto)});
+            factory_result = factory(proto, this, config);
 
             processors.merge_config.forEach(function(processor){processor.call(null, config, proto.__config);});
             proto.__config = config;
+
+            processors.proto.forEach(function(processor){processor.call(null, proto, factory_result, base, Proto)});
 
             constructor = function () {
                 var instance = Object.create(proto),
