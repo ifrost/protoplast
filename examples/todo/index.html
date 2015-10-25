@@ -15,21 +15,9 @@
 
 		<script src="node_modules/protoplast/dist/protoplast.js"></script>
 		<script>
-
-			var model_plugin = {
-				merge_config_processor: function(target, base) {
-					target.update_after = (target.update_after || []).concat(base.update_after || []);
-				},
-				constructor_processor: function(constructor, proto) {
-					constructor.aop(proto.__config.update_after, {
-						after: function () {
-							this._update();
-						}
-					});
-				}
-			};
-
-			var Proto = Protoplast.create(Protoplast.get_all_plugins().concat([model_plugin]));
+			var Proto = Protoplast.create({
+				plugins: Protoplast.get_all_plugins()
+			});
 		</script>
 
 		<script src="node_modules/d3/d3.js"></script>

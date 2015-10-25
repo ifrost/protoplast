@@ -8,14 +8,15 @@ describe('Protoplast Plugins', function() {
             pre_init_processor: sinon.spy(),
             post_init_processor: sinon.spy(),
             constructor_processor: sinon.spy(),
-            proto_processor: sinon.spy(),
-            protoplast_processor: sinon.spy()
+            proto_processor: sinon.spy()
         };
 
         execution_chain = [];
         init = sinon.spy();
 
-        Proto = Protoplast.create([custom_plugin]);
+        Proto = Protoplast.create({
+            plugins: [custom_plugin]
+        });
 
         Base = Proto.extend(function(proto, base, config){
             config.custom = ['base'];
@@ -35,7 +36,6 @@ describe('Protoplast Plugins', function() {
     it('Initialization Flow', function() {
         sinon.assert.called(custom_plugin.merge_config_processor);
         sinon.assert.called(custom_plugin.proto_processor);
-        sinon.assert.called(custom_plugin.protoplast_processor);
         sinon.assert.called(custom_plugin.constructor_processor);
 
         sinon.assert.notCalled(custom_plugin.pre_init_processor);
@@ -50,8 +50,11 @@ describe('Protoplast Plugins', function() {
     it('Merge Config Processor', function(){
         sinon.assert.calledTwice(custom_plugin.merge_config_processor);
 
-        chai.assert.deepEqual(custom_plugin.merge_config_processor.firstCall.args, [{custom: ['base']}, {}]);
-        chai.assert.deepEqual(custom_plugin.merge_config_processor.secondCall.args, [{custom: ['foo']}, {custom: ['base']}])
+        chai.assert.deepEqual(custom_plugin.merge_config_processor.firstCall.args[0].custom, ['base']);
+        chai.assert.equal(custom_plugin.merge_config_processor.firstCall.args[1].custom, undefined);
+
+        chai.assert.deepEqual(custom_plugin.merge_config_processor.secondCall.args[0].custom, ['foo']);
+        chai.assert.deepEqual(custom_plugin.merge_config_processor.secondCall.args[1].custom, ['base']);
     });
 
     it('Pre/Post Init Processor', function(){
@@ -68,9 +71,25 @@ describe('Protoplast Plugins', function() {
         chai.assert.deepEqual(custom_plugin.constructor_processor.lastCall.args, [Foo, Foo.__proto, Base.__proto, Proto]);
     });
 
-    it('Protoplast Processor', function(){
-        chai.assert.deepEqual(custom_plugin.protoplast_processor.lastCall.args, [Proto]);
+    it('Proto plugins', function() {
+
+        var Base, Foo;
+
+        Base = Proto.extend(function(proto){
+
+        });
+
+        Foo = Base.extend(function(proto, base, config){
+            config.plugins = [custom_plugin];
+        });
+
+        Base();
+        sinon.assert.calledOnce(custom_plugin.post_init_processor);
+
+        Foo();
+        sinon.assert.calledThrice(custom_plugin.post_init_processor);
     });
+
 });
 
 describe('Protoplast', function(){
@@ -79,7 +98,9 @@ describe('Protoplast', function(){
 
     beforeEach(function(){
         var plugins = Protoplast.plugins;
-        Proto = Protoplast.create([plugins.aop, plugins.di, plugins.dispatcher, plugins.mixin, plugins.pubsub]);
+        Proto = Protoplast.create({
+            plugins: [plugins.aop, plugins.di, plugins.dispatcher, plugins.mixin, plugins.pubsub]
+        });
     });
 
     describe('Inheritance', function(){
