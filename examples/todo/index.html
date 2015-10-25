@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Template • TodoMVC</title>
+		<link rel="stylesheet" href="node_modules/todomvc-common/base.css">
+		<link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
+		<!-- CSS overrides - remove if you don't need it -->
+		<link rel="stylesheet" href="css/app.css">
+	</head>
+	<body>
+		<!-- Scripts here. Don't remove ↓ -->
+		<script src="node_modules/todomvc-common/base.js"></script>
+
+		<script src="node_modules/protoplast/dist/protoplast.min.js"></script>
+		<script>
+
+			var model_plugin = {
+				default_config_processor: function(config) {
+					config.update_after = [];
+				},
+				merge_config_processor: function(target, base) {
+					target.update_after = target.update_after.concat(base.update_after);
+				},
+				constructor_processor: function(constructor, proto) {
+					proto.__config.update_after.forEach(function(method){
+						constructor.aop(method, {
+							after: function() {
+								this._update();
+							}
+						})
+					})
+				}
+			};
+
+			var Proto = Protoplast.create(Protoplast.get_all_plugins().concat([model_plugin]));
+		</script>
+
+		<script src="node_modules/d3/d3.js"></script>
+
+		<script src="js/view/view.js"></script>
+		<script src="js/view/app.js"></script>
+		<script src="js/view/main.js"></script>
+		<script src="js/view/header.js"></script>
+		<script src="js/view/todos.js"></script>
+		<script src="js/view/footer.js"></script>
+		<script src="js/view/info.js"></script>
+
+		<script src="js/model/model.js"></script>
+		<script src="js/model/viewstate.js"></script>
+		<script src="js/model/todos.js"></script>
+
+		<script src="js/controller/controller.js"></script>
+		<script src="js/controller/todo.js"></script>
+		<script src="js/controller/viewstate.js"></script>
+
+		<script src="js/router.js"></script>
+
+		<script src="js/app.js"></script>
+	</body>
+</html>
