@@ -3,10 +3,17 @@
 
     window.TodosModel = window.Model.extend(function(proto, base, config){
 
+        config.mixin = [window.Storage];
         config.update_after = ['add', 'remove', 'toggle', 'toggle_all'];
 
         proto.init = function() {
-            this._todos = [];
+            this.store_id('todos');
+            this._todos = this.store_read() || [];
+            this.on('updated', this.store, this);
+        };
+
+        proto.store = function() {
+            this.store_save(this._todos);
         };
 
         proto.add = function(todo) {

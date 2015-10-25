@@ -19,7 +19,7 @@
         };
 
         proto.submit_todo = function() {
-            var text = this.input.property('value');
+            var text = this.input.property('value').trim();
             if (text.length) {
                 this.pub('todos/add', text);
                 this.input.property('value', '');

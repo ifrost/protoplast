@@ -14,7 +14,7 @@
                 .on('change', this.toggle.bind(this));
             this.root.append('label').attr('for', 'toggle-all').text('Mark all as complete');
 
-            this.todoList = window.TodosView(this.root);
+            window.TodosView(this.root);
 
             this.get_todos().on('updated', this.update_toggle, this);
             this.update_toggle();

@@ -75,10 +75,15 @@
                 .append('input')
                 .classed('edit', true)
                 .on('keypress', function(todo){
-                    var text = d3.select(this).property('value');
-                    if (d3.event.keyCode === 13 && text.length) {
+                    var text = d3.select(this).property('value').trim();
+                    if (d3.event.keyCode === 13) {
                         self.exit_edit_mode();
-                        self.pub('todos/edit', {todo: todo, text: text})
+                        if (text.length) {
+                            self.pub('todos/edit', {todo: todo, text: text})
+                        }
+                        else {
+                            self.pub('todos/remove', todo)
+                        }
                     }
                 });
 
