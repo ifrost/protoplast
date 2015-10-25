@@ -17,6 +17,7 @@
             this.todoList = window.TodosView(this.root);
 
             this.get_todos().on('updated', this.update_toggle, this);
+            this.update_toggle();
         };
 
         proto.toggle = function() {
@@ -26,6 +27,7 @@
         proto.update_toggle = function() {
             var checked = this.get_todos().all().length === this.get_todos().done().length;
             this.toggleAll.property('checked', checked);
+            this.toggleAll.style('display', this.get_todos().all().length ? 'block' : 'none');
         };
 
     });

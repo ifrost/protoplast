@@ -6,7 +6,7 @@
         config.inject.get_view_state = 'viewstate';
 
         proto.init = function() {
-            this.sub('view/change').add(this.change_view_state, this);
+            this.sub('view/change').add(this.change_view_state);
         };
 
         proto.change_view_state = function(state){

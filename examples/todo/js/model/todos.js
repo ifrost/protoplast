@@ -7,11 +7,6 @@
 
         proto.init = function() {
             this._todos = [];
-            this._todos = [
-                {text: 'Todo 1', done: false},
-                {text: 'Todo 2', done: true},
-                {text: 'Todo 3', done: false}
-            ]
         };
 
         proto.add = function(todo) {
@@ -46,10 +41,6 @@
 
         proto.done = function() {
             return this._todos.filter(function(todo){return todo.done});
-        };
-
-        proto._update = function() {
-            this.dispatch('updated');
         };
 
     });
