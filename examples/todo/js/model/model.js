@@ -2,11 +2,11 @@
     'use strict';
 
     var model_plugin = {
-        merge_config_processor: function(target, base) {
-            target.update_after = (target.update_after || []).concat(base.update_after || []);
+        merge_config_processor: function() {
+            this.config.update_after = (this.config.update_after || []).concat(this.base_config.update_after || []);
         },
-        constructor_processor: function(constructor, proto) {
-            constructor.aop(proto.__config.update_after, {
+        constructor_processor: function() {
+            this.constructor.aop(this.config.update_after, {
                 after: function () {
                     this._update();
                 }

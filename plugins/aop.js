@@ -15,8 +15,9 @@
 
     Protoplast.plugins.aop = {
         wrap: wrap,
-        constructor_processor: function (constructor, proto, base) {
-            constructor.aop = function (methods, aspects) {
+        constructor_processor: function () {
+            var proto = this.proto, base = this.base;
+            this.constructor.aop = function (methods, aspects) {
                 if (!(methods instanceof Array)) {
                     methods = [methods];
                 }

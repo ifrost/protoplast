@@ -50,25 +50,28 @@ describe('Protoplast Plugins', function() {
     it('Merge Config Processor', function(){
         sinon.assert.calledTwice(custom_plugin.merge_config_processor);
 
-        chai.assert.deepEqual(custom_plugin.merge_config_processor.firstCall.args[0].custom, ['base']);
-        chai.assert.equal(custom_plugin.merge_config_processor.firstCall.args[1].custom, undefined);
+        chai.assert.deepEqual(custom_plugin.merge_config_processor.firstCall.thisValue.config.custom, ['base']);
+        chai.assert.equal(custom_plugin.merge_config_processor.firstCall.thisValue.base_config.custom, undefined);
 
-        chai.assert.deepEqual(custom_plugin.merge_config_processor.secondCall.args[0].custom, ['foo']);
-        chai.assert.deepEqual(custom_plugin.merge_config_processor.secondCall.args[1].custom, ['base']);
+        chai.assert.deepEqual(custom_plugin.merge_config_processor.secondCall.thisValue.config.custom, ['foo']);
+        chai.assert.deepEqual(custom_plugin.merge_config_processor.secondCall.thisValue.base_config.custom, ['base']);
     });
 
     it('Pre/Post Init Processor', function(){
         var foo = Foo('test');
         sinon.assert.callOrder(custom_plugin.pre_init_processor,init,custom_plugin.post_init_processor);
-        chai.assert.deepEqual(custom_plugin.pre_init_processor.lastCall.args, [foo, ['test'], Foo.__proto, Base.__proto, Proto]);
+        chai.assert.deepEqual(custom_plugin.pre_init_processor.lastCall.thisValue.args, ['test']);
+        chai.assert.deepEqual(custom_plugin.pre_init_processor.lastCall.thisValue.instance, foo);
     });
 
     it('Proto Processor', function(){
-        chai.assert.deepEqual(custom_plugin.proto_processor.lastCall.args, [Foo.__proto, 'foo-factory-result', Base.__proto, Proto]);
+        chai.assert.deepEqual(custom_plugin.proto_processor.lastCall.thisValue.proto, Foo.__proto);
+        chai.assert.deepEqual(custom_plugin.proto_processor.lastCall.thisValue.base, Base.__proto);
+        chai.assert.deepEqual(custom_plugin.proto_processor.lastCall.thisValue.factory_result, 'foo-factory-result');
     });
 
     it('Constructor Processor', function(){
-        chai.assert.deepEqual(custom_plugin.constructor_processor.lastCall.args, [Foo, Foo.__proto, Base.__proto, Proto]);
+        chai.assert.deepEqual(custom_plugin.constructor_processor.lastCall.thisValue.constructor, Foo);
     });
 
     it('Proto plugins', function() {

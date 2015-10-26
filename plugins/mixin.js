@@ -32,11 +32,11 @@
     }
 
     Protoplast.plugins.mixin = {
-        merge_config_processor: function(target, base) {
-            target.mixin = (target.mixin || []).concat(base.mixin || [])
+        merge_config_processor: function() {
+            this.config.mixin = (this.config.mixin || []).concat(this.base_config.mixin || [])
         },
-        pre_init_processor: function(instance, args, proto) {
-            mixin(instance, proto.__config.mixin);
+        pre_init_processor: function() {
+            mixin(this.instance, this.config.mixin);
         }
     }
 

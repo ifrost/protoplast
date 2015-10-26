@@ -47,11 +47,11 @@
     }
 
     Protoplast.plugins.di = {
-        merge_config_processor: function(target, base) {
-            target.inject = mix(target.inject || {}, base.inject || {})
+        merge_config_processor: function() {
+            this.config.inject = mix(this.config.inject || {}, this.base_config.inject || {})
         },
-        pre_init_processor: function(instance, args, proto) {
-            inject(instance, proto.__config.inject);
+        pre_init_processor: function() {
+            inject(this.instance, this.config.inject);
         },
         protoplast_processor: function(Proto) {
             /**

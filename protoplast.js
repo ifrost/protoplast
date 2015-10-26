@@ -34,8 +34,26 @@
 
             factory_result = factory(proto, this, config);
 
+            constructor = function () {
+                context.instance = Object.create(proto);
+                context.args = Array.prototype.slice.call(arguments);
+                processors.pre_init.forEach(function(processor){processor.call(context)});
+                context.instance.init.apply(context.instance, context.args);
+                processors.post_init.forEach(function(processor){processor.call(context)});
+                return context.instance;
+            };
+
             config.plugins = (this.__config.plugins || []).concat(config.plugins || []);
-            var processors = {};
+            var processors = {}, context = {
+                proto: proto,
+                factory: factory,
+                base: base,
+                config: config,
+                base_config: this.__config,
+                factory_result: factory_result,
+                Proto: Proto,
+                constructor: constructor
+            };
             processors.merge_config = concat_processors(config.plugins, 'merge_config_processor');
             processors.pre_init = concat_processors(config.plugins, 'pre_init_processor');
             processors.post_init = concat_processors(config.plugins, 'post_init_processor');
@@ -43,23 +61,14 @@
             processors.proto = concat_processors(config.plugins, 'proto_processor');
             processors.protoplast = concat_processors(config.plugins, 'protoplast_processor');
 
-            processors.merge_config.forEach(function(processor){processor.call(null, config, proto.__config);});
+            processors.merge_config.forEach(function(processor){processor.call(context);});
             proto.__config = config;
 
-            processors.proto.forEach(function(processor){processor.call(null, proto, factory_result, base, Proto)});
-
-            constructor = function () {
-                var instance = Object.create(proto),
-                    args = Array.prototype.slice.call(arguments);
-                processors.pre_init.forEach(function(processor){processor.call(null, instance, args, proto, base, Proto)});
-                instance.init.apply(instance, args);
-                processors.post_init.forEach(function(processor){processor.call(null, instance, args, proto, base, Proto)});
-                return instance;
-            };
+            processors.proto.forEach(function(processor){processor.call(context)});
 
             constructor.extend = Proto.extend.bind(proto);
             constructor.__proto = proto;
-            processors.constructor.forEach(function(processor){processor.call(null, constructor, proto, base, Proto)});
+            processors.constructor.forEach(function(processor){processor.call(context)});
             return constructor;
         };
         protoplast_processors.forEach(function(processor){processor.call(null, Proto)});
