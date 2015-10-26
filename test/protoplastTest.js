@@ -145,9 +145,9 @@ describe('Protoplast', function(){
                 }
             });
 
-            Sub = Base.extend(function(proto, $super){
+            Sub = Base.extend(function(proto, base){
                 proto.test = function() {
-                    return $super.test.call(this) * 2;
+                    return base.test.call(this) * 2;
                 }
             });
 
@@ -292,11 +292,11 @@ describe('Protoplast', function(){
 
             var Foo, Bar, foo, bar;
 
-            Foo = Proto.extend(function(proto, $super, config){
+            Foo = Proto.extend(function(proto, base, config){
                 config.inject = {bar: 'bar'};
             });
 
-            Bar = Proto.extend(function(proto, $super, config){
+            Bar = Proto.extend(function(proto, base, config){
                 config.inject = {foo: 'foo'};
             });
 
@@ -312,7 +312,7 @@ describe('Protoplast', function(){
 
             var Foo, Foo2, Bar, foo, bar;
 
-            Foo = Proto.extend(function(proto, $super, config){
+            Foo = Proto.extend(function(proto, base, config){
                 config.inject = {bar: 'bar'};
             });
             Foo2 = Foo.extend(function(){});
@@ -332,14 +332,14 @@ describe('Protoplast', function(){
 
             var Source, Destination, source, destination;
 
-            Source = Proto.extend(function(proto, $super, config){
+            Source = Proto.extend(function(proto, base, config){
                 config.inject = {pub: 'pub'};
                 proto.send = function(msg) {
                     this.pub('message', msg)
                 }
             });
 
-            Destination = Proto.extend(function(proto, $super, config){
+            Destination = Proto.extend(function(proto, base, config){
                 config.inject = {sub: 'sub'};
                 proto.init = function() {
                     this.sub('message').add(this.save_message);
@@ -380,7 +380,7 @@ describe('Protoplast', function(){
                 proto.bar = 'bar';
             });
 
-            FooBar = Proto.extend(function(proto, $super, config){
+            FooBar = Proto.extend(function(proto, base, config){
                 config.mixin = [Foo, Bar];
             });
 
@@ -397,7 +397,7 @@ describe('Protoplast', function(){
 
             var Dispatcher, dispatcher, message = '';
 
-            Dispatcher = Proto.extend(function(proto, $super, config){
+            Dispatcher = Proto.extend(function(proto, base, config){
                 config.mixin = [Proto.Dispatcher];
                 proto.hello = function() {
                     this.dispatch('message', 'hello')
@@ -431,7 +431,7 @@ describe('Protoplast', function(){
             });
 
             // create a clickable component that displays number of clicks
-            View = Proto.extend(function(proto, $super, config){
+            View = Proto.extend(function(proto, base, config){
                 config.inject = {pub: 'pub'};
 
                 proto.show = function(value) {
@@ -444,7 +444,7 @@ describe('Protoplast', function(){
             });
 
             // action dispatcher to convert view actions to domain actions
-            ActionDispatcher = Proto.extend(function(proto, $super, config){
+            ActionDispatcher = Proto.extend(function(proto, base, config){
                 config.inject = {sub: 'sub', pub: 'pub'};
 
                 proto.init = function() {
@@ -457,7 +457,7 @@ describe('Protoplast', function(){
             });
 
             // repository to react to domain actions and pass data to the view
-            Repository = Proto.extend(function(proto, $super, config){
+            Repository = Proto.extend(function(proto, base, config){
                 config.inject = {sub: 'sub', view: 'view'};
 
                 proto.init = function() {

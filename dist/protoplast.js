@@ -1,10 +1,17 @@
 (function(exports) {
     "use strict";
 
-    function protoplast_factory(config) {
+    /**
+     * Merges processors of the same type from multiple plugins
+     * @param {Object} plugins
+     * @param {String} processor_name
+     * @returns {Function[]}
+     */
+    function concat_processors(plugins, processor_name) {
+        return plugins.map(function(plugin){return plugin[processor_name]}).filter(Boolean);
+    }
 
-        config = config || {};
-        config.plugins = config.plugins || [];
+    function protoplast_factory(config) {
 
         /**
          * Base protoplast
@@ -12,18 +19,14 @@
          */
         var Proto = {};
 
-        function concat_processors(plugins, processor_name) {
-            return plugins.map(function(plugin){return plugin[processor_name]}).filter(Boolean);
-        }
-
-        var protoplast_processors = concat_processors(config.plugins, 'protoplast_processor');
-
+        config = config || {};
+        config.plugins = config.plugins || [];
         Proto.__config = config;
         Proto.init = function () {};
 
         /**
-         * Creates a new prototype that extends current prototype
-         * @param {Function} factory - factory to create prototype factory(proto, $super, config)
+         * Extend current prototype
+         * @param {Function} factory - factory to create prototype factory(proto, base, config)
          * @returns {Function} constructor - function used to create instances based on the prototype
          */
         Proto.extend = function (factory) {
@@ -37,29 +40,33 @@
             constructor = function () {
                 context.instance = Object.create(proto);
                 context.args = Array.prototype.slice.call(arguments);
+
                 processors.pre_init.forEach(function(processor){processor.call(context)});
                 context.instance.init.apply(context.instance, context.args);
                 processors.post_init.forEach(function(processor){processor.call(context)});
+
                 return context.instance;
             };
 
             config.plugins = (this.__config.plugins || []).concat(config.plugins || []);
-            var processors = {}, context = {
-                proto: proto,
-                factory: factory,
-                base: base,
-                config: config,
-                base_config: this.__config,
-                factory_result: factory_result,
-                Proto: Proto,
-                constructor: constructor
-            };
-            processors.merge_config = concat_processors(config.plugins, 'merge_config_processor');
-            processors.pre_init = concat_processors(config.plugins, 'pre_init_processor');
-            processors.post_init = concat_processors(config.plugins, 'post_init_processor');
-            processors.constructor = concat_processors(config.plugins, 'constructor_processor');
-            processors.proto = concat_processors(config.plugins, 'proto_processor');
-            processors.protoplast = concat_processors(config.plugins, 'protoplast_processor');
+            var context = {
+                    proto: proto,
+                    factory: factory,
+                    base: base,
+                    config: config,
+                    base_config: this.__config,
+                    factory_result: factory_result,
+                    Proto: Proto,
+                    constructor: constructor
+                },
+                processors = {
+                    merge_config: concat_processors(config.plugins, 'merge_config_processor'),
+                    pre_init: concat_processors(config.plugins, 'pre_init_processor'),
+                    post_init: concat_processors(config.plugins, 'post_init_processor'),
+                    constructor: concat_processors(config.plugins, 'constructor_processor'),
+                    proto: concat_processors(config.plugins, 'proto_processor'),
+                    protoplast: concat_processors(config.plugins, 'protoplast_processor')
+                };
 
             processors.merge_config.forEach(function(processor){processor.call(context);});
             proto.__config = config;
@@ -71,7 +78,7 @@
             processors.constructor.forEach(function(processor){processor.call(context)});
             return constructor;
         };
-        protoplast_processors.forEach(function(processor){processor.call(null, Proto)});
+        concat_processors(config.plugins, 'protoplast_processor').forEach(function(processor){processor.call(null, Proto)});
         return Proto;
     }
 
