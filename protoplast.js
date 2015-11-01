@@ -1,97 +1,86 @@
 (function(exports) {
     "use strict";
 
-    /**
-     * Merges processors of the same type from multiple plugins
-     * @param {Object} plugins
-     * @param {String} processor_name
-     * @returns {Function[]}
-     */
-    function concat_processors(plugins, processor_name) {
-        return plugins.map(function(plugin){return plugin[processor_name]}).filter(Boolean);
-    }
-
-    function protoplast_factory(config) {
-
-        /**
-         * Base protoplast
-         * @type {Object}
-         */
-        var Proto = {};
-
-        config = config || {};
-        config.plugins = config.plugins || [];
-        Proto.__config = config;
-        Proto.init = function () {};
-
-        /**
-         * Extend current prototype
-         * @param {Function} factory - factory to create prototype factory(proto, base, config)
-         * @returns {Function} constructor - function used to create instances based on the prototype
-         */
-        Proto.extend = function (factory) {
-            var proto = Object.create(this), constructor, base = this,
-                config = {}, factory_result;
-
-            factory = factory || function(){};
-
-            factory_result = factory(proto, this, config);
-
-            constructor = function () {
-                context.instance = Object.create(proto);
-                context.args = Array.prototype.slice.call(arguments);
-
-                processors.pre_init.forEach(function(processor){processor.call(context)});
-                context.instance.init.apply(context.instance, context.args);
-                processors.post_init.forEach(function(processor){processor.call(context)});
-
-                return context.instance;
-            };
-
-            config.plugins = (this.__config.plugins || []).concat(config.plugins || []);
-            var context = {
-                    proto: proto,
-                    factory: factory,
-                    base: base,
-                    config: config,
-                    base_config: this.__config,
-                    factory_result: factory_result,
-                    Proto: Proto,
-                    constructor: constructor
-                },
-                processors = {
-                    merge_config: concat_processors(config.plugins, 'merge_config_processor'),
-                    pre_init: concat_processors(config.plugins, 'pre_init_processor'),
-                    post_init: concat_processors(config.plugins, 'post_init_processor'),
-                    constructor: concat_processors(config.plugins, 'constructor_processor'),
-                    proto: concat_processors(config.plugins, 'proto_processor'),
-                    protoplast: concat_processors(config.plugins, 'protoplast_processor')
-                };
-
-            processors.merge_config.forEach(function(processor){processor.call(context);});
-            proto.__config = config;
-
-            processors.proto.forEach(function(processor){processor.call(context)});
-
-            constructor.extend = Proto.extend.bind(proto);
-            constructor.__proto = proto;
-            processors.constructor.forEach(function(processor){processor.call(context)});
-            return constructor;
-        };
-        concat_processors(config.plugins, 'protoplast_processor').forEach(function(processor){processor.call(null, Proto)});
-        return Proto;
-    }
-
-    exports.Protoplast = {
-        create: protoplast_factory,
-        plugins: {},
-        get_all_plugins: function() {
-            var plugins = [];
-            for (var plugin_name in this.plugins) {
-                plugins.push(this.plugins[plugin_name]);
+    function merge(destination, source) {
+        for (var property in source) {
+            if (source[property] instanceof Array) {
+                destination[property] = destination[property] || [];
+                destination[property] = source[property].concat(destination[property]);
             }
-            return plugins;
+            else if (['number','boolean','string'].indexOf(typeof(source[property])) !== -1) {
+                if (!destination.hasOwnProperty(property)) {
+                    destination[property] = source[property];
+                }
+            }
+            else {
+                destination[property] = destination[property] || {};
+                merge(destination[property], source[property]);
+            }
         }
-    };
+        return destination;
+    }
+
+    /**
+     * Mixes source properties into destination object
+     * @param {Object} destination
+     * @param {Object} source
+     * @returns {Object}
+     */
+    function mix(destination, source) {
+        for (var property in source) {
+            if (property !== 'init' && property.substr(0, 2) !== '__') {
+                destination[property] = source[property];
+            }
+        }
+        return destination;
+    }
+
+    /**
+     * Mixes all mixins into the instance
+     * @param {Object} instance
+     * @param {Object[]} mixins
+     * @returns {Object}
+     */
+    function mixin(instance, mixins) {
+        mixins.forEach(function (Mixin) {
+            mix(instance, Mixin());
+        });
+        return instance;
+    }
+
+    function extend(mixins, factory) {
+
+        if (mixins instanceof Function) {
+            factory = mixins;
+            mixins = [];
+        }
+
+        var proto = Object.create(this), constructor, meta = {};
+        if (factory) factory(proto, this, meta);
+
+        proto.__meta__ = merge(meta, this.__meta__);
+        proto.__base__ = this;
+        mixin(proto, mixins || []);
+
+        constructor = function () {
+            var instance = Object.create(proto);
+            instance.init.apply(instance, arguments);
+            return instance;
+        };
+
+        constructor.__prototype__ = proto;
+        constructor.__meta__ = proto.__meta__;
+        constructor.extend = extend.bind(proto);
+
+        return constructor;
+    }
+
+    var Protoplast = Object.create({});
+    Protoplast.init = function(){};
+    Protoplast.__meta__ = {};
+
+    Protoplast.extend = extend;
+
+    exports.Protoplast = Protoplast;
 
 })(this);
