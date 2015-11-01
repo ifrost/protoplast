@@ -1,13 +1,16 @@
 (function (window) {
     'use strict';
 
-    window.HeaderView = window.View.extend(function(proto){
+    window.HeaderView = window.View.extend(function(proto, base, meta){
 
-        proto.init = function(parent) {
-            this.root = parent.append('header').classed('header', true);
+        meta.tag = 'header';
 
-            this.header = this.root.append('h1').text('todos');
-            this.input = this.root.append('input')
+        proto.create = function() {
+
+            this.$root.classed('header', true);
+
+            this.header = this.$root.append('h1').text('todos');
+            this.input = this.$root.append('input')
                 .classed('new-todo', true)
                 .attr('placeholder', 'What needs to be done?')
                 .property('autofocus', true)

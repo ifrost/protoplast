@@ -1,11 +1,10 @@
 (function (window) {
     'use strict';
 
-    window.Router = window.Proto.extend(function(proto, base, config){
+    window.Router = window.Protoplast.extend(function(proto, base, config){
 
         config.inject = {
-            pub: 'pub',
-            get_view_state: 'viewstate'
+            pub: 'pub'
         };
 
         var url_to_state = {

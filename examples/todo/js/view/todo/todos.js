@@ -1,17 +1,21 @@
 (function (window) {
     'use strict';
 
-    window.TodosView = window.View.extend(function(proto, base, config){
+    window.TodosView = window.View.extend(function(proto, base, meta){
 
-        config.inject = {
-            get_todos: 'todos',
-            get_view_state: 'viewstate'
+        meta.tag = 'ul';
+        
+        meta.inject = {
+            todos: 'todos',
+            view_state: 'viewstate'
         };
 
-        proto.init = function(parent) {
-            this.root = parent.append('ul').classed('todo-list', true);
-            this.get_todos().on('updated', this.render, this);
-            this.get_view_state().on('updated', this.render, this);
+        proto.create = function() {
+
+            this.$root.classed('todo-list', true);
+
+            this.todos.on('updated', this.render, this);
+            this.view_state.on('updated', this.render, this);
 
             var self = this;
             d3.select(window)
@@ -30,15 +34,15 @@
         };
 
         proto.get_data = function() {
-            var state = this.get_view_state().get_state(), data;
+            var state = this.view_state.get_state(), data;
             if (state == window.ViewStateModel.ALL) {
-                data = this.get_todos().all();
+                data = this.todos.all();
             }
             else if (state == window.ViewStateModel.DONE) {
-                data = this.get_todos().done();
+                data = this.todos.done();
             }
             else if (state == window.ViewStateModel.UNDONE) {
-                data = this.get_todos().undone();
+                data = this.todos.undone();
             }
             return data;
         };
@@ -48,7 +52,7 @@
 
             var self = this;
 
-            var update = this.root.selectAll('li').data(data);
+            var update = this.$root.selectAll('li').data(data);
             var exit = update.exit();
             var enter = update.enter();
 
@@ -111,14 +115,14 @@
         };
 
         proto.enter_edit_mode = function(todo) {
-            var li = this.root.selectAll('li').filter(function(d){
+            var li = this.$root.selectAll('li').filter(function(d){
                 return d === todo;
             }).classed('editing', true);
             li.selectAll('input').attr('value', todo.text).node().focus();
         };
 
         proto.exit_edit_mode = function() {
-            this.root.selectAll('li').classed('editing', false);
+            this.$root.selectAll('li').classed('editing', false);
         };
     });
 

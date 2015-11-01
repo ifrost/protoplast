@@ -1,9 +1,9 @@
 (function (window) {
     'use strict';
 
-    window.ViewStateModel = window.Model.extend(function(proto, base, config){
+    window.ViewStateModel = window.Model.extend(function(proto, base, meta){
 
-        config.update_after = ['change'];
+        meta.update_after = ['change'];
 
         proto.init = function() {
             this._state = window.ViewStateModel.ALL;
@@ -20,6 +20,8 @@
 
     window.ViewStateModel.ALL = 'all';
     window.ViewStateModel.DONE = 'done';
-    window.ViewStateModel.UNDONE = 'undone';
+    window.ViewStateModel.UNDONE = 'undone'
+
+    window.Model.auto_update(window.ViewStateModel);
 
 })(window);

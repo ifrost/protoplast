@@ -1,10 +1,9 @@
 (function (window) {
     'use strict';
 
-    window.TodosModel = window.Model.extend(function(proto, base, config){
+    window.TodosModel = window.Model.extend([window.Storage], function(proto, base, meta){
 
-        config.mixin = [window.Storage];
-        config.update_after = ['add', 'remove', 'toggle', 'toggle_all'];
+        meta.update_after = ['add', 'remove', 'toggle', 'toggle_all'];
 
         proto.init = function() {
             this.store_id('todos');
@@ -51,5 +50,7 @@
         };
 
     });
+
+    window.Model.auto_update(window.TodosModel);
 
 })(window);

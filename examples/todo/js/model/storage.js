@@ -1,6 +1,6 @@
 (function(window){
 
-    window.Storage = window.Proto.extend(function(proto){
+    window.Storage = window.Protoplast.extend(function(proto){
 
         proto.store_id = function(id) {
             this.id = id;

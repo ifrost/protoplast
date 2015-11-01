@@ -1,15 +1,21 @@
 (function (window) {
     'use strict';
 
-    window.AppView = window.View.extend(function(proto){
+    var HeaderView = window.HeaderView,
+        MainView = window.MainView,
+        FooterView = window.FooterView;
 
-        proto.init = function(parent) {
-            this.root = parent.append('section').classed('todoapp', true)
+    window.AppView = window.View.extend(function(proto, base, meta){
 
-            window.HeaderView(this.root);
-            window.MainView(this.root);
-            window.FooterView(this.root);
-            window.InfoView(parent);
+        meta.tag = 'section';
+
+        proto.create = function() {
+
+            this.$root.classed('todoapp', true)
+
+            this.add(HeaderView());
+            this.add(MainView());
+            this.add(FooterView());
         }
 
     });
