@@ -1,17 +1,24 @@
 (function (window) {
 	'use strict';
 
-	var context = window.Context(), appView;
+	var context = window.Context();
 
+	// models
 	context.register('todos', window.TodosModel());
 	context.register('viewstate', window.ViewStateModel());
-	context.register('appview', appView = AppView());
+
+	// controllers
 	context.register('todocontroller', window.TodoController());
 	context.register('viewstatecontroller', window.ViewStateController());
+
+	// misc
 	context.register('router', window.Router());
+
 	context.build();
 
-	document.body.appendChild(appView.root);
-	document.body.appendChild(window.InfoView().root);
+	// view
+	var root = window.Component.Root(document.body, context);
+	root.add(window.AppView());
+	root.add(window.InfoView());
 
 })(window);

@@ -281,7 +281,7 @@
          */
         proto.init = function() {
             this._children = [];
-            this.root = document.createElement(this.__meta__.tag);
+            this.root = document.createElement(this.__meta__.tag || 'div');
         };
 
         /**
@@ -311,9 +311,7 @@
          */
         proto.add = function(child) {
             this._children.push(child);
-            if (this.__fastinject__) {
-                this.__fastinject__(child);
-            }
+            this.__fastinject__(child);
             this.root.appendChild(child.root);
         };
 
@@ -330,6 +328,13 @@
             }
         }
     });
+
+    Component.Root = function(element, context) {
+        var component = Component();
+        component.root = element;
+        context.register(component);
+        return component;
+    };
 
     exports.Component = Component;
 
