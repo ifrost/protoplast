@@ -1,257 +1,26 @@
 (function(exports) {
     "use strict";
 
-    /**
-     * Merges processors of the same type from multiple plugins
-     * @param {Object} plugins
-     * @param {String} processor_name
-     * @returns {Function[]}
-     */
-    function concat_processors(plugins, processor_name) {
-        return plugins.map(function(plugin){return plugin[processor_name]}).filter(Boolean);
-    }
-
-    function protoplast_factory(config) {
-
-        /**
-         * Base protoplast
-         * @type {Object}
-         */
-        var Proto = {};
-
-        config = config || {};
-        config.plugins = config.plugins || [];
-        Proto.__config = config;
-        Proto.init = function () {};
-
-        /**
-         * Extend current prototype
-         * @param {Function} factory - factory to create prototype factory(proto, base, config)
-         * @returns {Function} constructor - function used to create instances based on the prototype
-         */
-        Proto.extend = function (factory) {
-            var proto = Object.create(this), constructor, base = this,
-                config = {}, factory_result;
-
-            factory = factory || function(){};
-
-            factory_result = factory(proto, this, config);
-
-            constructor = function () {
-                context.instance = Object.create(proto);
-                context.args = Array.prototype.slice.call(arguments);
-
-                processors.pre_init.forEach(function(processor){processor.call(context)});
-                context.instance.init.apply(context.instance, context.args);
-                processors.post_init.forEach(function(processor){processor.call(context)});
-
-                return context.instance;
-            };
-
-            config.plugins = (this.__config.plugins || []).concat(config.plugins || []);
-            var context = {
-                    proto: proto,
-                    factory: factory,
-                    base: base,
-                    config: config,
-                    base_config: this.__config,
-                    factory_result: factory_result,
-                    Proto: Proto,
-                    constructor: constructor
-                },
-                processors = {
-                    merge_config: concat_processors(config.plugins, 'merge_config_processor'),
-                    pre_init: concat_processors(config.plugins, 'pre_init_processor'),
-                    post_init: concat_processors(config.plugins, 'post_init_processor'),
-                    constructor: concat_processors(config.plugins, 'constructor_processor'),
-                    proto: concat_processors(config.plugins, 'proto_processor'),
-                    protoplast: concat_processors(config.plugins, 'protoplast_processor')
-                };
-
-            processors.merge_config.forEach(function(processor){processor.call(context);});
-            proto.__config = config;
-
-            processors.proto.forEach(function(processor){processor.call(context)});
-
-            constructor.extend = Proto.extend.bind(proto);
-            constructor.__proto = proto;
-            processors.constructor.forEach(function(processor){processor.call(context)});
-            return constructor;
-        };
-        concat_processors(config.plugins, 'protoplast_processor').forEach(function(processor){processor.call(null, Proto)});
-        return Proto;
-    }
-
-    exports.Protoplast = {
-        create: protoplast_factory,
-        plugins: {},
-        get_all_plugins: function() {
-            var plugins = [];
-            for (var plugin_name in this.plugins) {
-                plugins.push(this.plugins[plugin_name]);
-            }
-            return plugins;
-        }
-    };
-
-})(this);
-(function(exports) {
-    "use strict";
-
-    var Protoplast = exports.Protoplast;
-
-    function wrap(proto, method, aspects, origin) {
-        origin = origin || proto[method];
-        proto[method] = function () {
-            if (aspects.before) aspects.before.apply(this, arguments);
-            var result = origin.apply(this, arguments);
-            if (aspects.after) result = aspects.after.apply(this, arguments);
-            return result;
-        }
-    }
-
-    Protoplast.plugins.aop = {
-        wrap: wrap,
-        constructor_processor: function () {
-            var proto = this.proto, base = this.base;
-            this.constructor.aop = function (methods, aspects) {
-                if (!(methods instanceof Array)) {
-                    methods = [methods];
-                }
-                methods.forEach(function(method){
-                    if (proto[method] instanceof Function) {
-
-                        // create a simple override delegating to the base class
-                        // to make sure the base method is called if it was wrapped
-                        // with an aspect
-                        if (!proto.hasOwnProperty(method)) {
-                            proto[method] = function () {
-                                base[method].apply(this, arguments);
-                            }
-                        }
-
-                        var origin = proto[method];
-
-                        wrap(proto, method, aspects, origin);
-                    }
-                });
-            };
-        }
-    }
-
-})(this);
-(function(exports){
-    "use strict";
-
-    var Protoplast = exports.Protoplast;
-
-    /**
-     * List of object in the context
-     * @type {Object}
-     * @private
-     */
-    var _objects = {};
-
-    /**
-     * Resolves dependency. If dependency is a function - delegates directly, otherwise tries to
-     * retrieve the dependency
-     * @param {String} id
-     * @returns {Function}
-     */
-    function object_resolver(id) {
-        return function () {
-            return _objects[id] instanceof Function ? _objects[id].apply(this, arguments) : _objects[id];
-        }
-    }
-
-    /**
-     * Mixes source properties into destination object
-     * @param {Object} destination
-     * @param {Object} source
-     * @returns {Object}
-     */
-    function mix(destination, source) {
+    function merge(destination, source) {
         for (var property in source) {
-            destination[property] = source[property];
+            if (source[property] instanceof Array) {
+                destination[property] = destination[property] || [];
+                destination[property] = source[property].concat(destination[property]);
+            }
+            else if (['number','boolean','string'].indexOf(typeof(source[property])) !== -1) {
+                if (!destination.hasOwnProperty(property)) {
+                    destination[property] = source[property];
+                }
+            }
+            else {
+                destination[property] = destination[property] || {};
+                merge(destination[property], source[property]);
+            }
         }
         return destination;
     }
 
     /**
-     * Performs dependency injection based on the config
-     * @param {Object} instance
-     * @param {Object} config - {property:dependencyId,...}
-     */
-    function inject(instance, config) {
-        for (var property in config) {
-            instance[property] = object_resolver(config[property]).bind(instance)
-        }
-    }
-
-    Protoplast.plugins.di = {
-        merge_config_processor: function() {
-            this.config.inject = mix(this.config.inject || {}, this.base_config.inject || {})
-        },
-        pre_init_processor: function() {
-            inject(this.instance, this.config.inject);
-        },
-        protoplast_processor: function(Proto) {
-            /**
-             * Registers object in the DI context
-             * @param {String} id
-             * @param {Object} instance
-             */
-            Proto.register = function (id, instance) {
-                _objects[id] = instance;
-            };
-        }
-    }
-
-})(this);
-(function(exports){
-    "use strict";
-
-    var Protoplast = exports.Protoplast;
-
-    Protoplast.plugins.dispatcher =  {
-        protoplast_processor: function(Proto) {
-            /**
-             * EventDispatcher implementation, can be used as mixin or base protoype
-             * @type {Function}
-             */
-            Proto.Dispatcher = Proto.extend(function (proto) {
-
-                proto.dispatch = function (topic, message) {
-                    this._topics = this._topics || {};
-                    (this._topics[topic] || []).forEach(function (config) {
-                        config.handler.call(config.context, message);
-                    })
-                };
-
-                proto.on = function (topic, handler, context) {
-                    this._topics = this._topics || {};
-                    this._topics[topic] = this._topics[topic] || [];
-                    this._topics[topic].push({handler: handler, context: context});
-                };
-
-                proto.off = function (topic, handler, context) {
-                    this._topics = this._topics || {};
-                    this._topics[topic] = this._topics[topic].filter(function (config) {
-                        return handler ? config.handler !== handler : config.context !== context
-                    })
-                };
-            });
-        }
-    };
-
-
-})(this);
-(function(exports){
-    "use strict";
-
-    var Protoplast = exports.Protoplast;
-
-    /**
      * Mixes source properties into destination object
      * @param {Object} destination
      * @param {Object} source
@@ -259,7 +28,7 @@
      */
     function mix(destination, source) {
         for (var property in source) {
-            if (property !== 'init') {
+            if (property !== 'init' && property.substr(0, 2) !== '__') {
                 destination[property] = source[property];
             }
         }
@@ -279,41 +48,246 @@
         return instance;
     }
 
-    Protoplast.plugins.mixin = {
-        merge_config_processor: function() {
-            this.config.mixin = (this.config.mixin || []).concat(this.base_config.mixin || [])
-        },
-        pre_init_processor: function() {
-            mixin(this.instance, this.config.mixin);
+    function extend(mixins, factory) {
+
+        if (mixins instanceof Function) {
+            factory = mixins;
+            mixins = [];
+        }
+
+        var proto = Object.create(this), constructor, meta = {};
+        if (factory) factory(proto, this, meta);
+
+        proto.__meta__ = merge(meta, this.__meta__);
+        proto.__base__ = this;
+        mixin(proto, mixins || []);
+
+        constructor = function () {
+            var instance = Object.create(proto);
+            instance.init.apply(instance, arguments);
+            return instance;
+        };
+
+        constructor.__prototype__ = proto;
+        constructor.__meta__ = proto.__meta__;
+        constructor.extend = extend.bind(proto);
+
+        return constructor;
+    }
+
+    var Protoplast = Object.create({});
+    Protoplast.init = function(){};
+    Protoplast.__meta__ = {};
+
+    Protoplast.extend = extend;
+
+    exports.Protoplast = Protoplast;
+
+})(this);
+(function(exports){
+
+    var Protoplast = exports.Protoplast;
+
+    function wrap(proto, method, aspects, origin) {
+        origin = origin || proto[method];
+        proto[method] = function () {
+            if (aspects.before) aspects.before.apply(this, arguments);
+            var result = origin.apply(this, arguments);
+            if (aspects.after) result = aspects.after.apply(this, arguments);
+            return result;
         }
     }
 
-})(this);
+    var Aop = Protoplast.extend(function(proto){
+
+        proto.init = function(aop_proto) {
+            this.aop_proto = aop_proto instanceof Function ? aop_proto.__prototype__ : aop_proto;
+        };
+
+        proto.aop = function(methods, aspects) {
+            var aop_proto = this.aop_proto;
+            if (!(methods instanceof Array)) {
+                methods = [methods];
+            }
+            methods.forEach(function(method){
+                if (aop_proto[method] instanceof Function) {
+
+                    // create a simple override delegating to the base class
+                    // to make sure the base method is called if it was wrapped
+                    // with an aspect
+                    if (!aop_proto.hasOwnProperty(method)) {
+                        aop_proto[method] = function () {
+                            aop_proto.__base__[method].apply(this, arguments);
+                        }
+                    }
+
+                    var origin = aop_proto[method];
+
+                    wrap(aop_proto, method, aspects, origin);
+                }
+            });
+        };
+
+    });
+
+    exports.Aop = Aop;
+
+})(window);
 (function(exports){
     "use strict";
 
     var Protoplast = exports.Protoplast;
 
-    Protoplast.plugins.pubsub = {
-        protoplast_processor: function(Proto) {
-            Proto.register('pub', function (topic, message) {
-                Proto.dispatcher.dispatch(topic, message);
-            });
+    /**
+     * EventDispatcher implementation, can be used as mixin or base protoype
+     * @type {Function}
+     */
+    var Dispatcher = Protoplast.extend(function (proto) {
 
-            Proto.register('sub', function (topic) {
-                var self = this;
-                return {
-                    add: function (handler) {
-                        Proto.dispatcher.on(topic, handler, self);
-                    },
-                    remove: function (handler) {
-                        Proto.dispatcher.off(topic, handler, self);
-                    }
-                }
-            });
+        proto.dispatch = function (topic, message) {
+            this._topics = this._topics || {};
+            (this._topics[topic] || []).forEach(function (config) {
+                config.handler.call(config.context, message);
+            })
+        };
 
-            Proto.dispatcher = Proto.Dispatcher();
-        }
-    };
+        proto.on = function (topic, handler, context) {
+            this._topics = this._topics || {};
+            this._topics[topic] = this._topics[topic] || [];
+            this._topics[topic].push({handler: handler, context: context});
+        };
+
+        proto.off = function (topic, handler, context) {
+            this._topics = this._topics || {};
+            this._topics[topic] = this._topics[topic].filter(function (config) {
+                return handler ? config.handler !== handler : config.context !== context
+            })
+        };
+    });
+
+    exports.Dispatcher = Dispatcher;
 
 })(this);
+(function(exports){
+
+    var Dispatcher = exports.Dispatcher;
+
+    var Context = Protoplast.extend(function(proto){
+
+        /**
+         * Map of object in the context
+         * @type {Object}
+         * @private
+         */
+        proto._objects = null;
+
+        proto.init = function() {
+            var self = this;
+            this._objects = {
+                pub: function (topic, message) {
+                    self._dispatcher.dispatch(topic, message);
+                },
+                sub: function (topic) {
+                    var instance_self = this;
+                    return {
+                        add: function (handler) {
+                            self._dispatcher.on(topic, handler, instance_self);
+                        },
+                        remove: function (handler) {
+                            self._dispatcher.off(topic, handler, instance_self);
+                        }
+                    }
+                }
+            };
+            this._dispatcher = Dispatcher();
+        };
+
+        /**
+         * Registers object in the DI context
+         * @param {String} id
+         * @param {Object} instance
+         */
+        proto.register = function (id, instance) {
+            if (arguments.length == 1) {
+                instance = id;
+            }
+            else {
+                this._objects[id] = instance;
+            }
+
+            instance.__fastinject__ = function(obj) {
+                this.register(obj);
+                if (obj.injected instanceof Function) {
+                    obj.injected();
+                }
+            }.bind(this);
+
+            this.inject(instance, instance.__meta__.inject);
+        };
+
+        /**
+         * Performs dependency injection based on the config
+         * @param {Object} instance
+         * @param {Object} config - {property:dependencyId,...}
+         */
+        proto.inject = function(instance, config) {
+            var self = this, id;
+            for (var property in config) {
+                id = config[property];
+
+                (function(id){
+                    Object.defineProperty(instance, property, {
+                        get: function() {
+                            return self._objects[id];
+                        }
+                    });
+                })(id);
+            }
+        };
+
+        proto.build = function() {
+            Object.keys(this._objects).forEach(function(id) {
+                var instance = this._objects[id];
+                if (instance.injected instanceof Function) {
+                    instance.injected();
+                }
+            }.bind(this));
+        };
+
+    });
+
+    exports.Context = Context;
+
+})(window);
+(function(exports){
+
+    var Protoplast = exports.Protoplast;
+
+    var Component = Protoplast.extend(function(proto, base, meta){
+
+        proto.init = function() {
+            this._children = [];
+            this.root = document.createElement(this.__meta__.tag);
+        };
+
+        proto.create = function() {
+
+        };
+
+        proto.injected = function() {
+            this.create();
+        };
+
+        proto.add = function(child) {
+            this._children.push(child);
+            if (this.__fastinject__) {
+                this.__fastinject__(child);
+            }
+            this.root.appendChild(child.root);
+        };
+
+    });
+
+    exports.Component = Component;
+
+})(window);
