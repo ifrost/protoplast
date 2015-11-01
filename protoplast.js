@@ -1,11 +1,17 @@
 (function(exports) {
     "use strict";
 
+    /**
+     * Merges source object into destination. Arrays are concatenated, primitives taken from the source if not
+     * defined and complex object merged recursively
+     * @param destination
+     * @param source
+     * @returns {Object}
+     */
     function merge(destination, source) {
         for (var property in source) {
             if (source[property] instanceof Array) {
-                destination[property] = destination[property] || [];
-                destination[property] = source[property].concat(destination[property]);
+                destination[property] = source[property].concat(destination[property] || []);
             }
             else if (['number','boolean','string'].indexOf(typeof(source[property])) !== -1) {
                 if (!destination.hasOwnProperty(property)) {
@@ -21,7 +27,7 @@
     }
 
     /**
-     * Mixes source properties into destination object
+     * Mixes mixin source properties into destination object
      * @param {Object} destination
      * @param {Object} source
      * @returns {Object}

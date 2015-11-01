@@ -1,11 +1,17 @@
 (function(exports) {
     "use strict";
 
+    /**
+     * Merges source object into destination. Arrays are concatenated, primitives taken from the source if not
+     * defined and complex object merged recursively
+     * @param destination
+     * @param source
+     * @returns {Object}
+     */
     function merge(destination, source) {
         for (var property in source) {
             if (source[property] instanceof Array) {
-                destination[property] = destination[property] || [];
-                destination[property] = source[property].concat(destination[property]);
+                destination[property] = source[property].concat(destination[property] || []);
             }
             else if (['number','boolean','string'].indexOf(typeof(source[property])) !== -1) {
                 if (!destination.hasOwnProperty(property)) {
@@ -21,7 +27,7 @@
     }
 
     /**
-     * Mixes source properties into destination object
+     * Mixes mixin source properties into destination object
      * @param {Object} destination
      * @param {Object} source
      * @returns {Object}
@@ -88,8 +94,14 @@
 
     var Protoplast = exports.Protoplast;
 
-    function wrap(proto, method, aspects, origin) {
-        origin = origin || proto[method];
+    /**
+     * Wraps the method with aspects
+     * @param {Object} proto
+     * @param {String} method
+     * @param {before: Function, after:Function} aspects
+     */
+    function wrap(proto, method, aspects) {
+        var origin = proto[method];
         proto[method] = function () {
             if (aspects.before) aspects.before.apply(this, arguments);
             var result = origin.apply(this, arguments);
@@ -98,34 +110,29 @@
         }
     }
 
+    /**
+     * AOP Manager. Allows to add aspects to a prototype
+     */
     var Aop = Protoplast.extend(function(proto){
 
-        proto.init = function(aop_proto) {
-            this.aop_proto = aop_proto instanceof Function ? aop_proto.__prototype__ : aop_proto;
+        proto.init = function(constructor) {
+            this.aop_proto = constructor.__prototype__;
         };
 
+        /**
+         * Applies aspects
+         * @param {String[]} methods
+         * @param {before: Function, after: Function} aspects
+         */
         proto.aop = function(methods, aspects) {
-            var aop_proto = this.aop_proto;
+
             if (!(methods instanceof Array)) {
                 methods = [methods];
             }
+
             methods.forEach(function(method){
-                if (aop_proto[method] instanceof Function) {
-
-                    // create a simple override delegating to the base class
-                    // to make sure the base method is called if it was wrapped
-                    // with an aspect
-                    if (!aop_proto.hasOwnProperty(method)) {
-                        aop_proto[method] = function () {
-                            aop_proto.__base__[method].apply(this, arguments);
-                        }
-                    }
-
-                    var origin = aop_proto[method];
-
-                    wrap(aop_proto, method, aspects, origin);
-                }
-            });
+                wrap(this.aop_proto, method, aspects);
+            }, this);
         };
 
     });
@@ -263,21 +270,45 @@
 
     var Protoplast = exports.Protoplast;
 
-    var Component = Protoplast.extend(function(proto, base, meta){
+    /**
+     * Creates a simple component tree-like architecture for the view layer. Used with DI
+     * @alias Component
+     */
+    var Component = Protoplast.extend(function(proto){
 
+        /**
+         * Initialize component by creating the root tag
+         */
         proto.init = function() {
             this._children = [];
             this.root = document.createElement(this.__meta__.tag);
         };
 
-        proto.create = function() {
+        /**
+         * Template method, used to create DOM of the component
+         */
+        proto.create = function() {};
 
+        /**
+         * Destroy the component and all child components
+         */
+        proto.destroy = function() {
+            this._children.forEach(function(child){
+                this.remove(child);
+            }, this);
         };
 
+        /**
+         * Injected handler
+         */
         proto.injected = function() {
             this.create();
         };
 
+        /**
+         * Add a child component
+         * @param {Component} child
+         */
         proto.add = function(child) {
             this._children.push(child);
             if (this.__fastinject__) {
@@ -286,6 +317,18 @@
             this.root.appendChild(child.root);
         };
 
+        /**
+         * Remove child component
+         * @param {Component} child
+         */
+        proto.remove = function(child) {
+            var index = this._children.indexOf(child);
+            if (index !== -1) {
+                this._children.splice(index, 1);
+                this.root.removeChild(child.root);
+                child.destroy();
+            }
+        }
     });
 
     exports.Component = Component;
