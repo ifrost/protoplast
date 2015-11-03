@@ -3,7 +3,7 @@
 
     window.TodosModel = window.Model.extend([window.Storage], function(proto, base, meta){
 
-        meta.update_after = ['add', 'remove', 'toggle', 'toggle_all'];
+        meta.update_after = ['add', 'remove', 'toggle', 'toggle_all', 'refresh'];
 
         proto.init = function() {
             this.store_id('todos');
@@ -33,9 +33,7 @@
             });
         };
 
-        proto.refresh = function() {
-            this._update();
-        };
+        proto.refresh = function() {};
 
         proto.all = function() {
             return this._todos;

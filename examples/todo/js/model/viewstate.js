@@ -20,7 +20,7 @@
 
     window.ViewStateModel.ALL = 'all';
     window.ViewStateModel.DONE = 'done';
-    window.ViewStateModel.UNDONE = 'undone'
+    window.ViewStateModel.UNDONE = 'undone';
 
     window.Model.auto_update(window.ViewStateModel);
 

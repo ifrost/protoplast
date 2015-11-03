@@ -4,7 +4,8 @@
     app.run({
         controllers: {
             todocontroller: window.TodoController(),
-            viewstatecontroller: window.ViewStateController()
+            viewstatecontroller: window.ViewStateController(),
+            router: window.Router()
         },
         models: {
             todos: window.TodosModel(),
