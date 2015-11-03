@@ -62,11 +62,13 @@
         }
 
         var proto = Object.create(this), constructor, meta = {};
+
+        mixin(proto, mixins || []);
+
         if (factory) factory(proto, this, meta);
 
         proto.__meta__ = merge(meta, this.__meta__);
         proto.__base__ = this;
-        mixin(proto, mixins || []);
 
         constructor = function () {
             var instance = Object.create(proto);
