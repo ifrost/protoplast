@@ -68,6 +68,7 @@
         return component;
     };
 
-    exports.Component = Component;
+    exports.ProtoplastExt = exports.ProtoplastExt || {};
+    exports.ProtoplastExt.Component = Component;
 
 })(window);

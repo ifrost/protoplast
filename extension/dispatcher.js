@@ -30,6 +30,7 @@
         };
     });
 
-    exports.Dispatcher = Dispatcher;
+    exports.ProtoplastExt = exports.ProtoplastExt || {};
+    exports.ProtoplastExt.Dispatcher = Dispatcher;
 
 })(this);

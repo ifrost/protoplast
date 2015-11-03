@@ -1,6 +1,6 @@
 (function(exports){
 
-    var Dispatcher = exports.Dispatcher;
+    var Dispatcher = exports.ProtoplastExt.Dispatcher;
 
     var Context = Protoplast.extend(function(proto){
 
@@ -86,6 +86,7 @@
 
     });
 
-    exports.Context = Context;
+    exports.ProtoplastExt = exports.ProtoplastExt || {};
+    exports.ProtoplastExt.Context = Context;
 
 })(window);

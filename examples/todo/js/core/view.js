@@ -1,7 +1,7 @@
 (function (window) {
     'use strict';
 
-    window.View = window.Component.extend(function(proto, base, meta){
+    window.View = window.ProtoplastExt.Component.extend(function(proto, base, meta){
 
         meta.inject = {pub: 'pub'};
 

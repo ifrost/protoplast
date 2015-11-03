@@ -45,6 +45,7 @@
 
     });
 
-    exports.Aop = Aop;
+    exports.ProtoplastExt = exports.ProtoplastExt || {};
+    exports.ProtoplastExt.Aop = Aop;
 
 })(window);

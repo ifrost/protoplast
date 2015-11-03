@@ -1,5 +1,9 @@
 describe('Protoplast', function(){
 
+    var Dispatcher = ProtoplastExt.Dispatcher,
+        Context = ProtoplastExt.Context,
+        Aop = ProtoplastExt.Aop;
+
     describe('Metadata', function(){
 
         it('assings metadata to the prototype', function(){

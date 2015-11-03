@@ -139,7 +139,8 @@
 
     });
 
-    exports.Aop = Aop;
+    exports.ProtoplastExt = exports.ProtoplastExt || {};
+    exports.ProtoplastExt.Aop = Aop;
 
 })(window);
 (function(exports){
@@ -174,12 +175,13 @@
         };
     });
 
-    exports.Dispatcher = Dispatcher;
+    exports.ProtoplastExt = exports.ProtoplastExt || {};
+    exports.ProtoplastExt.Dispatcher = Dispatcher;
 
 })(this);
 (function(exports){
 
-    var Dispatcher = exports.Dispatcher;
+    var Dispatcher = exports.ProtoplastExt.Dispatcher;
 
     var Context = Protoplast.extend(function(proto){
 
@@ -265,7 +267,8 @@
 
     });
 
-    exports.Context = Context;
+    exports.ProtoplastExt = exports.ProtoplastExt || {};
+    exports.ProtoplastExt.Context = Context;
 
 })(window);
 (function(exports){
@@ -338,6 +341,7 @@
         return component;
     };
 
-    exports.Component = Component;
+    exports.ProtoplastExt = exports.ProtoplastExt || {};
+    exports.ProtoplastExt.Component = Component;
 
 })(window);
