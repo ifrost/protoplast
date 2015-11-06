@@ -54,6 +54,32 @@
         return instance;
     }
 
+    /**
+     * Verifies whether prototype implements all methods in interfaces
+     * @param proto
+     * @param interfaces
+     */
+    function impl(proto, interfaces) {
+        var exists, is_function, matches_params, error;
+        interfaces.forEach(function(clazz){
+            var i = clazz.__prototype__;
+            for (var property in i) {
+                if (i.hasOwnProperty(property) && typeof i[property] === "function") {
+                    exists = proto[property];
+                    is_function = typeof proto[property] === "function";
+                    matches_params = is_function && proto[property].length === i[property].length;
+                    if (!exists || !is_function || !matches_params) {
+                        error = 'Prototype ' + proto.__meta__.name + ' should implement method ' + property + ' with ' + i[property].length + ' param(s), ';
+                        if (!exists) error += property + ' not found in the prototype';
+                        if (exists && !is_function) error += property + ' is not a function';
+                        if (exists && is_function && !matches_params) error += proto[property].length + ' param(s) found';
+                        throw new Error(error);
+                    }
+                }
+            }
+        });
+    }
+
     function extend(mixins, factory) {
 
         if (mixins instanceof Function) {
@@ -64,11 +90,12 @@
         var proto = Object.create(this), constructor, meta = {};
 
         mixin(proto, mixins || []);
-
         if (factory) factory(proto, this, meta);
 
         proto.__meta__ = merge(meta, this.__meta__);
         proto.__base__ = this;
+
+        impl(proto, proto.__meta__.impl);
 
         constructor = function () {
             var instance = Object.create(proto);
@@ -79,13 +106,14 @@
         constructor.__prototype__ = proto;
         constructor.__meta__ = proto.__meta__;
         constructor.extend = extend.bind(proto);
+        constructor.impl = impl.bind(proto);
 
         return constructor;
     }
 
     var Protoplast = Object.create({});
     Protoplast.init = function(){};
-    Protoplast.__meta__ = {};
+    Protoplast.__meta__ = {impl: [], name: "Protoplast"};
 
     Protoplast.extend = extend;
 

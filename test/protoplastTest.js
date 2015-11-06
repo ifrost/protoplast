@@ -7,7 +7,7 @@ describe('Protoplast', function(){
     describe('Metadata', function(){
 
         it('assings metadata to the prototype', function(){
-            var Base, Sub;
+            var Base;
 
             Base = Protoplast.extend(function(proto, base, meta){
                 meta.num = 1;
@@ -58,11 +58,9 @@ describe('Protoplast', function(){
                 meta.str = 'text 2';
             });
 
-            chai.assert.deepEqual(Sub.__meta__, {
-                num: 2,
-                bool: false,
-                str: 'text 2'
-            });
+            chai.assert.equal(Sub.__meta__.num, 2);
+            chai.assert.equal(Sub.__meta__.bool, false);
+            chai.assert.equal(Sub.__meta__.str, 'text 2');
         });
 
         it('concatenates arrays in metadata', function(){
@@ -458,6 +456,38 @@ describe('Protoplast', function(){
             dispatcher.hello();
 
             chai.assert.equal(message, 'hello');
+        });
+    });
+
+    describe('Interfaces', function(){
+        it('verifies if prototype implements passed interfaces', function(){
+
+            var Interface = Protoplast.extend(function(proto){
+                proto.foo = function(alpha, beta) {}
+            });
+
+            var CorrectBase = Protoplast.extend(function(proto, base, meta){
+                proto.foo = function(alpha, beta) {};
+            });
+
+            var IncorrectBase = Protoplast.extend(function(proto){
+                proto.foo = function(gamma) {};
+            });
+
+            function correctSub() {
+                CorrectBase.extend(function(proto, base, meta){
+                    meta.impl = [Interface];
+                })
+            }
+
+            function incorrectSub() {
+                IncorrectBase.extend(function(proto, base, meta){
+                    meta.impl = [Interface];
+                })
+            }
+
+            correctSub();
+            chai.assert.throw(incorrectSub);
         });
     });
 
