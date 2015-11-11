@@ -49,7 +49,7 @@
      */
     function mixin(instance, mixins) {
         mixins.forEach(function (Mixin) {
-            mix(instance, Mixin.create());
+            mix(instance, Mixin.prototype);
         });
         return instance;
     }
@@ -80,79 +80,50 @@
         });
     }
 
-    function extend(mixins, factory) {
+    var Protoplast = function() {};
+
+    Protoplast.extend = function(mixins, constructor) {
+        var base = this;
 
         if (mixins instanceof Function) {
-            factory = mixins;
+            constructor = mixins;
             mixins = [];
         }
+        constructor = constructor || function() {
+            base.apply(this, arguments);
+        };
+        mixins = mixins || [];
 
-        var proto = Object.create(this), constructor, meta = {};
+        constructor.prototype = Object.create(base.prototype);
+        constructor.base = base.prototype;
 
-        mixin(proto, mixins || []);
-        if (factory) factory(proto, this, meta);
+        mixin(constructor.prototype, mixins);
 
-        proto.__meta__ = merge(meta, this.__meta__);
-        proto.__base__ = this;
+        constructor.extend = Protoplast.extend.bind(constructor);
 
-        impl(proto, proto.__meta__.impl);
-
-        constructor = function () {
-            var instance = Object.create(proto);
-            instance.init.apply(instance, arguments);
-            return instance;
+        constructor.define = function(properties) {
+            for (var property in properties) {
+                constructor.prototype[property] = properties[property];
+            }
+            return constructor;
         };
 
-        constructor.__prototype__ = proto;
-        constructor.__meta__ = proto.__meta__;
-        constructor.extend = extend.bind(proto);
-        constructor.impl = impl.bind(proto);
+        constructor.meta = function(meta) {
+            constructor.prototype.__meta__ = merge(meta, base.prototype.__meta__);
+            constructor.__meta__ = constructor.prototype.__meta__;
+            return constructor;
+        };
+
+        constructor.impl = function(interfaces) {
+            impl(constructor.prototype, interfaces);
+            return constructor;
+        };
+
+        constructor.meta({});
 
         return constructor;
-    }
-
-    var Protoplast = {
-        prototype: {},
-        base: undefined,
-        meta: {impl: [], name: "Protoplast"},
-        create: function() {
-            var instance = Object.create(this.prototype);
-            instance.__meta__ = this.meta;
-            return instance;
-        },
-        extend: function(mixins, factory) {
-
-            if (arguments.length === 1 && !(mixins instanceof Array)) {
-                factory = mixins;
-                mixins = [];
-            }
-
-            factory = factory || function() {};
-            mixins = mixins || [];
-
-            var superfactory = Object.create(this), meta = {}, create;
-            superfactory.prototype = mixin(Object.create(this.prototype), mixins);
-            create = factory(superfactory.prototype, this.prototype, meta);
-            if (create) superfactory.create = create;
-            superfactory.meta = merge(meta, this.meta);
-            superfactory.base = this;
-            impl(superfactory.prototype, superfactory.meta.impl);
-            return superfactory;
-        },
-        factory: function(factory) {
-            this.create = factory;
-            return this;
-        },
-        initializer: function(initializer) {
-            var self = this;
-            this.factory(function(){
-                var instance = self.base.create.apply(this, arguments);
-                initializer.apply(instance, arguments);
-                return instance;
-            });
-            return this;
-        }
     };
+    Protoplast.prototype.__meta__ = {};
 
     exports.Protoplast = Protoplast;
 
