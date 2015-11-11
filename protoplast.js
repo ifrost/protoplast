@@ -80,8 +80,49 @@
         });
     }
 
+    /**
+     * Define prototype
+     * @param properties
+     */
+    function define(properties) {
+        for (var property in properties) {
+            this.prototype[property] = properties[property];
+        }
+        return this;
+    }
+
+    /**
+     * Assign metadata
+     * @param meta
+     */
+    function meta(meta) {
+        this.prototype.__meta__ = merge(meta, this.base.__meta__);
+        this.__meta__ = this.prototype.__meta__;
+        return this;
+    }
+
+    /**
+     * Verify whether object implements provided interfaces
+     * @param interfaces
+     * @returns {verify_interfaces}
+     */
+    function verify_interfaces(interfaces) {
+        impl(this.prototype, interfaces);
+        return this;
+    }
+
+    /**
+     * Base protoplast constructor
+     * @constructor
+     */
     var Protoplast = function() {};
 
+    /**
+     * Creates new factory function
+     * @param [mixins]
+     * @param constructor]
+     * @returns {Function}
+     */
     Protoplast.extend = function(mixins, constructor) {
         var base = this;
 
@@ -89,9 +130,11 @@
             constructor = mixins;
             mixins = [];
         }
+
         constructor = constructor || function() {
             base.apply(this, arguments);
         };
+
         mixins = mixins || [];
 
         constructor.prototype = Object.create(base.prototype);
@@ -100,24 +143,9 @@
         mixin(constructor.prototype, mixins);
 
         constructor.extend = Protoplast.extend.bind(constructor);
-
-        constructor.define = function(properties) {
-            for (var property in properties) {
-                constructor.prototype[property] = properties[property];
-            }
-            return constructor;
-        };
-
-        constructor.meta = function(meta) {
-            constructor.prototype.__meta__ = merge(meta, base.prototype.__meta__);
-            constructor.__meta__ = constructor.prototype.__meta__;
-            return constructor;
-        };
-
-        constructor.impl = function(interfaces) {
-            impl(constructor.prototype, interfaces);
-            return constructor;
-        };
+        constructor.define = define;
+        constructor.meta = meta;
+        constructor.impl = verify_interfaces;
 
         constructor.meta({});
 
