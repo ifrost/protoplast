@@ -120,7 +120,7 @@
     /**
      * Creates new factory function
      * @param [mixins]
-     * @param constructor]
+     * @param [constructor]
      * @returns {Function}
      */
     Protoplast.extend = function(mixins, constructor) {

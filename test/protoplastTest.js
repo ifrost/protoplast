@@ -188,7 +188,7 @@ describe('Protoplast', function(){
             foo.append('text');
             chai.assert.equal(foo.text, 'texttext');
 
-            new Aop(Foo).aop('append', {
+            Aop(Foo).aop('append', {
                 after: function() {
                     this.text += '!';
                 }
@@ -215,7 +215,7 @@ describe('Protoplast', function(){
             foo.append('text');
             chai.assert.equal(foo.text, 'texttext');
 
-            new Aop(Foo).aop('append', {
+            Aop(Foo).aop('append', {
                 before: function() {
                     this.text += ',';
                 }
@@ -244,7 +244,7 @@ describe('Protoplast', function(){
                 }
             });
 
-            var aop = new Aop(UCText);
+            var aop = Aop(UCText);
 
             aop.aop('append', {
                 after: function() {
@@ -271,7 +271,7 @@ describe('Protoplast', function(){
                 b: function() {}
             });
 
-            new Aop(Foo).aop(['a','b'], {
+            Aop(Foo).aop(['a','b'], {
                 after: after,
                 before: before
             });

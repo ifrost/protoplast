@@ -24,27 +24,27 @@
     /**
      * AOP Manager. Allows to add aspects to a prototype
      */
-    var Aop = Protoplast.extend(function(constructor){
-        this.constructor = constructor;
-    }).define({
+    var Aop = function(constructor) {
+        return {
+            /**
+             * Applies aspects
+             * @param {String[]} methods
+             * @param {before: Function, after: Function} aspects
+             */
+            aop: function(methods, aspects) {
 
-        /**
-         * Applies aspects
-         * @param {String[]} methods
-         * @param {before: Function, after: Function} aspects
-         */
-        aop: function(methods, aspects) {
+                if (!(methods instanceof Array)) {
+                    methods = [methods];
+                }
 
-            if (!(methods instanceof Array)) {
-                methods = [methods];
+                methods.forEach(function(method){
+                    wrap(constructor.prototype, method, aspects);
+                }, this);
+                return this;
             }
 
-            methods.forEach(function(method){
-                wrap(this.constructor.prototype, method, aspects);
-            }, this);
         }
-
-    });
+    };
 
     exports.ProtoplastExt = exports.ProtoplastExt || {};
     exports.ProtoplastExt.Aop = Aop;
