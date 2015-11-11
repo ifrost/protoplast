@@ -18,10 +18,10 @@ describe('Protoplast', function(){
                 }
             });
 
-            chai.assert.equal(Base.__meta__.num, 1);
-            chai.assert.equal(Base.__meta__.bool, true);
-            chai.assert.equal(Base.__meta__.str, 'text');
-            chai.assert.equal(Base.__meta__.obj.test, 'test');
+            chai.assert.equal(Base.meta.num, 1);
+            chai.assert.equal(Base.meta.bool, true);
+            chai.assert.equal(Base.meta.str, 'text');
+            chai.assert.equal(Base.meta.obj.test, 'test');
 
         });
 
@@ -37,9 +37,9 @@ describe('Protoplast', function(){
 
             Sub = Base.extend();
 
-            chai.assert.equal(Sub.__meta__.num, 1);
-            chai.assert.equal(Sub.__meta__.bool, true);
-            chai.assert.equal(Sub.__meta__.str, 'text');
+            chai.assert.equal(Sub.meta.num, 1);
+            chai.assert.equal(Sub.meta.bool, true);
+            chai.assert.equal(Sub.meta.str, 'text');
         });
 
         it('overrides primitive values in metadata', function(){
@@ -58,9 +58,9 @@ describe('Protoplast', function(){
                 meta.str = 'text 2';
             });
 
-            chai.assert.equal(Sub.__meta__.num, 2);
-            chai.assert.equal(Sub.__meta__.bool, false);
-            chai.assert.equal(Sub.__meta__.str, 'text 2');
+            chai.assert.equal(Sub.meta.num, 2);
+            chai.assert.equal(Sub.meta.bool, false);
+            chai.assert.equal(Sub.meta.str, 'text 2');
         });
 
         it('concatenates arrays in metadata', function(){
@@ -75,7 +75,7 @@ describe('Protoplast', function(){
                 meta.array = [4];
             });
 
-            chai.assert.deepEqual(Sub.__meta__.array, [1,2,3,4]);
+            chai.assert.deepEqual(Sub.meta.array, [1,2,3,4]);
         });
 
         it('deeply merges object values in metadata', function(){
@@ -98,12 +98,18 @@ describe('Protoplast', function(){
                 }
             });
 
-            chai.assert.deepEqual(Sub.__meta__.obj, {
+            chai.assert.deepEqual(Sub.meta.obj, {
                 sub: 2,
                 base: 1,
                 override: 'test 2',
                 array: [1,2,3,4]
             });
+        });
+
+        it('assigns meta data with instances', function() {
+            var Base = Protoplast.extend(), base;
+            base = Base.create();
+            chai.assert.equal(base.__meta__, Base.meta);
         });
 
     });
@@ -119,30 +125,96 @@ describe('Protoplast', function(){
 
             Sub = Base.extend();
 
-            base = Base();
-            sub = Sub();
+            base = Base.create();
+            sub = Sub.create();
 
             chai.assert.equal(base.value, 10);
             chai.assert.equal(sub.value, 10);
         });
 
-        it('runs init method with passed arguments when object is created', function() {
+        it('runs factory method with passed arguments when object is created', function() {
 
             var Base, base, Sub, sub;
 
-            Base = Protoplast.extend(function(proto){
-                proto.init = function(value) {
-                    this.value = value;
-                }
+            Base = Protoplast.extend().factory( function(value) {
+                var base = Protoplast.create.bind(this)();
+                base.value = value;
+                return base;
             });
 
             Sub = Base.extend();
 
-            base = Base(10);
-            sub = Sub(10);
+            base = Base.create(10);
+            sub = Sub.create(10);
 
             chai.assert.equal(base.value, 10);
             chai.assert.equal(sub.value, 10);
+        });
+
+        it('inherits all properties using factories', function() {
+
+            var Base, Sub, sub;
+
+            Base = Protoplast.extend(function(proto){
+                proto.set_value = function(value) {
+                    this.value = value;
+                }
+            }).factory(function(value){
+                var instance = Protoplast.create.bind(this)();
+                instance.set_value(value);
+                return instance;
+            });
+
+            Sub = Base.extend(function(proto){
+                proto.get_value = function() {
+                    return this.value;
+                }
+            }).factory(function(value){
+                var instance = Base.create.bind(this)(value);
+                return instance;
+            });
+
+            sub = Sub.create(10);
+            chai.assert.equal(sub.get_value(), 10);
+        });
+
+        it('inherits all properties', function() {
+
+            var Base, Sub, sub;
+
+            Base = Protoplast.extend(function(proto){
+                proto.set_value = function(value) {
+                    this.value = value;
+                }
+            }).initializer(function(value){
+                this.set_value(value);
+            });
+
+            Sub = Base.extend(function(proto){
+                proto.get_value = function() {
+                    return this.value;
+                }
+            });
+
+            sub = Sub.create(10);
+            chai.assert.equal(sub.get_value(), 10);
+        });
+
+        it('runs factory when using simplified version', function() {
+            var Base, base, Sub, sub;
+
+            Base = Protoplast.extend().initializer( function(value) {
+                this.value = value;
+            });
+
+            Sub = Base.extend();
+
+            base = Base.create(10);
+            sub = Sub.create(10);
+
+            chai.assert.equal(base.value, 10);
+            chai.assert.equal(sub.value, 10);
+
         });
 
         it('allows to run base methods', function() {
@@ -161,12 +233,13 @@ describe('Protoplast', function(){
                 }
             });
 
-            base = Base();
-            sub = Sub();
+            base = Base.create();
+            sub = Sub.create();
 
             chai.assert.equal(base.test(), 10);
             chai.assert.equal(sub.test(), 20);
         });
+
     });
 
     describe('AOP', function() {
@@ -175,25 +248,24 @@ describe('Protoplast', function(){
             var Foo, foo;
 
             Foo = Protoplast.extend(function(proto){
-                proto.init = function(text) {
-                    this.text = text;
-                };
                 proto.append = function(text) {
                     this.text += text;
-                }
+                };
+            }).initializer(function(text) {
+                this.text = text;
             });
 
-            foo = Foo('text');
+            foo = Foo.create('text');
             foo.append('text');
             chai.assert.equal(foo.text, 'texttext');
 
-            Aop(Foo).aop('append', {
+            Aop.create(Foo).aop('append', {
                 after: function() {
                     this.text += '!';
                 }
             });
 
-            foo = Foo('text');
+            foo = Foo.create('text');
             foo.append('text');
             chai.assert.equal(foo.text, 'texttext!');
         });
@@ -203,25 +275,24 @@ describe('Protoplast', function(){
             var Foo, foo;
 
             Foo = Protoplast.extend(function(proto){
-                proto.init = function(text) {
-                    this.text = text;
-                };
                 proto.append = function(text) {
                     this.text += text;
                 }
+            }).initializer(function(text) {
+                this.text = text;
             });
 
-            foo = Foo('text');
+            foo = Foo.create('text');
             foo.append('text');
             chai.assert.equal(foo.text, 'texttext');
 
-            Aop(Foo).aop('append', {
+            Aop.create(Foo).aop('append', {
                 before: function() {
                     this.text += ',';
                 }
             });
 
-            foo = Foo('text');
+            foo = Foo.create('text');
             foo.append('text');
             chai.assert.equal(foo.text, 'text,text');
         });
@@ -230,25 +301,27 @@ describe('Protoplast', function(){
 
             var Text, UCText, text;
 
-            Text = Protoplast.extend(function(proto){
-                proto.init = function(text) {
-                    this.text = text;
-                };
+            Text = Protoplast.extend(function(proto,base,meta){
+                meta.name = "Text";
                 proto.append = function(text) {
                     this.text += text;
                 }
+            }).initializer(function(text) {
+                this.text = text;
             });
 
-            UCText = Text.extend(function(proto){
+            UCText = Text.extend(function(proto,base,meta){
+                meta.name = "UCText";
                 proto.toUpperCase = function() {
                     this.text = this.text.toUpperCase();
                 }
             });
-            var aop = Aop(UCText);
+            var aop = Aop.create(UCText);
 
-            aop.aop('init', {
-                after: function() {
-                    this.toUpperCase();
+            aop.aop({
+                after: function(instance) {
+                    instance.toUpperCase();
+                    return instance;
                 }
             });
             aop.aop('append', {
@@ -263,7 +336,8 @@ describe('Protoplast', function(){
                 }
             });
 
-            text = UCText('test');
+            text = UCText.create('test');
+
             chai.assert.equal(text.text, 'TEST');
             text.append('test');
             chai.assert.equal(text.text, 'TEST,TEST');
@@ -277,12 +351,12 @@ describe('Protoplast', function(){
                 proto.b = function() {};
             });
 
-            Aop(Foo).aop(['a','b'], {
+            Aop.create(Foo).aop(['a','b'], {
                 after: after,
                 before: before
             });
 
-            foo = Foo();
+            foo = Foo.create();
 
             sinon.assert.notCalled(after);
             sinon.assert.notCalled(before);
@@ -299,6 +373,28 @@ describe('Protoplast', function(){
         });
     });
 
+    describe('EventDispatcher', function() {
+        it('allows to create event dispatchers', function() {
+
+            var CustomDispatcher, dispatcher, message = '';
+
+            CustomDispatcher = Protoplast.extend([Dispatcher], function(proto){
+                proto.hello = function() {
+                    this.dispatch('message', 'hello')
+                }
+            });
+
+            dispatcher = CustomDispatcher.create();
+
+            dispatcher.on('message', function(value){
+                message = value;
+            });
+            dispatcher.hello();
+
+            chai.assert.equal(message, 'hello');
+        });
+    });
+
     describe('Dependency Injection', function() {
         it('inject dependencies according to config', function() {
 
@@ -312,10 +408,10 @@ describe('Protoplast', function(){
                 meta.inject = {foo: 'foo'};
             });
 
-            var context = Context();
+            var context = Context.create();
 
-            context.register('foo', foo = Foo());
-            context.register('bar', bar = Bar());
+            context.register('foo', foo = Foo.create());
+            context.register('bar', bar = Bar.create());
 
             chai.assert.equal(foo.bar, bar);
             chai.assert.equal(bar.foo, foo);
@@ -333,10 +429,10 @@ describe('Protoplast', function(){
 
             Bar = Protoplast.extend(function(){});
 
-            var context = Context();
+            var context = Context.create();
 
-            context.register('foo', foo = Foo2());
-            context.register('bar', bar = Bar());
+            context.register('foo', foo = Foo2.create());
+            context.register('bar', bar = Bar.create());
 
             chai.assert.equal(foo.bar, bar);
 
@@ -358,14 +454,14 @@ describe('Protoplast', function(){
 
             Foo = Protoplast.extend(function(proto){
                 proto.injected = function() {
-                    bar = Bar();
+                    bar = Bar.create();
                     this.__fastinject__(bar);
                 }
             });
 
-            var context = Context();
-            context.register('foo', Foo());
-            context.register('dep', dep = Dep());
+            var context = Context.create();
+            context.register('foo', Foo.create());
+            context.register('dep', dep = Dep.create());
             context.build();
 
             chai.assert.equal(bar.dep.value(), 10);
@@ -397,9 +493,9 @@ describe('Protoplast', function(){
                 };
             });
 
-            var context = Context();
-            context.register('source', source = Source());
-            context.register('dest', destination = Destination());
+            var context = Context.create();
+            context.register('source', source = Source.create());
+            context.register('dest', destination = Destination.create());
             context.build();
 
             source.send('hello');
@@ -429,33 +525,11 @@ describe('Protoplast', function(){
 
             FooBar = Protoplast.extend([Foo, Bar]);
 
-            foobar = FooBar();
+            foobar = FooBar.create();
 
             chai.assert.equal(foobar.foo, 'foo');
             chai.assert.equal(foobar.bar, 'bar');
 
-        });
-    });
-
-    describe('EventDispatcher', function() {
-        it('allows to create event dispatchers', function() {
-
-            var CustomDispatcher, dispatcher, message = '';
-
-            CustomDispatcher = Protoplast.extend([Dispatcher], function(proto){
-                proto.hello = function() {
-                    this.dispatch('message', 'hello')
-                }
-            });
-
-            dispatcher = CustomDispatcher();
-
-            dispatcher.on('message', function(value){
-                message = value;
-            });
-            dispatcher.hello();
-
-            chai.assert.equal(message, 'hello');
         });
     });
 
@@ -466,7 +540,7 @@ describe('Protoplast', function(){
                 proto.foo = function(alpha, beta) {}
             });
 
-            var CorrectBase = Protoplast.extend(function(proto, base, meta){
+            var CorrectBase = Protoplast.extend(function(proto){
                 proto.foo = function(alpha, beta) {};
             });
 
@@ -501,15 +575,14 @@ describe('Protoplast', function(){
 
                 meta.inject = {pub: 'pub'};
 
-                proto.init = function() {
-                    this.view = View();
-                };
                 proto.injected = function() {
                     this.view.pub = this.pub;
                 };
                 proto.data = function(data) {
                     this.view.show(data.clicks);
                 };
+            }).initializer(function() {
+                this.view = View.create();
             });
 
             // create a clickable component that displays number of clicks
@@ -541,10 +614,6 @@ describe('Protoplast', function(){
             Repository = Protoplast.extend(function(proto, base, meta){
                 meta.inject = {sub: 'sub', view: 'view'};
 
-                proto.init = function() {
-                    this.clicks = 0;
-                };
-
                 proto.injected = function() {
                     this.sub('click/increment').add(this.increment);
                     this.refresh();
@@ -559,20 +628,23 @@ describe('Protoplast', function(){
                     this.view.data({clicks: this.clicks});
                 }
 
+            }).initializer(function() {
+                this.clicks = 0;
             });
 
             // capture view for testing
             var _view = null;
-            Aop(View).aop('init', {
-                after: function() {
-                    _view = this;
+            Aop.create(View).aop({
+                after: function(obj) {
+                    _view = obj;
+                    return obj;
                 }
             });
 
-            var context = Context();
-            context.register('view', RootView());
-            context.register('ad', ActionDispatcher());
-            context.register('repo', repository = Repository());
+            var context = Context.create();
+            context.register('view', RootView.create());
+            context.register('ad', ActionDispatcher.create());
+            context.register('repo', repository = Repository.create());
             context.build();
 
             chai.assert.equal(repository.clicks, 0);

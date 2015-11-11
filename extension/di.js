@@ -11,27 +11,6 @@
          */
         proto._objects = null;
 
-        proto.init = function() {
-            var self = this;
-            this._objects = {
-                pub: function (topic, message) {
-                    self._dispatcher.dispatch(topic, message);
-                },
-                sub: function (topic) {
-                    var instance_self = this;
-                    return {
-                        add: function (handler) {
-                            self._dispatcher.on(topic, handler, instance_self);
-                        },
-                        remove: function (handler) {
-                            self._dispatcher.off(topic, handler, instance_self);
-                        }
-                    }
-                }
-            };
-            this._dispatcher = Dispatcher();
-        };
-
         /**
          * Registers object in the DI context
          * @param {String} id
@@ -84,6 +63,25 @@
             }.bind(this));
         };
 
+    }).initializer(function() {
+        var self = this;
+        this._objects = {
+            pub: function (topic, message) {
+                self._dispatcher.dispatch(topic, message);
+            },
+            sub: function (topic) {
+                var instance_self = this;
+                return {
+                    add: function (handler) {
+                        self._dispatcher.on(topic, handler, instance_self);
+                    },
+                    remove: function (handler) {
+                        self._dispatcher.off(topic, handler, instance_self);
+                    }
+                }
+            }
+        };
+        this._dispatcher = Dispatcher.create();
     });
 
     exports.ProtoplastExt = exports.ProtoplastExt || {};

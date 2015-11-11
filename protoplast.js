@@ -34,7 +34,7 @@
      */
     function mix(destination, source) {
         for (var property in source) {
-            if (property !== 'init' && property.substr(0, 2) !== '__') {
+            if (property.substr(0, 2) !== '__') {
                 destination[property] = source[property];
             }
         }
@@ -49,7 +49,7 @@
      */
     function mixin(instance, mixins) {
         mixins.forEach(function (Mixin) {
-            mix(instance, Mixin());
+            mix(instance, Mixin.create());
         });
         return instance;
     }
@@ -61,8 +61,8 @@
      */
     function impl(proto, interfaces) {
         var exists, is_function, matches_params, error;
-        interfaces.forEach(function(clazz){
-            var i = clazz.__prototype__;
+        interfaces.forEach(function(superfactory){
+            var i = superfactory.prototype;
             for (var property in i) {
                 if (i.hasOwnProperty(property) && typeof i[property] === "function") {
                     exists = proto[property];
@@ -111,11 +111,48 @@
         return constructor;
     }
 
-    var Protoplast = Object.create({});
-    Protoplast.init = function(){};
-    Protoplast.__meta__ = {impl: [], name: "Protoplast"};
+    var Protoplast = {
+        prototype: {},
+        base: undefined,
+        meta: {impl: [], name: "Protoplast"},
+        create: function() {
+            var instance = Object.create(this.prototype);
+            instance.__meta__ = this.meta;
+            return instance;
+        },
+        extend: function(mixins, factory) {
 
-    Protoplast.extend = extend;
+            if (arguments.length === 1 && !(mixins instanceof Array)) {
+                factory = mixins;
+                mixins = [];
+            }
+
+            factory = factory || function() {};
+            mixins = mixins || [];
+
+            var superfactory = Object.create(this), meta = {}, create;
+            superfactory.prototype = mixin(Object.create(this.prototype), mixins);
+            create = factory(superfactory.prototype, this.prototype, meta);
+            if (create) superfactory.create = create;
+            superfactory.meta = merge(meta, this.meta);
+            superfactory.base = this;
+            impl(superfactory.prototype, superfactory.meta.impl);
+            return superfactory;
+        },
+        factory: function(factory) {
+            this.create = factory;
+            return this;
+        },
+        initializer: function(initializer) {
+            var self = this;
+            this.factory(function(){
+                var instance = self.base.create.apply(this, arguments);
+                initializer.apply(instance, arguments);
+                return instance;
+            });
+            return this;
+        }
+    };
 
     exports.Protoplast = Protoplast;
 

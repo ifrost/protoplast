@@ -10,10 +10,13 @@
      */
     function wrap(proto, method, aspects) {
         var origin = proto[method];
+        if (!proto[method]) {
+            throw Error("Can't create aspect for method " + method + ". Method does not exist.")
+        }
         proto[method] = function () {
             if (aspects.before) aspects.before.apply(this, arguments);
             var result = origin.apply(this, arguments);
-            if (aspects.after) result = aspects.after.apply(this, arguments);
+            if (aspects.after) result = aspects.after.call(this, result, arguments);
             return result;
         }
     }
@@ -23,10 +26,6 @@
      */
     var Aop = Protoplast.extend(function(proto){
 
-        proto.init = function(constructor) {
-            this.aop_proto = constructor.__prototype__;
-        };
-
         /**
          * Applies aspects
          * @param {String[]} methods
@@ -34,15 +33,28 @@
          */
         proto.aop = function(methods, aspects) {
 
+            var to_wrap;
+
+            if (arguments.length == 1) {
+                to_wrap = this.superfactory;
+                aspects = methods;
+                methods = ['create'];
+            }
+            else {
+                to_wrap = this.superfactory.prototype;
+            }
+
             if (!(methods instanceof Array)) {
                 methods = [methods];
             }
 
             methods.forEach(function(method){
-                wrap(this.aop_proto, method, aspects);
+                wrap(to_wrap, method, aspects);
             }, this);
         };
 
+    }).initializer(function(superfactory){
+        this.superfactory = superfactory;
     });
 
     exports.ProtoplastExt = exports.ProtoplastExt || {};
