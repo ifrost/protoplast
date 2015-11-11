@@ -488,10 +488,14 @@ describe('Protoplast', function(){
 
             var RootView, View, ActionDispatcher, Repository, view, repository, _view;
 
+            function ViewFactory() {
+                _view = new View();
+                return _view;
+            }
+
             // create root view that will be injected into repositories
             RootView = Protoplast.extend(function() {
-                this.view = new View();
-                _view = this.view;
+                this.view = ViewFactory();
             }).define({
                 injected: function() {
                     this.view.pub = this.pub;
