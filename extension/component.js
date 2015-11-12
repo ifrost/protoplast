@@ -1,4 +1,4 @@
-(function(exports){
+(function(exports) {
 
     var Protoplast = exports.Protoplast;
 
@@ -16,13 +16,14 @@
         /**
          * Template method, used to create DOM of the component
          */
-        create: function() {},
+        create: function() {
+        },
 
         /**
          * Destroy the component and all child components
          */
         destroy: function() {
-            this._children.forEach(function(child){
+            this._children.forEach(function(child) {
                 this.remove(child);
             }, this);
         },

@@ -1,4 +1,4 @@
-(function (window) {
+(function(window) {
     'use strict';
 
     var url_to_state = {

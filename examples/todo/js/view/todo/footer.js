@@ -12,7 +12,7 @@
             }
         },
 
-        create: function() {
+        create: function () {
 
             this.$root.classed('footer', true);
 
@@ -35,13 +35,13 @@
             this.update_selection();
         },
 
-        update_selection: function() {
+        update_selection: function () {
             this.filter_all.classed('selected', this.view_state.get_state() === window.ViewStateModel.ALL);
             this.filter_undone.classed('selected', this.view_state.get_state() === window.ViewStateModel.UNDONE);
             this.filter_done.classed('selected', this.view_state.get_state() === window.ViewStateModel.DONE);
         },
 
-        update_counter: function() {
+        update_counter: function () {
             var count_undone = this.todos.undone().length,
                 count_all = this.todos.all().length,
                 count_done = this.todos.done().length,

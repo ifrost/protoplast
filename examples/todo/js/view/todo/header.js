@@ -5,7 +5,7 @@
 
         tag: 'header',
 
-        create: function() {
+        create: function () {
 
             this.$root.classed('header', true);
 
@@ -14,14 +14,14 @@
                 .classed('new-todo', true)
                 .attr('placeholder', 'What needs to be done?')
                 .property('autofocus', true)
-                .on('keypress', function(){
+                .on('keypress', function () {
                     if (d3.event.keyCode === 13) {
                         this.submit_todo();
                     }
                 }.bind(this));
         },
 
-        submit_todo:  function() {
+        submit_todo: function () {
             var text = this.input.property('value').trim();
             if (text.length) {
                 this.pub('todos/add', text);

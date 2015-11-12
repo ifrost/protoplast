@@ -1,4 +1,4 @@
-(function (window) {
+(function(window) {
     'use strict';
 
     window.Model = window.Protoplast.extend([window.ProtoplastExt.Dispatcher]);

@@ -1,4 +1,4 @@
-(function(exports){
+(function(exports) {
 
     var Dispatcher = exports.ProtoplastExt.Dispatcher;
 
@@ -7,16 +7,16 @@
         __init__: function() {
             var self = this;
             this._objects = {
-                pub: function (topic, message) {
+                pub: function(topic, message) {
                     self._dispatcher.dispatch(topic, message);
                 },
-                sub: function (topic) {
+                sub: function(topic) {
                     var instance_self = this;
                     return {
-                        add: function (handler) {
+                        add: function(handler) {
                             self._dispatcher.on(topic, handler, instance_self);
                         },
-                        remove: function (handler) {
+                        remove: function(handler) {
                             self._dispatcher.off(topic, handler, instance_self);
                         }
                     }
@@ -34,10 +34,10 @@
 
         /**
          * Registers object in the DI context
-         * @param {String} id
+         * @param {String} [id]
          * @param {Object} instance
          */
-        register: function (id, instance) {
+        register: function(id, instance) {
             if (arguments.length == 1) {
                 instance = id;
             }
@@ -63,15 +63,17 @@
         inject: function(instance, config) {
             var self = this, id;
             for (var property in config) {
-                id = config[property];
+                if (config.hasOwnProperty(property)) {
+                    id = config[property];
 
-                (function(id){
-                    Object.defineProperty(instance, property, {
-                        get: function() {
-                            return self._objects[id];
-                        }
-                    });
-                })(id);
+                    (function(id) {
+                        Object.defineProperty(instance, property, {
+                            get: function() {
+                                return self._objects[id];
+                            }
+                        });
+                    })(id);
+                }
             }
         },
 

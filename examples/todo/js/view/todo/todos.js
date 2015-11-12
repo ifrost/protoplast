@@ -12,7 +12,7 @@
             }
         },
 
-        create: function() {
+        create: function () {
 
             this.$root.classed('todo-list', true);
 
@@ -21,12 +21,12 @@
 
             var self = this;
             d3.select(window)
-                .on('click', function() {
+                .on('click', function () {
                     if (!d3.select(d3.event.target).classed('edit')) {
                         self.exit_edit_mode();
                     }
                 })
-                .on('keyup', function() {
+                .on('keyup', function () {
                     if (d3.event.keyCode === 27) {
                         self.exit_edit_mode();
                     }
@@ -35,7 +35,7 @@
             this.render();
         },
 
-        get_data: function() {
+        get_data: function () {
             var state = this.view_state.get_state(), data;
             if (state == window.ViewStateModel.ALL) {
                 data = this.todos.all();
@@ -49,7 +49,7 @@
             return data;
         },
 
-        render: function() {
+        render: function () {
             var data = this.get_data();
 
             var self = this;
@@ -73,7 +73,7 @@
                 .attr('type', 'checkbox');
             new_div
                 .append('label')
-                .on('dblclick', function(d) {
+                .on('dblclick', function (d) {
                     self.exit_edit_mode();
                     self.enter_edit_mode(d);
                 });
@@ -85,7 +85,7 @@
             new_li
                 .append('input')
                 .classed('edit', true)
-                .on('keypress', function(todo){
+                .on('keypress', function (todo) {
                     var text = d3.select(this).property('value').trim();
                     if (d3.event.keyCode === 13) {
                         self.exit_edit_mode();
@@ -106,24 +106,30 @@
                 .remove();
 
             // update
-            update.classed('completed', function(d){return d.done});
+            update.classed('completed', function (d) {
+                return d.done
+            });
             var div = update.select('div');
             div.select('label')
-                .text(function(d){return d.text});
+                .text(function (d) {
+                    return d.text
+                });
             div.select('input.toggle')
-                .property('checked', function(d){return d.done});
+                .property('checked', function (d) {
+                    return d.done
+                });
             div.select('input.edit');
             div.select('button.destroy');
         },
 
-        enter_edit_mode: function(todo) {
-            var li = this.$root.selectAll('li').filter(function(d){
+        enter_edit_mode: function (todo) {
+            var li = this.$root.selectAll('li').filter(function (d) {
                 return d === todo;
             }).classed('editing', true);
             li.selectAll('input').attr('value', todo.text).node().focus();
         },
 
-        exit_edit_mode: function() {
+        exit_edit_mode: function () {
             this.$root.selectAll('li').classed('editing', false);
         }
     });

@@ -1,10 +1,10 @@
-(function (window) {
+(function(window) {
     'use strict';
 
     window.TodoController = window.Controller.extend({
 
         __meta__: {
-            inject:{todos: 'todos'}
+            inject: {todos: 'todos'}
         },
 
         injected: function() {
@@ -33,7 +33,7 @@
         },
 
         clear_done: function() {
-            this.todos.done().forEach(function(todo){
+            this.todos.done().forEach(function(todo) {
                 this.remove_todo(todo);
             }, this)
         },

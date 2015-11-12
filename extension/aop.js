@@ -1,17 +1,17 @@
-(function(exports){
+(function(exports) {
 
     /**
      * Wraps the method with aspects
      * @param {Object} proto
      * @param {String} method
-     * @param {before: Function, after:Function} aspects
+     * @param {{before: Function, after:Function}} aspects
      */
     function wrap(proto, method, aspects) {
         var origin = proto[method];
         if (!proto[method]) {
             throw Error("Can't create aspect for method " + method + ". Method does not exist.")
         }
-        proto[method] = function () {
+        proto[method] = function() {
             if (aspects.before) aspects.before.apply(this, arguments);
             var result = origin.apply(this, arguments);
             if (aspects.after) result = aspects.after.call(this, result, arguments);
@@ -26,8 +26,8 @@
         return {
             /**
              * Applies aspects
-             * @param {String[]} methods
-             * @param {before: Function, after: Function} aspects
+             * @param {String[]|String} methods
+             * @param {{before: Function, after: Function}} aspects
              */
             aop: function(methods, aspects) {
 
@@ -35,7 +35,7 @@
                     methods = [methods];
                 }
 
-                methods.forEach(function(method){
+                methods.forEach(function(method) {
                     wrap(constructor.prototype, method, aspects);
                 }, this);
                 return this;

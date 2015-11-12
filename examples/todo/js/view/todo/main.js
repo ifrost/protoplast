@@ -11,7 +11,7 @@
             inject: {todos: 'todos'}
         },
 
-        create: function() {
+        create: function () {
 
             this.$root.classed('main', true);
 
@@ -26,11 +26,11 @@
             this.update_toggle();
         },
 
-        toggle: function() {
+        toggle: function () {
             this.pub('todos/toggle_all', this.toggleAll.property('checked'));
         },
 
-        update_toggle: function() {
+        update_toggle: function () {
             var checked = this.todos.all().length === this.todos.done().length;
             this.toggleAll.property('checked', checked);
             this.toggleAll.style('display', this.todos.all().length ? 'block' : 'none');

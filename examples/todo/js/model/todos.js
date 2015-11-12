@@ -1,4 +1,4 @@
-(function (window) {
+(function(window) {
     'use strict';
 
     window.TodosModel = window.Model.extend([window.Storage], {
@@ -22,7 +22,9 @@
         },
 
         remove: function(todo) {
-            this._todos = this._todos.filter(function(t){return t !== todo})
+            this._todos = this._todos.filter(function(t) {
+                return t !== todo
+            })
         },
 
         toggle: function(todo) {
@@ -30,23 +32,28 @@
         },
 
         toggle_all: function(value) {
-            this._todos.forEach(function(todo){
+            this._todos.forEach(function(todo) {
                 todo.done = value;
             });
         },
 
-        refresh: function() {},
+        refresh: function() {
+        },
 
         all: function() {
             return this._todos;
         },
 
         undone: function() {
-            return this._todos.filter(function(todo){return !todo.done});
+            return this._todos.filter(function(todo) {
+                return !todo.done
+            });
         },
 
         done: function() {
-            return this._todos.filter(function(todo){return todo.done});
+            return this._todos.filter(function(todo) {
+                return todo.done
+            });
         }
 
     });

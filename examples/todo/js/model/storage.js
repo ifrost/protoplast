@@ -1,4 +1,4 @@
-(function(window){
+(function(window) {
 
     window.Storage = window.Protoplast.extend({
 

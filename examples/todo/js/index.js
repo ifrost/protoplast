@@ -1,4 +1,4 @@
-(function(window){
+(function(window) {
 
     var app = new App();
     app.run({

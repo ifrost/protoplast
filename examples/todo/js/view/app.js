@@ -1,4 +1,4 @@
-(function (window) {
+(function(window) {
     'use strict';
 
     var HeaderView = window.HeaderView,
@@ -9,9 +9,9 @@
 
         tag: 'section',
 
-        create:function() {
+        create: function() {
 
-            this.$root.classed('todoapp', true)
+            this.$root.classed('todoapp', true);
 
             this.add(new HeaderView());
             this.add(new MainView());

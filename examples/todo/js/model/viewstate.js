@@ -1,4 +1,4 @@
-(function (window) {
+(function(window) {
     'use strict';
 
     window.ViewStateModel = window.Model.extend({

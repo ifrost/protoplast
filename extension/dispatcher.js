@@ -1,4 +1,4 @@
-(function(exports){
+(function(exports) {
     "use strict";
 
     var Protoplast = exports.Protoplast;
@@ -9,22 +9,22 @@
      */
     var Dispatcher = Protoplast.extend({
 
-        dispatch: function (topic, message) {
+        dispatch: function(topic, message) {
             this._topics = this._topics || {};
-            (this._topics[topic] || []).forEach(function (config) {
+            (this._topics[topic] || []).forEach(function(config) {
                 config.handler.call(config.context, message);
             })
         },
 
-        on: function (topic, handler, context) {
+        on: function(topic, handler, context) {
             this._topics = this._topics || {};
             this._topics[topic] = this._topics[topic] || [];
             this._topics[topic].push({handler: handler, context: context});
         },
 
-        off: function (topic, handler, context) {
+        off: function(topic, handler, context) {
             this._topics = this._topics || {};
-            this._topics[topic] = this._topics[topic].filter(function (config) {
+            this._topics[topic] = this._topics[topic].filter(function(config) {
                 return handler ? config.handler !== handler : config.context !== context
             })
         }

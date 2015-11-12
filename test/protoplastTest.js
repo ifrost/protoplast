@@ -1,12 +1,12 @@
-describe('Protoplast', function(){
+describe('Protoplast', function() {
 
     var Dispatcher = ProtoplastExt.Dispatcher,
         Context = ProtoplastExt.Context,
         Aop = ProtoplastExt.Aop;
 
-    describe('Metadata', function(){
+    describe('Metadata', function() {
 
-        it('assings metadata to the prototype', function(){
+        it('assings metadata to the prototype', function() {
             var Base;
 
             Base = Protoplast.extend({
@@ -24,7 +24,7 @@ describe('Protoplast', function(){
             chai.assert.equal(Base.__meta__.obj.test, 'test');
         });
 
-        it('merges primitive values in metadata', function(){
+        it('merges primitive values in metadata', function() {
 
             var Base, Sub;
 
@@ -43,7 +43,7 @@ describe('Protoplast', function(){
             chai.assert.equal(Sub.__meta__.str, 'text');
         });
 
-        it('overrides primitive values in metadata', function(){
+        it('overrides primitive values in metadata', function() {
 
             var Base, Sub;
 
@@ -68,21 +68,21 @@ describe('Protoplast', function(){
             chai.assert.equal(Sub.__meta__.str, 'text 2');
         });
 
-        it('concatenates arrays in metadata', function(){
+        it('concatenates arrays in metadata', function() {
 
             var Base, Sub;
 
             Base = Protoplast.extend({
-                __meta__: {array: [1,2,3]}
+                __meta__: {array: [1, 2, 3]}
             });
             Sub = Base.extend({
                 __meta__: {array: [4]}
             });
 
-            chai.assert.deepEqual(Sub.__meta__.array, [1,2,3,4]);
+            chai.assert.deepEqual(Sub.__meta__.array, [1, 2, 3, 4]);
         });
 
-        it('deeply merges object values in metadata', function(){
+        it('deeply merges object values in metadata', function() {
 
             var Base, Sub;
 
@@ -91,7 +91,7 @@ describe('Protoplast', function(){
                     obj: {
                         base: 1,
                         override: 'test',
-                        array: [1,2,3]
+                        array: [1, 2, 3]
                     }
                 }
             });
@@ -110,7 +110,7 @@ describe('Protoplast', function(){
                 sub: 2,
                 base: 1,
                 override: 'test 2',
-                array: [1,2,3,4]
+                array: [1, 2, 3, 4]
             });
         });
 
@@ -122,7 +122,7 @@ describe('Protoplast', function(){
 
     });
 
-    describe('Inheritance', function(){
+    describe('Inheritance', function() {
         it('creates a simple prototype', function() {
 
             var Base, base, Sub, sub;
@@ -145,7 +145,7 @@ describe('Protoplast', function(){
             var Base, Sub, sub;
 
             Base = Protoplast.extend({
-                __init__: function(value){
+                __init__: function(value) {
                     this.set_value(value);
                 },
                 set_value: function(value) {
@@ -245,7 +245,7 @@ describe('Protoplast', function(){
             chai.assert.equal(foo.text, 'text,text');
         });
 
-        it('runs aspects on subinstances', function(){
+        it('runs aspects on subinstances', function() {
 
             var Text, UCText, text;
 
@@ -287,11 +287,13 @@ describe('Protoplast', function(){
             var Foo, foo, before = sinon.spy(), after = sinon.spy();
 
             Foo = Protoplast.extend({
-                a: function() {},
-                b: function() {}
+                a: function() {
+                },
+                b: function() {
+                }
             });
 
-            Aop(Foo).aop(['a','b'], {
+            Aop(Foo).aop(['a', 'b'], {
                 after: after,
                 before: before
             });
@@ -326,7 +328,7 @@ describe('Protoplast', function(){
 
             dispatcher = new CustomDispatcher();
 
-            dispatcher.on('message', function(value){
+            dispatcher.on('message', function(value) {
                 message = value;
             });
             dispatcher.hello();
@@ -362,7 +364,7 @@ describe('Protoplast', function(){
 
         });
 
-        it('inherits dependencies config from the base prototype', function(){
+        it('inherits dependencies config from the base prototype', function() {
 
             var Foo, Foo2, Bar, foo, bar;
 
@@ -417,7 +419,7 @@ describe('Protoplast', function(){
     });
 
     describe('Pub/Sub', function() {
-        it('dispatches messages between objects', function(){
+        it('dispatches messages between objects', function() {
 
             var Source, Destination, source, destination;
 
@@ -482,34 +484,6 @@ describe('Protoplast', function(){
             chai.assert.equal(foobar.foo, 'foo');
             chai.assert.equal(foobar.bar, 'bar');
 
-        });
-    });
-
-    describe('Interfaces', function(){
-        it('verifies if prototype implements passed interfaces', function(){
-
-            var Interface = Protoplast.extend({
-                foo: function(alpha, beta) {}
-            });
-
-            var CorrectBase = Protoplast.extend({
-                foo: function(alpha, beta) {}
-            });
-
-            var IncorrectBase = Protoplast.extend({
-                foo: function(gamma) {}
-            });
-
-            function correctSub() {
-                CorrectBase.extend().impl([Interface]);
-            }
-
-            function incorrectSub() {
-                IncorrectBase.extend().impl([Interface]);
-            }
-
-            correctSub();
-            chai.assert.throw(incorrectSub);
         });
     });
 

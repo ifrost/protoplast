@@ -1,4 +1,4 @@
-(function (window) {
+(function(window) {
     'use strict';
 
     window.ViewStateController = window.Controller.extend({
@@ -7,11 +7,11 @@
             inject: {view_state: 'viewstate'}
         },
 
-       injected: function() {
+        injected: function() {
             this.sub('view/change').add(this.change_view_state);
         },
 
-       change_view_state: function(state){
+        change_view_state: function(state) {
             this.view_state.change(state);
         }
 

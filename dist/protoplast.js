@@ -10,17 +10,19 @@
      */
     function merge(destination, source) {
         for (var property in source) {
-            if (source[property] instanceof Array) {
-                destination[property] = source[property].concat(destination[property] || []);
-            }
-            else if (['number','boolean','string'].indexOf(typeof(source[property])) !== -1) {
-                if (!destination.hasOwnProperty(property)) {
-                    destination[property] = source[property];
+            if (source.hasOwnProperty(property)) {
+                if (source[property] instanceof Array) {
+                    destination[property] = source[property].concat(destination[property] || []);
                 }
-            }
-            else {
-                destination[property] = destination[property] || {};
-                merge(destination[property], source[property]);
+                else if (['number', 'boolean', 'string'].indexOf(typeof(source[property])) !== -1) {
+                    if (!destination.hasOwnProperty(property)) {
+                        destination[property] = source[property];
+                    }
+                }
+                else {
+                    destination[property] = destination[property] || {};
+                    merge(destination[property], source[property]);
+                }
             }
         }
         return destination;
@@ -34,7 +36,7 @@
      */
     function mix(destination, source) {
         for (var property in source) {
-            if (property.substr(0, 2) !== '__') {
+            if (source.hasOwnProperty(property) && property.substr(0, 2) !== '__') {
                 destination[property] = source[property];
             }
         }
@@ -48,53 +50,18 @@
      * @returns {Object}
      */
     function mixin(instance, mixins) {
-        mixins.forEach(function (Mixin) {
+        mixins.forEach(function(Mixin) {
             mix(instance, Mixin.prototype);
         });
         return instance;
     }
 
     /**
-     * Verifies whether prototype implements all methods in interfaces
-     * @param proto
-     * @param interfaces
-     */
-    function impl(proto, interfaces) {
-        var exists, is_function, matches_params, error;
-        interfaces.forEach(function(superfactory){
-            var i = superfactory.prototype;
-            for (var property in i) {
-                if (i.hasOwnProperty(property) && typeof i[property] === "function") {
-                    exists = proto[property];
-                    is_function = typeof proto[property] === "function";
-                    matches_params = is_function && proto[property].length === i[property].length;
-                    if (!exists || !is_function || !matches_params) {
-                        error = 'Prototype ' + proto.__meta__.name + ' should implement method ' + property + ' with ' + i[property].length + ' param(s), ';
-                        if (!exists) error += property + ' not found in the prototype';
-                        if (exists && !is_function) error += property + ' is not a function';
-                        if (exists && is_function && !matches_params) error += proto[property].length + ' param(s) found';
-                        throw new Error(error);
-                    }
-                }
-            }
-        });
-    }
-
-    /**
-     * Verify whether object implements provided interfaces
-     * @param interfaces
-     * @returns {verify_interfaces}
-     */
-    function verify_interfaces(interfaces) {
-        impl(this.prototype, interfaces);
-        return this;
-    }
-
-    /**
      * Base protoplast constructor
      * @constructor
      */
-    var Protoplast = function() {};
+    var Protoplast = function() {
+    };
 
     /**
      * Creates new factory function
@@ -105,37 +72,38 @@
     Protoplast.extend = function(mixins, definition) {
         var base = this, constructor;
 
+        // set defaults
         if (!(mixins instanceof Array)) {
             definition = mixins;
             mixins = [];
         }
-
         definition = definition || {};
-
+        mixins = mixins || [];
         definition.__meta__ = definition.__meta__ || {};
-
         constructor = definition.__init__ || function() {
             base.apply(this, arguments);
         };
 
-        mixins = mixins || [];
-
+        // create prototype
         constructor.prototype = Object.create(base.prototype);
         constructor.base = base.prototype;
 
+        // mixin
         mixin(constructor.prototype, mixins);
 
+        // create prototype properties
         for (var property in definition) {
             if (property !== '__meta__' && property !== '__init') {
                 constructor.prototype[property] = definition[property];
             }
         }
 
+        // assign metadata
         constructor.prototype.__meta__ = merge(definition.__meta__, constructor.base.__meta__);
         constructor.__meta__ = constructor.prototype.__meta__;
 
+        // assign extend function
         constructor.extend = Protoplast.extend.bind(constructor);
-        constructor.impl = verify_interfaces;
 
         return constructor;
     };
@@ -144,20 +112,20 @@
     exports.Protoplast = Protoplast;
 
 })(this);
-(function(exports){
+(function(exports) {
 
     /**
      * Wraps the method with aspects
      * @param {Object} proto
      * @param {String} method
-     * @param {before: Function, after:Function} aspects
+     * @param {{before: Function, after:Function}} aspects
      */
     function wrap(proto, method, aspects) {
         var origin = proto[method];
         if (!proto[method]) {
             throw Error("Can't create aspect for method " + method + ". Method does not exist.")
         }
-        proto[method] = function () {
+        proto[method] = function() {
             if (aspects.before) aspects.before.apply(this, arguments);
             var result = origin.apply(this, arguments);
             if (aspects.after) result = aspects.after.call(this, result, arguments);
@@ -172,8 +140,8 @@
         return {
             /**
              * Applies aspects
-             * @param {String[]} methods
-             * @param {before: Function, after: Function} aspects
+             * @param {String[]|String} methods
+             * @param {{before: Function, after: Function}} aspects
              */
             aop: function(methods, aspects) {
 
@@ -181,7 +149,7 @@
                     methods = [methods];
                 }
 
-                methods.forEach(function(method){
+                methods.forEach(function(method) {
                     wrap(constructor.prototype, method, aspects);
                 }, this);
                 return this;
@@ -194,7 +162,7 @@
     exports.ProtoplastExt.Aop = Aop;
 
 })(window);
-(function(exports){
+(function(exports) {
     "use strict";
 
     var Protoplast = exports.Protoplast;
@@ -205,22 +173,22 @@
      */
     var Dispatcher = Protoplast.extend({
 
-        dispatch: function (topic, message) {
+        dispatch: function(topic, message) {
             this._topics = this._topics || {};
-            (this._topics[topic] || []).forEach(function (config) {
+            (this._topics[topic] || []).forEach(function(config) {
                 config.handler.call(config.context, message);
             })
         },
 
-        on: function (topic, handler, context) {
+        on: function(topic, handler, context) {
             this._topics = this._topics || {};
             this._topics[topic] = this._topics[topic] || [];
             this._topics[topic].push({handler: handler, context: context});
         },
 
-        off: function (topic, handler, context) {
+        off: function(topic, handler, context) {
             this._topics = this._topics || {};
-            this._topics[topic] = this._topics[topic].filter(function (config) {
+            this._topics[topic] = this._topics[topic].filter(function(config) {
                 return handler ? config.handler !== handler : config.context !== context
             })
         }
@@ -230,7 +198,7 @@
     exports.ProtoplastExt.Dispatcher = Dispatcher;
 
 })(this);
-(function(exports){
+(function(exports) {
 
     var Dispatcher = exports.ProtoplastExt.Dispatcher;
 
@@ -239,16 +207,16 @@
         __init__: function() {
             var self = this;
             this._objects = {
-                pub: function (topic, message) {
+                pub: function(topic, message) {
                     self._dispatcher.dispatch(topic, message);
                 },
-                sub: function (topic) {
+                sub: function(topic) {
                     var instance_self = this;
                     return {
-                        add: function (handler) {
+                        add: function(handler) {
                             self._dispatcher.on(topic, handler, instance_self);
                         },
-                        remove: function (handler) {
+                        remove: function(handler) {
                             self._dispatcher.off(topic, handler, instance_self);
                         }
                     }
@@ -266,10 +234,10 @@
 
         /**
          * Registers object in the DI context
-         * @param {String} id
+         * @param {String} [id]
          * @param {Object} instance
          */
-        register: function (id, instance) {
+        register: function(id, instance) {
             if (arguments.length == 1) {
                 instance = id;
             }
@@ -295,15 +263,17 @@
         inject: function(instance, config) {
             var self = this, id;
             for (var property in config) {
-                id = config[property];
+                if (config.hasOwnProperty(property)) {
+                    id = config[property];
 
-                (function(id){
-                    Object.defineProperty(instance, property, {
-                        get: function() {
-                            return self._objects[id];
-                        }
-                    });
-                })(id);
+                    (function(id) {
+                        Object.defineProperty(instance, property, {
+                            get: function() {
+                                return self._objects[id];
+                            }
+                        });
+                    })(id);
+                }
             }
         },
 
@@ -322,7 +292,7 @@
     exports.ProtoplastExt.Context = Context;
 
 })(window);
-(function(exports){
+(function(exports) {
 
     var Protoplast = exports.Protoplast;
 
@@ -340,13 +310,14 @@
         /**
          * Template method, used to create DOM of the component
          */
-        create: function() {},
+        create: function() {
+        },
 
         /**
          * Destroy the component and all child components
          */
         destroy: function() {
-            this._children.forEach(function(child){
+            this._children.forEach(function(child) {
                 this.remove(child);
             }, this);
         },
