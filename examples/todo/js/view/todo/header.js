@@ -3,6 +3,8 @@
 
     window.HeaderView = window.View.extend().define({
 
+        tag: 'header',
+
         create: function() {
 
             this.$root.classed('header', true);
@@ -27,6 +29,6 @@
             }
         }
 
-    }).meta({tag: 'header'});
+    });
 
 })(window);

@@ -7,6 +7,8 @@
 
     window.AppView = window.View.extend().define({
 
+        tag: 'section',
+
         create:function() {
 
             this.$root.classed('todoapp', true)
@@ -16,6 +18,6 @@
             this.add(new FooterView());
         }
 
-    }).meta({tag: 'section'});
+    });
 
 })(window);

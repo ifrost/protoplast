@@ -5,6 +5,8 @@
 
     window.MainView = window.View.extend().define({
 
+        tag: 'section',
+
         create: function() {
 
             this.$root.classed('main', true);
@@ -31,7 +33,6 @@
         }
 
     }).meta({
-        tag: 'section',
         inject: {todos: 'todos'}
     });
 

@@ -3,6 +3,8 @@
 
     window.InfoView = window.View.extend().define({
 
+        tag: 'footer',
+
         create: function() {
 
             this.$root.classed('info', true);
@@ -13,6 +15,6 @@
             this.$root.append('p').html('Part of <a href="http://todomvc.com">TodoMVC</a>')
         }
 
-    }).meta({tag: 'footer'});
+    });
 
 })(window);

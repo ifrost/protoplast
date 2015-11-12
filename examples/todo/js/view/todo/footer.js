@@ -3,6 +3,8 @@
 
     window.FooterView = window.View.extend().define({
 
+        tag: 'footer',
+
         create: function() {
 
             this.$root.classed('footer', true);
@@ -44,7 +46,6 @@
         }
 
     }).meta({
-        tag: 'footer',
         inject: {
             todos: 'todos',
             view_state: 'viewstate'

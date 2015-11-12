@@ -3,6 +3,8 @@
 
     window.TodosView = window.View.extend().define({
 
+        tag: 'ul',
+
         create: function() {
 
             this.$root.classed('todo-list', true);
@@ -118,7 +120,6 @@
             this.$root.selectAll('li').classed('editing', false);
         }
     }).meta({
-        tag: 'ul',
         inject: {
             todos: 'todos',
             view_state: 'viewstate'

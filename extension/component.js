@@ -8,7 +8,7 @@
      */
     var Component = Protoplast.extend(function() {
         this._children = [];
-        this.root = document.createElement(this.__meta__.tag || 'div');
+        this.root = document.createElement(this.tag || 'div');
     }).define({
 
         /**
