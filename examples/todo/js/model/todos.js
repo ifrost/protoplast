@@ -1,15 +1,17 @@
 (function (window) {
     'use strict';
 
-    window.TodosModel = window.Model.extend([window.Storage],
+    window.TodosModel = window.Model.extend([window.Storage], {
 
-        function() {
+        __meta__: {
+            update_after: ['add', 'remove', 'toggle', 'toggle_all', 'refresh']
+        },
+
+        __init__: function() {
             this.store_id('todos');
             this._todos = this.store_read() || [];
             this.on('updated', this.store, this);
-        }
-
-    ).define({
+        },
 
         store: function() {
             this.store_save(this._todos);
@@ -47,8 +49,6 @@
             return this._todos.filter(function(todo){return todo.done});
         }
 
-    }).meta({
-        update_after: ['add', 'remove', 'toggle', 'toggle_all', 'refresh']
     });
 
     window.Model.auto_update(window.TodosModel);

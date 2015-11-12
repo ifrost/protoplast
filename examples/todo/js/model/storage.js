@@ -1,6 +1,6 @@
 (function(window){
 
-    window.Storage = window.Protoplast.extend().define({
+    window.Storage = window.Protoplast.extend({
 
         store_id: function(id) {
             this.id = id;

@@ -1,7 +1,7 @@
 (function (window) {
     'use strict';
 
-    window.InfoView = window.View.extend().define({
+    window.InfoView = window.View.extend({
 
         tag: 'footer',
 

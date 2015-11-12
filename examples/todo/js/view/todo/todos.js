@@ -1,9 +1,16 @@
 (function (window) {
     'use strict';
 
-    window.TodosView = window.View.extend().define({
+    window.TodosView = window.View.extend({
 
         tag: 'ul',
+
+        __meta__: {
+            inject: {
+                todos: 'todos',
+                view_state: 'viewstate'
+            }
+        },
 
         create: function() {
 
@@ -118,11 +125,6 @@
 
         exit_edit_mode: function() {
             this.$root.selectAll('li').classed('editing', false);
-        }
-    }).meta({
-        inject: {
-            todos: 'todos',
-            view_state: 'viewstate'
         }
     });
 

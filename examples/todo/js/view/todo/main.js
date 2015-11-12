@@ -3,9 +3,13 @@
 
     var TodosView = window.TodosView;
 
-    window.MainView = window.View.extend().define({
+    window.MainView = window.View.extend({
 
         tag: 'section',
+
+        __meta__: {
+            inject: {todos: 'todos'}
+        },
 
         create: function() {
 
@@ -32,8 +36,6 @@
             this.toggleAll.style('display', this.todos.all().length ? 'block' : 'none');
         }
 
-    }).meta({
-        inject: {todos: 'todos'}
     });
 
 })(window);

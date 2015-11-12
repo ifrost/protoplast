@@ -5,7 +5,7 @@
         MainView = window.MainView,
         FooterView = window.FooterView;
 
-    window.AppView = window.View.extend().define({
+    window.AppView = window.View.extend({
 
         tag: 'section',
 

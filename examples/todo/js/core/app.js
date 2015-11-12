@@ -1,7 +1,7 @@
 (function (window) {
 	'use strict';
 
-	var App = window.Protoplast.extend().define({
+	var App = window.Protoplast.extend({
 		run: function(config) {
 			var context = new window.ProtoplastExt.Context();
 			for (var controller in config.controllers) {

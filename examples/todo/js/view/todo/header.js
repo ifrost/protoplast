@@ -1,7 +1,7 @@
 (function (window) {
     'use strict';
 
-    window.HeaderView = window.View.extend().define({
+    window.HeaderView = window.View.extend({
 
         tag: 'header',
 

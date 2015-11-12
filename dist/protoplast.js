@@ -81,27 +81,6 @@
     }
 
     /**
-     * Define prototype
-     * @param properties
-     */
-    function define(properties) {
-        for (var property in properties) {
-            this.prototype[property] = properties[property];
-        }
-        return this;
-    }
-
-    /**
-     * Assign metadata
-     * @param meta
-     */
-    function meta(meta) {
-        this.prototype.__meta__ = merge(meta, this.base.__meta__);
-        this.__meta__ = this.prototype.__meta__;
-        return this;
-    }
-
-    /**
      * Verify whether object implements provided interfaces
      * @param interfaces
      * @returns {verify_interfaces}
@@ -120,18 +99,22 @@
     /**
      * Creates new factory function
      * @param [mixins]
-     * @param [constructor]
+     * @param definition
      * @returns {Function}
      */
-    Protoplast.extend = function(mixins, constructor) {
-        var base = this;
+    Protoplast.extend = function(mixins, definition) {
+        var base = this, constructor;
 
-        if (mixins instanceof Function) {
-            constructor = mixins;
+        if (!(mixins instanceof Array)) {
+            definition = mixins;
             mixins = [];
         }
 
-        constructor = constructor || function() {
+        definition = definition || {};
+
+        definition.__meta__ = definition.__meta__ || {};
+
+        constructor = definition.__init__ || function() {
             base.apply(this, arguments);
         };
 
@@ -142,12 +125,17 @@
 
         mixin(constructor.prototype, mixins);
 
-        constructor.extend = Protoplast.extend.bind(constructor);
-        constructor.define = define;
-        constructor.meta = meta;
-        constructor.impl = verify_interfaces;
+        for (var property in definition) {
+            if (property !== '__meta__' && property !== '__init') {
+                constructor.prototype[property] = definition[property];
+            }
+        }
 
-        constructor.meta({});
+        constructor.prototype.__meta__ = merge(definition.__meta__, constructor.base.__meta__);
+        constructor.__meta__ = constructor.prototype.__meta__;
+
+        constructor.extend = Protoplast.extend.bind(constructor);
+        constructor.impl = verify_interfaces;
 
         return constructor;
     };
@@ -157,8 +145,6 @@
 
 })(this);
 (function(exports){
-
-    var Protoplast = exports.Protoplast;
 
     /**
      * Wraps the method with aspects
@@ -217,7 +203,7 @@
      * EventDispatcher implementation, can be used as mixin or base protoype
      * @type {Function}
      */
-    var Dispatcher = Protoplast.extend().define({
+    var Dispatcher = Protoplast.extend({
 
         dispatch: function (topic, message) {
             this._topics = this._topics || {};
@@ -248,26 +234,28 @@
 
     var Dispatcher = exports.ProtoplastExt.Dispatcher;
 
-    var Context = Protoplast.extend(function() {
-        var self = this;
-        this._objects = {
-            pub: function (topic, message) {
-                self._dispatcher.dispatch(topic, message);
-            },
-            sub: function (topic) {
-                var instance_self = this;
-                return {
-                    add: function (handler) {
-                        self._dispatcher.on(topic, handler, instance_self);
-                    },
-                    remove: function (handler) {
-                        self._dispatcher.off(topic, handler, instance_self);
+    var Context = Protoplast.extend({
+
+        __init__: function() {
+            var self = this;
+            this._objects = {
+                pub: function (topic, message) {
+                    self._dispatcher.dispatch(topic, message);
+                },
+                sub: function (topic) {
+                    var instance_self = this;
+                    return {
+                        add: function (handler) {
+                            self._dispatcher.on(topic, handler, instance_self);
+                        },
+                        remove: function (handler) {
+                            self._dispatcher.off(topic, handler, instance_self);
+                        }
                     }
                 }
-            }
-        };
-        this._dispatcher = new Dispatcher();
-    }).define({
+            };
+            this._dispatcher = new Dispatcher();
+        },
 
         /**
          * Map of object in the context
@@ -342,10 +330,12 @@
      * Creates a simple component tree-like architecture for the view layer. Used with DI
      * @alias Component
      */
-    var Component = Protoplast.extend(function() {
-        this._children = [];
-        this.root = document.createElement(this.tag || 'div');
-    }).define({
+    var Component = Protoplast.extend({
+
+        __init__: function() {
+            this._children = [];
+            this.root = document.createElement(this.tag || 'div');
+        },
 
         /**
          * Template method, used to create DOM of the component

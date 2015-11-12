@@ -1,7 +1,11 @@
 (function (window) {
     'use strict';
 
-    window.TodoController = window.Controller.extend().define({
+    window.TodoController = window.Controller.extend({
+
+        __meta__: {
+            inject:{todos: 'todos'}
+        },
 
         injected: function() {
             this.sub('todos/add').add(this.add_todo, this);
@@ -38,8 +42,6 @@
             data.todo.text = data.text;
             this.todos.refresh();
         }
-    }).meta({
-        inject:{todos: 'todos'}
     });
 
 })(window);

@@ -1,9 +1,16 @@
 (function (window) {
     'use strict';
 
-    window.FooterView = window.View.extend().define({
+    window.FooterView = window.View.extend({
 
         tag: 'footer',
+
+        __meta__: {
+            inject: {
+                todos: 'todos',
+                view_state: 'viewstate'
+            }
+        },
 
         create: function() {
 
@@ -45,11 +52,6 @@
             this.clear_all.style('display', count_done ? 'block' : 'none')
         }
 
-    }).meta({
-        inject: {
-            todos: 'todos',
-            view_state: 'viewstate'
-        }
     });
 
 })(window);

@@ -1,9 +1,15 @@
 (function (window) {
     'use strict';
 
-    window.ViewStateModel = window.Model.extend(function() {
-        this._state = window.ViewStateModel.ALL;
-    }).define({
+    window.ViewStateModel = window.Model.extend({
+
+        __meta__: {
+            update_after: ['change']
+        },
+
+        __init__: function() {
+            this._state = window.ViewStateModel.ALL;
+        },
 
         change: function(state) {
             this._state = state;
@@ -12,8 +18,6 @@
         get_state: function() {
             return this._state;
         }
-    }).meta({
-        update_after: ['change']
     });
 
     window.ViewStateModel.ALL = 'all';
