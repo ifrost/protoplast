@@ -81,27 +81,6 @@
     }
 
     /**
-     * Define prototype
-     * @param properties
-     */
-    function define(properties) {
-        for (var property in properties) {
-            this.prototype[property] = properties[property];
-        }
-        return this;
-    }
-
-    /**
-     * Assign metadata
-     * @param meta
-     */
-    function meta(meta) {
-        this.prototype.__meta__ = merge(meta, this.base.__meta__);
-        this.__meta__ = this.prototype.__meta__;
-        return this;
-    }
-
-    /**
      * Verify whether object implements provided interfaces
      * @param interfaces
      * @returns {verify_interfaces}
@@ -120,18 +99,22 @@
     /**
      * Creates new factory function
      * @param [mixins]
-     * @param [constructor]
+     * @param definition
      * @returns {Function}
      */
-    Protoplast.extend = function(mixins, constructor) {
-        var base = this;
+    Protoplast.extend = function(mixins, definition) {
+        var base = this, constructor;
 
-        if (mixins instanceof Function) {
-            constructor = mixins;
+        if (!(mixins instanceof Array)) {
+            definition = mixins;
             mixins = [];
         }
 
-        constructor = constructor || function() {
+        definition = definition || {};
+
+        definition.__meta__ = definition.__meta__ || {};
+
+        constructor = definition.__init__ || function() {
             base.apply(this, arguments);
         };
 
@@ -142,12 +125,17 @@
 
         mixin(constructor.prototype, mixins);
 
-        constructor.extend = Protoplast.extend.bind(constructor);
-        constructor.define = define;
-        constructor.meta = meta;
-        constructor.impl = verify_interfaces;
+        for (var property in definition) {
+            if (property !== '__meta__' && property !== '__init') {
+                constructor.prototype[property] = definition[property];
+            }
+        }
 
-        constructor.meta({});
+        constructor.prototype.__meta__ = merge(definition.__meta__, constructor.base.__meta__);
+        constructor.__meta__ = constructor.prototype.__meta__;
+
+        constructor.extend = Protoplast.extend.bind(constructor);
+        constructor.impl = verify_interfaces;
 
         return constructor;
     };

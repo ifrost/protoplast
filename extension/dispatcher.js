@@ -7,7 +7,7 @@
      * EventDispatcher implementation, can be used as mixin or base protoype
      * @type {Function}
      */
-    var Dispatcher = Protoplast.extend().define({
+    var Dispatcher = Protoplast.extend({
 
         dispatch: function (topic, message) {
             this._topics = this._topics || {};

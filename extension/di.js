@@ -2,26 +2,28 @@
 
     var Dispatcher = exports.ProtoplastExt.Dispatcher;
 
-    var Context = Protoplast.extend(function() {
-        var self = this;
-        this._objects = {
-            pub: function (topic, message) {
-                self._dispatcher.dispatch(topic, message);
-            },
-            sub: function (topic) {
-                var instance_self = this;
-                return {
-                    add: function (handler) {
-                        self._dispatcher.on(topic, handler, instance_self);
-                    },
-                    remove: function (handler) {
-                        self._dispatcher.off(topic, handler, instance_self);
+    var Context = Protoplast.extend({
+
+        __init__: function() {
+            var self = this;
+            this._objects = {
+                pub: function (topic, message) {
+                    self._dispatcher.dispatch(topic, message);
+                },
+                sub: function (topic) {
+                    var instance_self = this;
+                    return {
+                        add: function (handler) {
+                            self._dispatcher.on(topic, handler, instance_self);
+                        },
+                        remove: function (handler) {
+                            self._dispatcher.off(topic, handler, instance_self);
+                        }
                     }
                 }
-            }
-        };
-        this._dispatcher = new Dispatcher();
-    }).define({
+            };
+            this._dispatcher = new Dispatcher();
+        },
 
         /**
          * Map of object in the context

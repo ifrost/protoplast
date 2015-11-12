@@ -1,7 +1,5 @@
 (function(exports){
 
-    var Protoplast = exports.Protoplast;
-
     /**
      * Wraps the method with aspects
      * @param {Object} proto

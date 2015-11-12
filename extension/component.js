@@ -6,10 +6,12 @@
      * Creates a simple component tree-like architecture for the view layer. Used with DI
      * @alias Component
      */
-    var Component = Protoplast.extend(function() {
-        this._children = [];
-        this.root = document.createElement(this.tag || 'div');
-    }).define({
+    var Component = Protoplast.extend({
+
+        __init__: function() {
+            this._children = [];
+            this.root = document.createElement(this.tag || 'div');
+        },
 
         /**
          * Template method, used to create DOM of the component
