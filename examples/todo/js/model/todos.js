@@ -1,52 +1,54 @@
 (function (window) {
     'use strict';
 
-    window.TodosModel = window.Model.extend([window.Storage], function(proto, base, meta){
+    window.TodosModel = window.Model.extend([window.Storage],
 
-        meta.update_after = ['add', 'remove', 'toggle', 'toggle_all', 'refresh'];
-
-        proto.init = function() {
+        function() {
             this.store_id('todos');
             this._todos = this.store_read() || [];
             this.on('updated', this.store, this);
-        };
+        }
 
-        proto.store = function() {
+    ).define({
+
+        store: function() {
             this.store_save(this._todos);
-        };
+        },
 
-        proto.add = function(todo) {
+        add: function(todo) {
             this._todos.push(todo);
-        };
+        },
 
-        proto.remove = function(todo) {
+        remove: function(todo) {
             this._todos = this._todos.filter(function(t){return t !== todo})
-        };
+        },
 
-        proto.toggle = function(todo) {
+        toggle: function(todo) {
             todo.done = !todo.done;
-        };
+        },
 
-        proto.toggle_all = function(value) {
+        toggle_all: function(value) {
             this._todos.forEach(function(todo){
                 todo.done = value;
             });
-        };
+        },
 
-        proto.refresh = function() {};
+        refresh: function() {},
 
-        proto.all = function() {
+        all: function() {
             return this._todos;
-        };
+        },
 
-        proto.undone = function() {
+        undone: function() {
             return this._todos.filter(function(todo){return !todo.done});
-        };
+        },
 
-        proto.done = function() {
+        done: function() {
             return this._todos.filter(function(todo){return todo.done});
-        };
+        }
 
+    }).meta({
+        update_after: ['add', 'remove', 'toggle', 'toggle_all', 'refresh']
     });
 
     window.Model.auto_update(window.TodosModel);

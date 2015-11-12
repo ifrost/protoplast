@@ -6,52 +6,47 @@
      * Creates a simple component tree-like architecture for the view layer. Used with DI
      * @alias Component
      */
-    var Component = Protoplast.extend(function(proto){
-
-        /**
-         * Initialize component by creating the root tag
-         */
-        proto.init = function() {
-            this._children = [];
-            this.root = document.createElement(this.__meta__.tag || 'div');
-        };
+    var Component = Protoplast.extend(function() {
+        this._children = [];
+        this.root = document.createElement(this.__meta__.tag || 'div');
+    }).define({
 
         /**
          * Template method, used to create DOM of the component
          */
-        proto.create = function() {};
+        create: function() {},
 
         /**
          * Destroy the component and all child components
          */
-        proto.destroy = function() {
+        destroy: function() {
             this._children.forEach(function(child){
                 this.remove(child);
             }, this);
-        };
+        },
 
         /**
          * Injected handler
          */
-        proto.injected = function() {
+        injected: function() {
             this.create();
-        };
+        },
 
         /**
          * Add a child component
          * @param {Component} child
          */
-        proto.add = function(child) {
+        add: function(child) {
             this._children.push(child);
             this.__fastinject__(child);
             this.root.appendChild(child.root);
-        };
+        },
 
         /**
          * Remove child component
          * @param {Component} child
          */
-        proto.remove = function(child) {
+        remove: function(child) {
             var index = this._children.indexOf(child);
             if (index !== -1) {
                 this._children.splice(index, 1);
@@ -62,7 +57,7 @@
     });
 
     Component.Root = function(element, context) {
-        var component = Component();
+        var component = new Component();
         component.root = element;
         context.register(component);
         return component;

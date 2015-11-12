@@ -1,21 +1,19 @@
 (function (window) {
     'use strict';
 
-    window.ViewStateModel = window.Model.extend(function(proto, base, meta){
+    window.ViewStateModel = window.Model.extend(function() {
+        this._state = window.ViewStateModel.ALL;
+    }).define({
 
-        meta.update_after = ['change'];
-
-        proto.init = function() {
-            this._state = window.ViewStateModel.ALL;
-        };
-
-        proto.change = function(state) {
+        change: function(state) {
             this._state = state;
-        };
+        },
 
-        proto.get_state = function() {
+        get_state: function() {
             return this._state;
         }
+    }).meta({
+        update_after: ['change']
     });
 
     window.ViewStateModel.ALL = 'all';

@@ -1,9 +1,9 @@
 (function (window) {
 	'use strict';
 
-	var App = window.Protoplast.extend(function(proto){
-		proto.run = function(config) {
-			var context = window.ProtoplastExt.Context();
+	var App = window.Protoplast.extend().define({
+		run: function(config) {
+			var context = new window.ProtoplastExt.Context();
 			for (var controller in config.controllers) {
 				context.register(controller, config.controllers[controller]);
 			}

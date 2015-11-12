@@ -1,17 +1,17 @@
 (function(window){
 
-    window.Storage = window.Protoplast.extend(function(proto){
+    window.Storage = window.Protoplast.extend().define({
 
-        proto.store_id = function(id) {
+        store_id: function(id) {
             this.id = id;
-        };
+        },
 
-        proto.store_save = function(value) {
+        store_save: function(value) {
             var json = JSON.stringify(value);
             window.localStorage.setItem(this.id, json);
-        };
+        },
 
-        proto.store_read = function() {
+        store_read: function() {
             var json = window.localStorage.getItem(this.id);
             return JSON.parse(json);
         }

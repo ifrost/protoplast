@@ -1,11 +1,9 @@
 (function (window) {
     'use strict';
 
-    window.InfoView = window.View.extend(function(proto, base, meta){
+    window.InfoView = window.View.extend().define({
 
-        meta.tag = 'footer';
-
-        proto.create = function() {
+        create: function() {
 
             this.$root.classed('info', true);
 
@@ -15,6 +13,6 @@
             this.$root.append('p').html('Part of <a href="http://todomvc.com">TodoMVC</a>')
         }
 
-    });
+    }).meta({tag: 'footer'});
 
 })(window);

@@ -1,16 +1,9 @@
 (function (window) {
     'use strict';
 
-    window.TodosView = window.View.extend(function(proto, base, meta){
+    window.TodosView = window.View.extend().define({
 
-        meta.tag = 'ul';
-        
-        meta.inject = {
-            todos: 'todos',
-            view_state: 'viewstate'
-        };
-
-        proto.create = function() {
+        create: function() {
 
             this.$root.classed('todo-list', true);
 
@@ -31,9 +24,9 @@
                 });
 
             this.render();
-        };
+        },
 
-        proto.get_data = function() {
+        get_data: function() {
             var state = this.view_state.get_state(), data;
             if (state == window.ViewStateModel.ALL) {
                 data = this.todos.all();
@@ -45,9 +38,9 @@
                 data = this.todos.undone();
             }
             return data;
-        };
+        },
 
-        proto.render = function() {
+        render: function() {
             var data = this.get_data();
 
             var self = this;
@@ -112,18 +105,24 @@
                 .property('checked', function(d){return d.done});
             div.select('input.edit');
             div.select('button.destroy');
-        };
+        },
 
-        proto.enter_edit_mode = function(todo) {
+        enter_edit_mode: function(todo) {
             var li = this.$root.selectAll('li').filter(function(d){
                 return d === todo;
             }).classed('editing', true);
             li.selectAll('input').attr('value', todo.text).node().focus();
-        };
+        },
 
-        proto.exit_edit_mode = function() {
+        exit_edit_mode: function() {
             this.$root.selectAll('li').classed('editing', false);
-        };
+        }
+    }).meta({
+        tag: 'ul',
+        inject: {
+            todos: 'todos',
+            view_state: 'viewstate'
+        }
     });
 
 })(window);

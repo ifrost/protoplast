@@ -34,7 +34,7 @@
      */
     function mix(destination, source) {
         for (var property in source) {
-            if (property !== 'init' && property.substr(0, 2) !== '__') {
+            if (property.substr(0, 2) !== '__') {
                 destination[property] = source[property];
             }
         }
@@ -49,45 +49,109 @@
      */
     function mixin(instance, mixins) {
         mixins.forEach(function (Mixin) {
-            mix(instance, Mixin());
+            mix(instance, Mixin.prototype);
         });
         return instance;
     }
 
-    function extend(mixins, factory) {
+    /**
+     * Verifies whether prototype implements all methods in interfaces
+     * @param proto
+     * @param interfaces
+     */
+    function impl(proto, interfaces) {
+        var exists, is_function, matches_params, error;
+        interfaces.forEach(function(superfactory){
+            var i = superfactory.prototype;
+            for (var property in i) {
+                if (i.hasOwnProperty(property) && typeof i[property] === "function") {
+                    exists = proto[property];
+                    is_function = typeof proto[property] === "function";
+                    matches_params = is_function && proto[property].length === i[property].length;
+                    if (!exists || !is_function || !matches_params) {
+                        error = 'Prototype ' + proto.__meta__.name + ' should implement method ' + property + ' with ' + i[property].length + ' param(s), ';
+                        if (!exists) error += property + ' not found in the prototype';
+                        if (exists && !is_function) error += property + ' is not a function';
+                        if (exists && is_function && !matches_params) error += proto[property].length + ' param(s) found';
+                        throw new Error(error);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Define prototype
+     * @param properties
+     */
+    function define(properties) {
+        for (var property in properties) {
+            this.prototype[property] = properties[property];
+        }
+        return this;
+    }
+
+    /**
+     * Assign metadata
+     * @param meta
+     */
+    function meta(meta) {
+        this.prototype.__meta__ = merge(meta, this.base.__meta__);
+        this.__meta__ = this.prototype.__meta__;
+        return this;
+    }
+
+    /**
+     * Verify whether object implements provided interfaces
+     * @param interfaces
+     * @returns {verify_interfaces}
+     */
+    function verify_interfaces(interfaces) {
+        impl(this.prototype, interfaces);
+        return this;
+    }
+
+    /**
+     * Base protoplast constructor
+     * @constructor
+     */
+    var Protoplast = function() {};
+
+    /**
+     * Creates new factory function
+     * @param [mixins]
+     * @param [constructor]
+     * @returns {Function}
+     */
+    Protoplast.extend = function(mixins, constructor) {
+        var base = this;
 
         if (mixins instanceof Function) {
-            factory = mixins;
+            constructor = mixins;
             mixins = [];
         }
 
-        var proto = Object.create(this), constructor, meta = {};
-
-        mixin(proto, mixins || []);
-
-        if (factory) factory(proto, this, meta);
-
-        proto.__meta__ = merge(meta, this.__meta__);
-        proto.__base__ = this;
-
-        constructor = function () {
-            var instance = Object.create(proto);
-            instance.init.apply(instance, arguments);
-            return instance;
+        constructor = constructor || function() {
+            base.apply(this, arguments);
         };
 
-        constructor.__prototype__ = proto;
-        constructor.__meta__ = proto.__meta__;
-        constructor.extend = extend.bind(proto);
+        mixins = mixins || [];
+
+        constructor.prototype = Object.create(base.prototype);
+        constructor.base = base.prototype;
+
+        mixin(constructor.prototype, mixins);
+
+        constructor.extend = Protoplast.extend.bind(constructor);
+        constructor.define = define;
+        constructor.meta = meta;
+        constructor.impl = verify_interfaces;
+
+        constructor.meta({});
 
         return constructor;
-    }
-
-    var Protoplast = Object.create({});
-    Protoplast.init = function(){};
-    Protoplast.__meta__ = {};
-
-    Protoplast.extend = extend;
+    };
+    Protoplast.prototype.__meta__ = {};
 
     exports.Protoplast = Protoplast;
 
@@ -104,10 +168,13 @@
      */
     function wrap(proto, method, aspects) {
         var origin = proto[method];
+        if (!proto[method]) {
+            throw Error("Can't create aspect for method " + method + ". Method does not exist.")
+        }
         proto[method] = function () {
             if (aspects.before) aspects.before.apply(this, arguments);
             var result = origin.apply(this, arguments);
-            if (aspects.after) result = aspects.after.apply(this, arguments);
+            if (aspects.after) result = aspects.after.call(this, result, arguments);
             return result;
         }
     }
@@ -115,29 +182,27 @@
     /**
      * AOP Manager. Allows to add aspects to a prototype
      */
-    var Aop = Protoplast.extend(function(proto){
+    var Aop = function(constructor) {
+        return {
+            /**
+             * Applies aspects
+             * @param {String[]} methods
+             * @param {before: Function, after: Function} aspects
+             */
+            aop: function(methods, aspects) {
 
-        proto.init = function(constructor) {
-            this.aop_proto = constructor.__prototype__;
-        };
+                if (!(methods instanceof Array)) {
+                    methods = [methods];
+                }
 
-        /**
-         * Applies aspects
-         * @param {String[]} methods
-         * @param {before: Function, after: Function} aspects
-         */
-        proto.aop = function(methods, aspects) {
-
-            if (!(methods instanceof Array)) {
-                methods = [methods];
+                methods.forEach(function(method){
+                    wrap(constructor.prototype, method, aspects);
+                }, this);
+                return this;
             }
 
-            methods.forEach(function(method){
-                wrap(this.aop_proto, method, aspects);
-            }, this);
-        };
-
-    });
+        }
+    };
 
     exports.ProtoplastExt = exports.ProtoplastExt || {};
     exports.ProtoplastExt.Aop = Aop;
@@ -152,27 +217,27 @@
      * EventDispatcher implementation, can be used as mixin or base protoype
      * @type {Function}
      */
-    var Dispatcher = Protoplast.extend(function (proto) {
+    var Dispatcher = Protoplast.extend().define({
 
-        proto.dispatch = function (topic, message) {
+        dispatch: function (topic, message) {
             this._topics = this._topics || {};
             (this._topics[topic] || []).forEach(function (config) {
                 config.handler.call(config.context, message);
             })
-        };
+        },
 
-        proto.on = function (topic, handler, context) {
+        on: function (topic, handler, context) {
             this._topics = this._topics || {};
             this._topics[topic] = this._topics[topic] || [];
             this._topics[topic].push({handler: handler, context: context});
-        };
+        },
 
-        proto.off = function (topic, handler, context) {
+        off: function (topic, handler, context) {
             this._topics = this._topics || {};
             this._topics[topic] = this._topics[topic].filter(function (config) {
                 return handler ? config.handler !== handler : config.context !== context
             })
-        };
+        }
     });
 
     exports.ProtoplastExt = exports.ProtoplastExt || {};
@@ -183,42 +248,40 @@
 
     var Dispatcher = exports.ProtoplastExt.Dispatcher;
 
-    var Context = Protoplast.extend(function(proto){
+    var Context = Protoplast.extend(function() {
+        var self = this;
+        this._objects = {
+            pub: function (topic, message) {
+                self._dispatcher.dispatch(topic, message);
+            },
+            sub: function (topic) {
+                var instance_self = this;
+                return {
+                    add: function (handler) {
+                        self._dispatcher.on(topic, handler, instance_self);
+                    },
+                    remove: function (handler) {
+                        self._dispatcher.off(topic, handler, instance_self);
+                    }
+                }
+            }
+        };
+        this._dispatcher = new Dispatcher();
+    }).define({
 
         /**
          * Map of object in the context
          * @type {Object}
          * @private
          */
-        proto._objects = null;
-
-        proto.init = function() {
-            var self = this;
-            this._objects = {
-                pub: function (topic, message) {
-                    self._dispatcher.dispatch(topic, message);
-                },
-                sub: function (topic) {
-                    var instance_self = this;
-                    return {
-                        add: function (handler) {
-                            self._dispatcher.on(topic, handler, instance_self);
-                        },
-                        remove: function (handler) {
-                            self._dispatcher.off(topic, handler, instance_self);
-                        }
-                    }
-                }
-            };
-            this._dispatcher = Dispatcher();
-        };
+        _objects: null,
 
         /**
          * Registers object in the DI context
          * @param {String} id
          * @param {Object} instance
          */
-        proto.register = function (id, instance) {
+        register: function (id, instance) {
             if (arguments.length == 1) {
                 instance = id;
             }
@@ -234,14 +297,14 @@
             }.bind(this);
 
             this.inject(instance, instance.__meta__.inject);
-        };
+        },
 
         /**
          * Performs dependency injection based on the config
          * @param {Object} instance
          * @param {Object} config - {property:dependencyId,...}
          */
-        proto.inject = function(instance, config) {
+        inject: function(instance, config) {
             var self = this, id;
             for (var property in config) {
                 id = config[property];
@@ -254,16 +317,16 @@
                     });
                 })(id);
             }
-        };
+        },
 
-        proto.build = function() {
+        build: function() {
             Object.keys(this._objects).forEach(function(id) {
                 var instance = this._objects[id];
                 if (instance.injected instanceof Function) {
                     instance.injected();
                 }
             }.bind(this));
-        };
+        }
 
     });
 
@@ -279,52 +342,47 @@
      * Creates a simple component tree-like architecture for the view layer. Used with DI
      * @alias Component
      */
-    var Component = Protoplast.extend(function(proto){
-
-        /**
-         * Initialize component by creating the root tag
-         */
-        proto.init = function() {
-            this._children = [];
-            this.root = document.createElement(this.__meta__.tag || 'div');
-        };
+    var Component = Protoplast.extend(function() {
+        this._children = [];
+        this.root = document.createElement(this.__meta__.tag || 'div');
+    }).define({
 
         /**
          * Template method, used to create DOM of the component
          */
-        proto.create = function() {};
+        create: function() {},
 
         /**
          * Destroy the component and all child components
          */
-        proto.destroy = function() {
+        destroy: function() {
             this._children.forEach(function(child){
                 this.remove(child);
             }, this);
-        };
+        },
 
         /**
          * Injected handler
          */
-        proto.injected = function() {
+        injected: function() {
             this.create();
-        };
+        },
 
         /**
          * Add a child component
          * @param {Component} child
          */
-        proto.add = function(child) {
+        add: function(child) {
             this._children.push(child);
             this.__fastinject__(child);
             this.root.appendChild(child.root);
-        };
+        },
 
         /**
          * Remove child component
          * @param {Component} child
          */
-        proto.remove = function(child) {
+        remove: function(child) {
             var index = this._children.indexOf(child);
             if (index !== -1) {
                 this._children.splice(index, 1);
@@ -335,7 +393,7 @@
     });
 
     Component.Root = function(element, context) {
-        var component = Component();
+        var component = new Component();
         component.root = element;
         context.register(component);
         return component;

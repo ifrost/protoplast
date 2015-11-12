@@ -1,16 +1,9 @@
 (function (window) {
     'use strict';
 
-    window.FooterView = window.View.extend(function(proto, base, meta){
+    window.FooterView = window.View.extend().define({
 
-        meta.tag = 'footer';
-
-        meta.inject = {
-            todos: 'todos',
-            view_state: 'viewstate'
-        };
-
-        proto.create = function() {
+        create: function() {
 
             this.$root.classed('footer', true);
 
@@ -31,15 +24,15 @@
 
             this.view_state.on('updated', this.update_selection, this);
             this.update_selection();
-        };
+        },
 
-        proto.update_selection = function() {
+        update_selection: function() {
             this.filter_all.classed('selected', this.view_state.get_state() === window.ViewStateModel.ALL);
             this.filter_undone.classed('selected', this.view_state.get_state() === window.ViewStateModel.UNDONE);
             this.filter_done.classed('selected', this.view_state.get_state() === window.ViewStateModel.DONE);
-        };
+        },
 
-        proto.update_counter = function() {
+        update_counter: function() {
             var count_undone = this.todos.undone().length,
                 count_all = this.todos.all().length,
                 count_done = this.todos.done().length,
@@ -48,8 +41,14 @@
             this.counter.html('<strong>' + count_undone + '</strong> ' + items + ' left');
             this.$root.style('display', count_all ? 'block' : 'none');
             this.clear_all.style('display', count_done ? 'block' : 'none')
-        };
+        }
 
+    }).meta({
+        tag: 'footer',
+        inject: {
+            todos: 'todos',
+            view_state: 'viewstate'
+        }
     });
 
 })(window);

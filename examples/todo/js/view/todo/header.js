@@ -1,11 +1,9 @@
 (function (window) {
     'use strict';
 
-    window.HeaderView = window.View.extend(function(proto, base, meta){
+    window.HeaderView = window.View.extend().define({
 
-        meta.tag = 'header';
-
-        proto.create = function() {
+        create: function() {
 
             this.$root.classed('header', true);
 
@@ -19,9 +17,9 @@
                         this.submit_todo();
                     }
                 }.bind(this));
-        };
+        },
 
-        proto.submit_todo = function() {
+        submit_todo:  function() {
             var text = this.input.property('value').trim();
             if (text.length) {
                 this.pub('todos/add', text);
@@ -29,6 +27,6 @@
             }
         }
 
-    });
+    }).meta({tag: 'header'});
 
 })(window);

@@ -5,19 +5,17 @@
         MainView = window.MainView,
         FooterView = window.FooterView;
 
-    window.AppView = window.View.extend(function(proto, base, meta){
+    window.AppView = window.View.extend().define({
 
-        meta.tag = 'section';
-
-        proto.create = function() {
+        create:function() {
 
             this.$root.classed('todoapp', true)
 
-            this.add(HeaderView());
-            this.add(MainView());
-            this.add(FooterView());
+            this.add(new HeaderView());
+            this.add(new MainView());
+            this.add(new FooterView());
         }
 
-    });
+    }).meta({tag: 'section'});
 
 })(window);
