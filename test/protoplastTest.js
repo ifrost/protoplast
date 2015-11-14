@@ -140,6 +140,25 @@ describe('Protoplast', function() {
             chai.assert.equal(sub.value, 10);
         });
 
+        it('instanceof returns true for subinstances', function() {
+            var Base, Sub, SubSub, subsub, sub;
+            Base = Protoplast.extend();
+            Sub = Base.extend();
+            SubSub = Sub.extend();
+
+            subsub = new SubSub();
+            chai.assert.isTrue(subsub instanceof SubSub);
+            chai.assert.isTrue(subsub instanceof Sub);
+            chai.assert.isTrue(subsub instanceof Base);
+            chai.assert.isTrue(subsub instanceof Protoplast);
+
+            sub = new Sub();
+            chai.assert.isFalse(sub instanceof SubSub);
+            chai.assert.isTrue(sub instanceof Sub);
+            chai.assert.isTrue(sub instanceof Base);
+            chai.assert.isTrue(sub instanceof Protoplast);
+        });
+
         it('inherits all properties', function() {
 
             var Base, Sub, sub;
@@ -388,7 +407,7 @@ describe('Protoplast', function() {
 
         it('passes fast inject function', function() {
 
-            var Dep, dep, Foo, Bar, bar;
+            var Dep, dep, Foo, Bar, bar = null;
 
             Dep = Protoplast.extend({
                 value: function() {
@@ -490,7 +509,7 @@ describe('Protoplast', function() {
     describe('Examples', function() {
         it('flux example', function() {
 
-            var RootView, View, ActionDispatcher, Repository, view, repository, _view;
+            var RootView, View, ActionDispatcher, Repository, view, repository, _view = null;
 
             function ViewFactory() {
                 _view = new View();
