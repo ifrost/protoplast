@@ -8,7 +8,7 @@
      */
     var Component = Protoplast.extend({
 
-        __init__: function() {
+        $create: function() {
             this._children = [];
             this.root = document.createElement(this.tag || 'div');
         },
@@ -16,7 +16,7 @@
         /**
          * Template method, used to create DOM of the component
          */
-        create: function() {
+        init: function() {
         },
 
         /**
@@ -32,7 +32,7 @@
          * Injected handler
          */
         injected: function() {
-            this.create();
+            this.init();
         },
 
         /**
@@ -60,7 +60,7 @@
     });
 
     Component.Root = function(element, context) {
-        var component = new Component();
+        var component = Component.create();
         component.root = element;
         context.register(component);
         return component;

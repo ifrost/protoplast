@@ -51,26 +51,40 @@
      */
     function mixin(instance, mixins) {
         mixins.forEach(function(Mixin) {
-            mix(instance, Mixin.prototype);
+            mix(instance, Mixin);
         });
         return instance;
     }
 
     /**
-     * Base protoplast constructor
-     * @constructor
+     * Instance factory for create method
      */
-    var Protoplast = function() {
+    function factory(base, fn) {
+        return function() {
+            var instance = base.create.apply(this, arguments);
+            fn.apply(instance, arguments);
+            return instance;
+        };
+    }
+
+    /**
+     * Base protoplast
+     */
+    var Protoplast = {
+        $meta: {},
+        create: function() {
+            return Object.create(this);
+        }
     };
 
     /**
      * Creates new factory function
      * @param [mixins]
      * @param definition
-     * @returns {Function}
+     * @returns {Object}
      */
     Protoplast.extend = function(mixins, definition) {
-        var base = this, constructor;
+        var proto = Object.create(this), meta, desc, defined;
 
         // set defaults
         if (!(mixins instanceof Array)) {
@@ -79,39 +93,48 @@
         }
         definition = definition || {};
         mixins = mixins || [];
-        definition.__meta__ = definition.__meta__ || {};
-        constructor = definition.__init__ || function() {
-            base.apply(this, arguments);
-        };
+        meta = definition.$meta || {};
+        delete definition.$meta;
 
-        // create prototype
-        constructor.prototype = Object.create(base.prototype);
-        constructor.base = base.prototype;
+        if (definition.$create !== undefined) {
+            proto.create = factory(this, definition.$create);
+            delete definition.$create;
+        }
+        proto = mixin(proto, mixins);
 
-        // mixin
-        mixin(constructor.prototype, mixins);
-
-        // create prototype properties
         for (var property in definition) {
-            if (property !== '__meta__' && property !== '__init') {
-                constructor.prototype[property] = definition[property];
+            defined = false;
+                    
+            if (Object.prototype.toString.call(definition[property]) !== "[object Object]") {
+                defined = true;
+                desc = {value: definition[property], writable: true, enumerable: true};
+            } else {
+                desc = definition[property];
+                for (var d in desc) {
+                    if (['value', 'get', 'set', 'writable', 'enumerable'].indexOf(d) === -1) {
+                        meta[d] = meta[d] || {};
+			meta[d][property] = desc[d];
+                        delete desc[d];
+		    }
+		    else {
+			defined = true;
+		    }
+                } 
+            }
+            if (defined) {
+                Object.defineProperty(proto, property, desc);
             }
         }
 
-        // assign metadata
-        constructor.prototype.__meta__ = merge(definition.__meta__, constructor.base.__meta__);
-        constructor.__meta__ = constructor.prototype.__meta__;
+        proto.$meta = merge(meta, this.$meta);
 
-        // assign extend function
-        constructor.extend = Protoplast.extend.bind(constructor);
-
-        return constructor;
+        return proto;
     };
-    Protoplast.prototype.__meta__ = {};
 
     exports.Protoplast = Protoplast;
 
 })(this);
+
 (function(exports) {
 
     /**
@@ -136,7 +159,7 @@
     /**
      * AOP Manager. Allows to add aspects to a prototype
      */
-    var Aop = function(constructor) {
+    var Aop = function(proto) {
         return {
             /**
              * Applies aspects
@@ -150,7 +173,7 @@
                 }
 
                 methods.forEach(function(method) {
-                    wrap(constructor.prototype, method, aspects);
+                    wrap(proto, method, aspects);
                 }, this);
                 return this;
             }
@@ -162,6 +185,7 @@
     exports.ProtoplastExt.Aop = Aop;
 
 })(window);
+
 (function(exports) {
     "use strict";
 
@@ -204,7 +228,7 @@
 
     var Context = Protoplast.extend({
 
-        __init__: function() {
+        $create: function() {
             var self = this;
             this._objects = {
                 pub: function(topic, message) {
@@ -219,10 +243,11 @@
                         remove: function(handler) {
                             self._dispatcher.off(topic, handler, instance_self);
                         }
-                    }
+                    };
                 }
             };
-            this._dispatcher = new Dispatcher();
+        
+            this._dispatcher = Dispatcher.create();
         },
 
         /**
@@ -252,7 +277,7 @@
                 }
             }.bind(this);
 
-            this.inject(instance, instance.__meta__.inject);
+            this.inject(instance, instance.$meta.inject);
         },
 
         /**
@@ -292,6 +317,7 @@
     exports.ProtoplastExt.Context = Context;
 
 })(window);
+
 (function(exports) {
 
     var Protoplast = exports.Protoplast;
@@ -302,7 +328,7 @@
      */
     var Component = Protoplast.extend({
 
-        __init__: function() {
+        $create: function() {
             this._children = [];
             this.root = document.createElement(this.tag || 'div');
         },
@@ -310,7 +336,7 @@
         /**
          * Template method, used to create DOM of the component
          */
-        create: function() {
+        init: function() {
         },
 
         /**
@@ -326,7 +352,7 @@
          * Injected handler
          */
         injected: function() {
-            this.create();
+            this.init();
         },
 
         /**
@@ -354,7 +380,7 @@
     });
 
     Component.Root = function(element, context) {
-        var component = new Component();
+        var component = Component.create();
         component.root = element;
         context.register(component);
         return component;

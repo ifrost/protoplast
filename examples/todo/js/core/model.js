@@ -3,12 +3,12 @@
 
     window.Model = window.Protoplast.extend([window.ProtoplastExt.Dispatcher]);
 
-    window.Model.auto_update = function(constructor) {
-        window.ProtoplastExt.Aop(constructor).aop(constructor.__meta__.update_after, {
+    window.Model.auto_update = function(proto) {
+        window.ProtoplastExt.Aop(proto).aop(proto.$meta.update_after, {
             after: function() {
                 this.dispatch('updated');
             }
-        })
+        });
     };
 
 

@@ -57,22 +57,25 @@
     }
 
     /**
+     * Instance factory for create method
+     */
+    function factory(base, fn) {
+        return function() {
+            var instance = base.create.apply(this, arguments);
+            fn.apply(instance, arguments);
+            return instance;
+        };
+    }
+
+    /**
      * Base protoplast
      */
     var Protoplast = {
-        __meta__: {},
+        $meta: {},
         create: function() {
             return Object.create(this);
-        },
-        factory: function(fn) {
-            var base = this;
-            return function() {
-                var instance = base.create.apply(this, arguments);
-                fn.apply(instance, arguments);
-                return instance;
-            }
         }
-    }
+    };
 
     /**
      * Creates new factory function
@@ -90,15 +93,19 @@
         }
         definition = definition || {};
         mixins = mixins || [];
-        meta = definition.__meta__ || {};
-        delete definition.__meta__;
+        meta = definition.$meta || {};
+        delete definition.$meta;
 
+        if (definition.$create !== undefined) {
+            proto.create = factory(this, definition.$create);
+            delete definition.$create;
+        }
         proto = mixin(proto, mixins);
 
         for (var property in definition) {
             defined = false;
                     
-            if (typeof definition[property] === "function") {
+            if (Object.prototype.toString.call(definition[property]) !== "[object Object]") {
                 defined = true;
                 desc = {value: definition[property], writable: true, enumerable: true};
             } else {
@@ -119,7 +126,7 @@
             }
         }
 
-        proto.__meta__ = merge(meta, this.__meta__);
+        proto.$meta = merge(meta, this.$meta);
 
         return proto;
     };

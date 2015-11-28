@@ -1,18 +1,18 @@
 (function(window) {
 
-    var app = new App();
+    var app = App.create();
     app.run({
         controllers: {
-            todocontroller: new window.TodoController(),
-            viewstatecontroller: new window.ViewStateController(),
-            router: new window.Router()
+            todocontroller: window.TodoController.create(),
+            viewstatecontroller: window.ViewStateController.create(),
+            router: window.Router.create()
         },
         models: {
-            todos: new window.TodosModel(),
-            viewstate: new window.ViewStateModel()
+            todos: window.TodosModel.create(),
+            viewstate: window.ViewStateModel.create()
         },
         root_node: document.body,
-        root_views: [new window.AppView(), new window.InfoView()]
+        root_views: [window.AppView.create(), window.InfoView.create()]
     });
 
 })(window);

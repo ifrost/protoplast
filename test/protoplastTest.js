@@ -10,7 +10,7 @@ describe('Protoplast', function() {
             var Base;
 
             Base = Protoplast.extend({
-                __meta__: {
+                $meta: {
                     num: 1,
                     bool: true,
                     str: 'text',
@@ -18,10 +18,10 @@ describe('Protoplast', function() {
                 }
             });
 
-            chai.assert.equal(Base.__meta__.num, 1);
-            chai.assert.equal(Base.__meta__.bool, true);
-            chai.assert.equal(Base.__meta__.str, 'text');
-            chai.assert.equal(Base.__meta__.obj.test, 'test');
+            chai.assert.equal(Base.$meta.num, 1);
+            chai.assert.equal(Base.$meta.bool, true);
+            chai.assert.equal(Base.$meta.str, 'text');
+            chai.assert.equal(Base.$meta.obj.test, 'test');
         });
 
         it('merges primitive values in metadata', function() {
@@ -29,7 +29,7 @@ describe('Protoplast', function() {
             var Base, Sub;
 
             Base = Protoplast.extend({
-                __meta__: {
+                $meta: {
                     num: 1,
                     bool: true,
                     str: 'text'
@@ -38,9 +38,9 @@ describe('Protoplast', function() {
 
             Sub = Base.extend();
 
-            chai.assert.equal(Sub.__meta__.num, 1);
-            chai.assert.equal(Sub.__meta__.bool, true);
-            chai.assert.equal(Sub.__meta__.str, 'text');
+            chai.assert.equal(Sub.$meta.num, 1);
+            chai.assert.equal(Sub.$meta.bool, true);
+            chai.assert.equal(Sub.$meta.str, 'text');
         });
 
         it('overrides primitive values in metadata', function() {
@@ -48,7 +48,7 @@ describe('Protoplast', function() {
             var Base, Sub;
 
             Base = Protoplast.extend({
-                __meta__: {
+                $meta: {
                     num: 1,
                     bool: true,
                     str: 'text'
@@ -56,16 +56,16 @@ describe('Protoplast', function() {
             });
 
             Sub = Base.extend({
-                __meta__: {
+                $meta: {
                     num: 2,
                     bool: false,
                     str: 'text 2'
                 }
             });
 
-            chai.assert.equal(Sub.__meta__.num, 2);
-            chai.assert.equal(Sub.__meta__.bool, false);
-            chai.assert.equal(Sub.__meta__.str, 'text 2');
+            chai.assert.equal(Sub.$meta.num, 2);
+            chai.assert.equal(Sub.$meta.bool, false);
+            chai.assert.equal(Sub.$meta.str, 'text 2');
         });
 
         it('concatenates arrays in metadata', function() {
@@ -73,13 +73,13 @@ describe('Protoplast', function() {
             var Base, Sub;
 
             Base = Protoplast.extend({
-                __meta__: {array: [1, 2, 3]}
+                $meta: {array: [1, 2, 3]}
             });
             Sub = Base.extend({
-                __meta__: {array: [4]}
+                $meta: {array: [4]}
             });
 
-            chai.assert.deepEqual(Sub.__meta__.array, [1, 2, 3, 4]);
+            chai.assert.deepEqual(Sub.$meta.array, [1, 2, 3, 4]);
         });
 
         it('deeply merges object values in metadata', function() {
@@ -87,7 +87,7 @@ describe('Protoplast', function() {
             var Base, Sub;
 
             Base = Protoplast.extend({
-                __meta__: {
+                $meta: {
                     obj: {
                         base: 1,
                         override: 'test',
@@ -97,7 +97,7 @@ describe('Protoplast', function() {
             });
 
             Sub = Base.extend({
-                __meta__: {
+                $meta: {
                     obj: {
                         sub: 2,
                         override: 'test 2',
@@ -106,7 +106,7 @@ describe('Protoplast', function() {
                 }
             });
 
-            chai.assert.deepEqual(Sub.__meta__.obj, {
+            chai.assert.deepEqual(Sub.$meta.obj, {
                 sub: 2,
                 base: 1,
                 override: 'test 2',
@@ -117,7 +117,35 @@ describe('Protoplast', function() {
         it('assigns meta data with instances', function() {
             var Base = Protoplast.extend(), base;
             base = Base.create();
-            chai.assert.equal(base.__meta__, Base.__meta__);
+            chai.assert.equal(base.$meta, Base.$meta);
+        });
+
+        it('assigns meta data with properties', function() {
+            var Base = Protoplast.extend({
+                foo: {
+                    inject: "dependency",
+                    content: {list: ['foo', 'bar']}
+                }
+            });
+
+            var Sub = Base.extend({
+                foo: {
+                    inject: "dependency2",
+                    content: {list: ['foobar']}
+                }
+            });
+
+            chai.assert.deepEqual(Sub.$meta, {
+                inject: {
+                    foo: "dependency2"
+                },
+                content: {
+                    foo: {
+                        list: ['foo','bar','foobar']
+                    }
+                }
+            });
+
         });
 
     });
@@ -128,7 +156,7 @@ describe('Protoplast', function() {
             var Base, base, Sub, sub;
 
             Base = Protoplast.extend({
-                value: {value: 10}
+                value: 10
             });
 
             Sub = Base.extend();
@@ -145,9 +173,9 @@ describe('Protoplast', function() {
             var Base, Sub, sub;
 
             Base = Protoplast.extend({
-                create: Protoplast.factory(function(value) {
+                $create: function(value) {
                     this.set_value(value);
-                }),
+                },
                 set_value: function(value) {
                     this.value = value;
                 }
@@ -194,9 +222,9 @@ describe('Protoplast', function() {
             var Foo, foo;
 
             Foo = Protoplast.extend({
-                create: Protoplast.factory(function(text) {
+                $create: function(text) {
                     this.text = text;
-                }),
+                },
                 append: function(text) {
                     this.text += text;
                 }
@@ -222,9 +250,9 @@ describe('Protoplast', function() {
             var Foo, foo;
 
             Foo = Protoplast.extend({
-                create: Protoplast.factory(function(text) {
+                $create: function(text) {
                     this.text = text;
-                }),
+                },
                 append: function(text) {
                     this.text += text;
                 }
@@ -250,9 +278,9 @@ describe('Protoplast', function() {
             var Text, UCText, text;
 
             Text = Protoplast.extend({
-                create: Protoplast.factory(function(text) {
+                $create: function(text) {
                     this.text = text;
-                }),
+                },
                 append: function(text) {
                     this.text += text;
                 }
@@ -322,7 +350,7 @@ describe('Protoplast', function() {
 
             CustomDispatcher = Protoplast.extend([Dispatcher], {
                 hello: function() {
-                    this.dispatch('message', 'hello')
+                    this.dispatch('message', 'hello');
                 }
             });
 
@@ -343,13 +371,13 @@ describe('Protoplast', function() {
             var Foo, Bar, foo, bar;
 
             Foo = Protoplast.extend({
-                __meta__: {
+                $meta: {
                     inject: {bar: 'bar'}
                 }
             });
 
             Bar = Protoplast.extend({
-                __meta__: {
+                $meta: {
                     inject: {foo: 'foo'}
                 }
             });
@@ -369,7 +397,7 @@ describe('Protoplast', function() {
             var Foo, Foo2, Bar, foo, bar;
 
             Foo = Protoplast.extend({
-                __meta__: {
+                $meta: {
                     inject: {bar: 'bar'}
                 }
             });
@@ -397,7 +425,7 @@ describe('Protoplast', function() {
             });
 
             Bar = Protoplast.extend({
-                __meta__: {
+                $meta: {
                     inject: {dep: 'dep'}
                 }
             });
@@ -424,16 +452,16 @@ describe('Protoplast', function() {
             var Source, Destination, source, destination;
 
             Source = Protoplast.extend({
-                __meta__: {
+                $meta: {
                     inject: {pub: 'pub'}
                 },
                 send: function(msg) {
-                    this.pub('message', msg)
+                    this.pub('message', msg);
                 }
             });
 
             Destination = Protoplast.extend({
-                __meta__: {
+                $meta: {
                     inject: {sub: 'sub'}
                 },
                 injected: function() {
@@ -499,10 +527,10 @@ describe('Protoplast', function() {
 
             // create root view that will be injected into repositories
             RootView = Protoplast.extend({
-                __meta__: {
+                $meta: {
                     inject: {pub: 'pub'}
                 },
-                __init__: function() {
+                $create: function() {
                     this.view = ViewFactory();
                 },
                 injected: function() {
@@ -528,7 +556,7 @@ describe('Protoplast', function() {
             // action dispatcher to convert view actions to domain actions
             ActionDispatcher = Protoplast.extend({
 
-                __meta__: {
+                $meta: {
                     inject: {sub: 'sub', pub: 'pub'}
                 },
 
@@ -544,11 +572,11 @@ describe('Protoplast', function() {
             // repository to react to domain actions and pass data to the view
             Repository = Protoplast.extend({
 
-                __meta__: {
+                $meta: {
                     inject: {sub: 'sub', view: 'view'}
                 },
 
-                __init__: function() {
+                $create: function() {
                     this.clicks = 0;
                 },
 

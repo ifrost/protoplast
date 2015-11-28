@@ -3,11 +3,11 @@
 
     window.TodosModel = window.Model.extend([window.Storage], {
 
-        __meta__: {
+        $meta: {
             update_after: ['add', 'remove', 'toggle', 'toggle_all', 'refresh']
         },
 
-        __init__: function() {
+        $create: function() {
             this.store_id('todos');
             this._todos = this.store_read() || [];
             this.on('updated', this.store, this);
@@ -23,8 +23,8 @@
 
         remove: function(todo) {
             this._todos = this._todos.filter(function(t) {
-                return t !== todo
-            })
+                return t !== todo;
+            });
         },
 
         toggle: function(todo) {
@@ -46,13 +46,13 @@
 
         undone: function() {
             return this._todos.filter(function(todo) {
-                return !todo.done
+                return !todo.done;
             });
         },
 
         done: function() {
             return this._todos.filter(function(todo) {
-                return todo.done
+                return todo.done;
             });
         }
 

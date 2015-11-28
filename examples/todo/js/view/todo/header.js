@@ -5,7 +5,7 @@
 
         tag: 'header',
 
-        create: function () {
+        init: function () {
 
             this.$root.classed('header', true);
 
