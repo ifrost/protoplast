@@ -3,8 +3,8 @@
 
     window.ViewStateController = window.Controller.extend({
 
-        __meta__: {
-            inject: {view_state: 'viewstate'}
+        view_state: {
+            inject: 'viewstate'
         },
 
         injected: function() {

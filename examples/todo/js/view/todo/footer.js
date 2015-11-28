@@ -5,14 +5,15 @@
 
         tag: 'footer',
 
-        __meta__: {
-            inject: {
-                todos: 'todos',
-                view_state: 'viewstate'
-            }
+        todos: {
+            inject: 'todos'
         },
 
-        create: function () {
+        view_state: {
+            inject: 'viewstate'
+        },
+
+        init: function () {
 
             this.$root.classed('footer', true);
 
@@ -49,7 +50,7 @@
 
             this.counter.html('<strong>' + count_undone + '</strong> ' + items + ' left');
             this.$root.style('display', count_all ? 'block' : 'none');
-            this.clear_all.style('display', count_done ? 'block' : 'none')
+            this.clear_all.style('display', count_done ? 'block' : 'none');
         }
 
     });

@@ -9,11 +9,11 @@
 
     window.Router = window.Protoplast.extend({
 
-        __meta__: {
-            inject: {pub: 'pub'}
+        pub: {
+            inject: 'pub'
         },
 
-        __init__: function() {
+        $create: function() {
             window.addEventListener('hashchange', this.route.bind(this));
             window.addEventListener('load', this.route.bind(this));
         },

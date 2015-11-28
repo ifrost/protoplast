@@ -3,7 +3,7 @@
 
     var App = window.Protoplast.extend({
         run: function(config) {
-            var context = new window.ProtoplastExt.Context();
+            var context = window.ProtoplastExt.Context.create();
             for (var controller in config.controllers) {
                 context.register(controller, config.controllers[controller]);
             }

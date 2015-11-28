@@ -5,14 +5,14 @@
 
         tag: 'ul',
 
-        __meta__: {
+        $meta: {
             inject: {
                 todos: 'todos',
                 view_state: 'viewstate'
             }
         },
 
-        create: function () {
+        init: function () {
 
             this.$root.classed('todo-list', true);
 
@@ -90,10 +90,10 @@
                     if (d3.event.keyCode === 13) {
                         self.exit_edit_mode();
                         if (text.length) {
-                            self.pub('todos/edit', {todo: todo, text: text})
+                            self.pub('todos/edit', {todo: todo, text: text});
                         }
                         else {
-                            self.pub('todos/remove', todo)
+                            self.pub('todos/remove', todo);
                         }
                     }
                 });
@@ -107,16 +107,16 @@
 
             // update
             update.classed('completed', function (d) {
-                return d.done
+                return d.done;
             });
             var div = update.select('div');
             div.select('label')
                 .text(function (d) {
-                    return d.text
+                    return d.text;
                 });
             div.select('input.toggle')
                 .property('checked', function (d) {
-                    return d.done
+                    return d.done;
                 });
             div.select('input.edit');
             div.select('button.destroy');

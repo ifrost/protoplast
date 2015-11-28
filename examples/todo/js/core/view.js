@@ -2,12 +2,12 @@
     'use strict';
 
     window.View = window.ProtoplastExt.Component.extend({
-        __meta__: {
-            inject: {pub: 'pub'}
+        
+        pub: {
+            inject: 'pub'
         },
 
-        __init__: function() {
-            window.ProtoplastExt.Component.call(this);
+        $create: function() {
             this.$root = d3.select(this.root);
         }
     });

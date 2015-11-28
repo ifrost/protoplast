@@ -4,7 +4,7 @@
 
     var Context = Protoplast.extend({
 
-        __init__: function() {
+        $create: function() {
             var self = this;
             this._objects = {
                 pub: function(topic, message) {
@@ -19,10 +19,11 @@
                         remove: function(handler) {
                             self._dispatcher.off(topic, handler, instance_self);
                         }
-                    }
+                    };
                 }
             };
-            this._dispatcher = new Dispatcher();
+        
+            this._dispatcher = Dispatcher.create();
         },
 
         /**
@@ -52,7 +53,7 @@
                 }
             }.bind(this);
 
-            this.inject(instance, instance.__meta__.inject);
+            this.inject(instance, instance.$meta.inject);
         },
 
         /**

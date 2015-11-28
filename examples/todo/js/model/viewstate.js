@@ -3,11 +3,11 @@
 
     window.ViewStateModel = window.Model.extend({
 
-        __meta__: {
+        $meta: {
             update_after: ['change']
         },
 
-        __init__: function() {
+        $create: function() {
             this._state = window.ViewStateModel.ALL;
         },
 

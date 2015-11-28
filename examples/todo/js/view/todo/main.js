@@ -7,11 +7,11 @@
 
         tag: 'section',
 
-        __meta__: {
-            inject: {todos: 'todos'}
+        todos: {
+            inject: 'todos'
         },
 
-        create: function () {
+        init: function () {
 
             this.$root.classed('main', true);
 
@@ -21,7 +21,7 @@
                 .on('change', this.toggle.bind(this));
             this.$root.append('label').attr('for', 'toggle-all').text('Mark all as complete');
 
-            this.add(new TodosView());
+            this.add(TodosView.create());
             this.todos.on('updated', this.update_toggle, this);
             this.update_toggle();
         },

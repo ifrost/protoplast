@@ -9,13 +9,13 @@
 
         tag: 'section',
 
-        create: function() {
+        init: function() {
 
             this.$root.classed('todoapp', true);
 
-            this.add(new HeaderView());
-            this.add(new MainView());
-            this.add(new FooterView());
+            this.add(HeaderView.create());
+            this.add(MainView.create());
+            this.add(FooterView.create());
         }
 
     });
