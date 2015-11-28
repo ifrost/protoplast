@@ -51,26 +51,37 @@
      */
     function mixin(instance, mixins) {
         mixins.forEach(function(Mixin) {
-            mix(instance, Mixin.prototype);
+            mix(instance, Mixin);
         });
         return instance;
     }
 
     /**
-     * Base protoplast constructor
-     * @constructor
+     * Base protoplast
      */
-    var Protoplast = function() {
-    };
+    var Protoplast = {
+        __meta__: {},
+        create: function() {
+            return Object.create(this);
+        },
+        factory: function(fn) {
+            var base = this;
+            return function() {
+                var instance = base.create.apply(this, arguments);
+                fn.apply(instance, arguments);
+                return instance;
+            }
+        }
+    }
 
     /**
      * Creates new factory function
      * @param [mixins]
      * @param definition
-     * @returns {Function}
+     * @returns {Object}
      */
     Protoplast.extend = function(mixins, definition) {
-        var base = this, constructor;
+        var proto = Object.create(this), meta, desc, defined;
 
         // set defaults
         if (!(mixins instanceof Array)) {
@@ -79,35 +90,39 @@
         }
         definition = definition || {};
         mixins = mixins || [];
-        definition.__meta__ = definition.__meta__ || {};
-        constructor = definition.__init__ || function() {
-            base.apply(this, arguments);
-        };
+        meta = definition.__meta__ || {};
+        delete definition.__meta__;
 
-        // create prototype
-        constructor.prototype = Object.create(base.prototype);
-        constructor.base = base.prototype;
+        proto = mixin(proto, mixins);
 
-        // mixin
-        mixin(constructor.prototype, mixins);
-
-        // create prototype properties
         for (var property in definition) {
-            if (property !== '__meta__' && property !== '__init') {
-                constructor.prototype[property] = definition[property];
+            defined = false;
+                    
+            if (typeof definition[property] === "function") {
+                defined = true;
+                desc = {value: definition[property], writable: true, enumerable: true};
+            } else {
+                desc = definition[property];
+                for (var d in desc) {
+                    if (['value', 'get', 'set', 'writable', 'enumerable'].indexOf(d) === -1) {
+                        meta[d] = meta[d] || {};
+			meta[d][property] = desc[d];
+                        delete desc[d];
+		    }
+		    else {
+			defined = true;
+		    }
+                } 
+            }
+            if (defined) {
+                Object.defineProperty(proto, property, desc);
             }
         }
 
-        // assign metadata
-        constructor.prototype.__meta__ = merge(definition.__meta__, constructor.base.__meta__);
-        constructor.__meta__ = constructor.prototype.__meta__;
+        proto.__meta__ = merge(meta, this.__meta__);
 
-        // assign extend function
-        constructor.extend = Protoplast.extend.bind(constructor);
-
-        return constructor;
+        return proto;
     };
-    Protoplast.prototype.__meta__ = {};
 
     exports.Protoplast = Protoplast;
 

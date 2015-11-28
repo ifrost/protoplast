@@ -22,7 +22,7 @@
     /**
      * AOP Manager. Allows to add aspects to a prototype
      */
-    var Aop = function(constructor) {
+    var Aop = function(proto) {
         return {
             /**
              * Applies aspects
@@ -36,7 +36,7 @@
                 }
 
                 methods.forEach(function(method) {
-                    wrap(constructor.prototype, method, aspects);
+                    wrap(proto, method, aspects);
                 }, this);
                 return this;
             }

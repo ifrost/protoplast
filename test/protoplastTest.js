@@ -116,7 +116,7 @@ describe('Protoplast', function() {
 
         it('assigns meta data with instances', function() {
             var Base = Protoplast.extend(), base;
-            base = new Base();
+            base = Base.create();
             chai.assert.equal(base.__meta__, Base.__meta__);
         });
 
@@ -128,13 +128,13 @@ describe('Protoplast', function() {
             var Base, base, Sub, sub;
 
             Base = Protoplast.extend({
-                value: 10
+                value: {value: 10}
             });
 
             Sub = Base.extend();
 
-            base = new Base();
-            sub = new Sub();
+            base = Base.create();
+            sub = Sub.create();
 
             chai.assert.equal(base.value, 10);
             chai.assert.equal(sub.value, 10);
@@ -145,9 +145,9 @@ describe('Protoplast', function() {
             var Base, Sub, sub;
 
             Base = Protoplast.extend({
-                __init__: function(value) {
+                create: Protoplast.factory(function(value) {
                     this.set_value(value);
-                },
+                }),
                 set_value: function(value) {
                     this.value = value;
                 }
@@ -159,7 +159,7 @@ describe('Protoplast', function() {
                 }
             });
 
-            sub = new Sub(10);
+            sub = Sub.create(10);
             chai.assert.equal(sub.get_value(), 10);
         });
 
@@ -175,12 +175,12 @@ describe('Protoplast', function() {
 
             Sub = Base.extend({
                 test: function() {
-                    return Sub.base.test.call(this) * 2;
+                    return Base.test.call(this) * 2;
                 }
             });
 
-            base = new Base();
-            sub = new Sub();
+            base = Base.create();
+            sub = Sub.create();
 
             chai.assert.equal(base.test(), 10);
             chai.assert.equal(sub.test(), 20);
@@ -194,15 +194,15 @@ describe('Protoplast', function() {
             var Foo, foo;
 
             Foo = Protoplast.extend({
-                __init__: function(text) {
+                create: Protoplast.factory(function(text) {
                     this.text = text;
-                },
+                }),
                 append: function(text) {
                     this.text += text;
                 }
             });
 
-            foo = new Foo('text');
+            foo = Foo.create('text');
             foo.append('text');
             chai.assert.equal(foo.text, 'texttext');
 
@@ -212,7 +212,7 @@ describe('Protoplast', function() {
                 }
             });
 
-            foo = new Foo('text');
+            foo = Foo.create('text');
             foo.append('text');
             chai.assert.equal(foo.text, 'texttext!');
         });
@@ -222,15 +222,15 @@ describe('Protoplast', function() {
             var Foo, foo;
 
             Foo = Protoplast.extend({
-                __init__: function(text) {
+                create: Protoplast.factory(function(text) {
                     this.text = text;
-                },
+                }),
                 append: function(text) {
                     this.text += text;
                 }
             });
 
-            foo = new Foo('text');
+            foo = Foo.create('text');
             foo.append('text');
             chai.assert.equal(foo.text, 'texttext');
 
@@ -240,7 +240,7 @@ describe('Protoplast', function() {
                 }
             });
 
-            foo = new Foo('text');
+            foo = Foo.create('text');
             foo.append('text');
             chai.assert.equal(foo.text, 'text,text');
         });
@@ -250,9 +250,9 @@ describe('Protoplast', function() {
             var Text, UCText, text;
 
             Text = Protoplast.extend({
-                __init__: function(text) {
+                create: Protoplast.factory(function(text) {
                     this.text = text;
-                },
+                }),
                 append: function(text) {
                     this.text += text;
                 }
@@ -278,7 +278,7 @@ describe('Protoplast', function() {
                 }
             });
 
-            text = new UCText('test');
+            text = UCText.create('test');
             text.append('test');
             chai.assert.equal(text.text, 'TEST,TEST');
         });
@@ -298,7 +298,7 @@ describe('Protoplast', function() {
                 before: before
             });
 
-            foo = new Foo();
+            foo = Foo.create();
 
             sinon.assert.notCalled(after);
             sinon.assert.notCalled(before);
@@ -326,7 +326,7 @@ describe('Protoplast', function() {
                 }
             });
 
-            dispatcher = new CustomDispatcher();
+            dispatcher = CustomDispatcher.create();
 
             dispatcher.on('message', function(value) {
                 message = value;
@@ -354,10 +354,10 @@ describe('Protoplast', function() {
                 }
             });
 
-            var context = new Context();
+            var context = Context.create();
 
-            context.register('foo', foo = new Foo());
-            context.register('bar', bar = new Bar());
+            context.register('foo', foo = Foo.create());
+            context.register('bar', bar = Bar.create());
 
             chai.assert.equal(foo.bar, bar);
             chai.assert.equal(bar.foo, foo);
@@ -378,10 +378,10 @@ describe('Protoplast', function() {
 
             Bar = Protoplast.extend();
 
-            var context = new Context();
+            var context = Context.create();
 
-            context.register('foo', foo = new Foo2());
-            context.register('bar', bar = new Bar());
+            context.register('foo', foo = Foo2.create());
+            context.register('bar', bar = Bar.create());
 
             chai.assert.equal(foo.bar, bar);
         });
@@ -404,14 +404,14 @@ describe('Protoplast', function() {
 
             Foo = Protoplast.extend({
                 injected: function() {
-                    bar = new Bar();
+                    bar = Bar.create();
                     this.__fastinject__(bar);
                 }
             });
 
-            var context = new Context();
-            context.register('foo', new Foo());
-            context.register('dep', dep = new Dep());
+            var context = Context.create();
+            context.register('foo', Foo.create());
+            context.register('dep', dep = Dep.create());
             context.build();
 
             chai.assert.equal(bar.dep.value(), 10);
@@ -447,9 +447,9 @@ describe('Protoplast', function() {
                 }
             });
 
-            var context = new Context();
-            context.register('source', source = new Source());
-            context.register('dest', destination = new Destination());
+            var context = Context.create();
+            context.register('source', source = Source.create());
+            context.register('dest', destination = Destination.create());
             context.build();
 
             source.send('hello');
@@ -479,7 +479,7 @@ describe('Protoplast', function() {
 
             FooBar = Protoplast.extend([Foo, Bar]);
 
-            foobar = new FooBar();
+            foobar = FooBar.create();
 
             chai.assert.equal(foobar.foo, 'foo');
             chai.assert.equal(foobar.bar, 'bar');
@@ -493,7 +493,7 @@ describe('Protoplast', function() {
             var RootView, View, ActionDispatcher, Repository, view, repository, _view;
 
             function ViewFactory() {
-                _view = new View();
+                _view = View.create();
                 return _view;
             }
 
@@ -568,10 +568,10 @@ describe('Protoplast', function() {
 
             });
 
-            var context = new Context();
-            context.register('view', new RootView());
-            context.register('ad', new ActionDispatcher());
-            context.register('repo', repository = new Repository());
+            var context = Context.create();
+            context.register('view', RootView.create());
+            context.register('ad', ActionDispatcher.create());
+            context.register('repo', repository = Repository.create());
             context.build();
 
             chai.assert.equal(repository.clicks, 0);
