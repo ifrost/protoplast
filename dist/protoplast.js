@@ -272,8 +272,8 @@
 
             instance.__fastinject__ = function(obj) {
                 this.register(obj);
-                if (obj.injected instanceof Function) {
-                    obj.injected();
+                if (obj.$meta && obj.$meta.inject_init) {
+                    obj[Object.keys(obj.$meta.inject_init)[0]]();
                 }
             }.bind(this);
 
@@ -305,8 +305,8 @@
         build: function() {
             Object.keys(this._objects).forEach(function(id) {
                 var instance = this._objects[id];
-                if (instance.injected instanceof Function) {
-                    instance.injected();
+                if (instance.$meta && instance.$meta.inject_init) {
+                    instance[Object.keys(instance.$meta.inject_init)[0]]();
                 }
             }.bind(this));
         }
@@ -336,7 +336,9 @@
         /**
          * Template method, used to create DOM of the component
          */
-        init: function() {
+        init: {
+            inject_init: true,
+            value: function() {}
         },
 
         /**

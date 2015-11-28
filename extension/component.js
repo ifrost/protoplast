@@ -16,7 +16,9 @@
         /**
          * Template method, used to create DOM of the component
          */
-        init: function() {
+        init: {
+            inject_init: true,
+            value: function() {}
         },
 
         /**

@@ -431,9 +431,12 @@ describe('Protoplast', function() {
             });
 
             Foo = Protoplast.extend({
-                injected: function() {
-                    bar = Bar.create();
-                    this.__fastinject__(bar);
+                injected: {
+                    inject_init: true,
+                    value: function() {
+                        bar = Bar.create();
+                        this.__fastinject__(bar);
+                    }
                 }
             });
 
@@ -464,8 +467,11 @@ describe('Protoplast', function() {
                 $meta: {
                     inject: {sub: 'sub'}
                 },
-                injected: function() {
-                    this.sub('message').add(this.save_message);
+                injected: {
+                    inject_init: true,
+                    value: function() {
+                        this.sub('message').add(this.save_message);
+                    }
                 },
                 save_message: function(msg) {
                     this.message = msg;
@@ -527,14 +533,19 @@ describe('Protoplast', function() {
 
             // create root view that will be injected into repositories
             RootView = Protoplast.extend({
-                $meta: {
-                    inject: {pub: 'pub'}
-                },
+
+                pub: {
+                    inject: 'pub'
+                },                
+
                 $create: function() {
                     this.view = ViewFactory();
                 },
-                injected: function() {
-                    this.view.pub = this.pub;
+                initialize: {
+                    inject_init: true,
+                    value: function() {
+                        this.view.pub = this.pub;
+                    }
                 },
                 data: function(data) {
                     this.view.show(data.clicks);
@@ -556,14 +567,20 @@ describe('Protoplast', function() {
             // action dispatcher to convert view actions to domain actions
             ActionDispatcher = Protoplast.extend({
 
-                $meta: {
-                    inject: {sub: 'sub', pub: 'pub'}
+                sub: {
+                    inject: 'sub'
                 },
 
-                injected: function() {
-                    this.sub('myview/clicked').add(this.count_click);
+                pub: {
+                    inject: 'pub'
                 },
 
+                injected: {
+                    inject_init: true,
+                    value: function() {
+                        this.sub('myview/clicked').add(this.count_click);
+                    }
+                },
                 count_click: function() {
                     this.pub('click/increment', 1);
                 }
@@ -572,17 +589,24 @@ describe('Protoplast', function() {
             // repository to react to domain actions and pass data to the view
             Repository = Protoplast.extend({
 
-                $meta: {
-                    inject: {sub: 'sub', view: 'view'}
+                sub: {
+                    inject: 'sub'
+                },
+
+                view: {
+                    inject: 'view'
                 },
 
                 $create: function() {
                     this.clicks = 0;
                 },
 
-                injected: function() {
-                    this.sub('click/increment').add(this.increment);
-                    this.refresh();
+                injected: {
+                    inject_init: true,
+                    value: function() {
+                        this.sub('click/increment').add(this.increment);
+                        this.refresh();
+                    }
                 },
 
                 increment: function(value) {
