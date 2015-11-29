@@ -272,12 +272,23 @@
 
             instance.__fastinject__ = function(obj) {
                 this.register(obj);
-                if (obj.$meta && obj.$meta.inject_init) {
-                    obj[Object.keys(obj.$meta.inject_init)[0]]();
-                }
+                this.process(obj);
             }.bind(this);
 
             this.inject(instance, instance.$meta.inject);
+        },
+
+        process: function(obj) {
+            if (obj.$meta && obj.$meta.inject_init) {
+                Object.keys(obj.$meta.inject_init).forEach(function(handler){
+                    obj[handler]();
+                }, this);
+            }
+            if (obj.$meta && obj.$meta.sub) {
+                Object.keys(obj.$meta.sub).forEach(function(handler){
+                    this._objects.sub.call(obj, obj.$meta.sub[handler]).add(obj[handler]);
+                }, this);
+            }
         },
 
         /**
@@ -305,9 +316,7 @@
         build: function() {
             Object.keys(this._objects).forEach(function(id) {
                 var instance = this._objects[id];
-                if (instance.$meta && instance.$meta.inject_init) {
-                    instance[Object.keys(instance.$meta.inject_init)[0]]();
-                }
+                this.process(instance);
             }.bind(this));
         }
 
@@ -348,13 +357,6 @@
             this._children.forEach(function(child) {
                 this.remove(child);
             }, this);
-        },
-
-        /**
-         * Injected handler
-         */
-        injected: function() {
-            this.init();
         },
 
         /**

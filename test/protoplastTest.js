@@ -541,12 +541,14 @@ describe('Protoplast', function() {
                 $create: function() {
                     this.view = ViewFactory();
                 },
+
                 initialize: {
                     inject_init: true,
                     value: function() {
                         this.view.pub = this.pub;
                     }
                 },
+
                 data: function(data) {
                     this.view.show(data.clicks);
                 }
@@ -562,36 +564,26 @@ describe('Protoplast', function() {
                 click: function() {
                     this.pub('myview/clicked');
                 }
+
             });
 
             // action dispatcher to convert view actions to domain actions
             ActionDispatcher = Protoplast.extend({
 
-                sub: {
-                    inject: 'sub'
-                },
-
                 pub: {
                     inject: 'pub'
                 },
 
-                injected: {
-                    inject_init: true,
+                count_click: {
+                    sub: 'myview/clicked',
                     value: function() {
-                        this.sub('myview/clicked').add(this.count_click);
+                        this.pub('click/increment', 1);
                     }
-                },
-                count_click: function() {
-                    this.pub('click/increment', 1);
                 }
             });
 
             // repository to react to domain actions and pass data to the view
             Repository = Protoplast.extend({
-
-                sub: {
-                    inject: 'sub'
-                },
 
                 view: {
                     inject: 'view'
@@ -601,21 +593,19 @@ describe('Protoplast', function() {
                     this.clicks = 0;
                 },
 
-                injected: {
-                    inject_init: true,
-                    value: function() {
-                        this.sub('click/increment').add(this.increment);
+                increment: {
+                    sub: 'click/increment',
+                    value: function(value) {
+                        this.clicks += value;
                         this.refresh();
                     }
                 },
 
-                increment: function(value) {
-                    this.clicks += value;
-                    this.refresh();
-                },
-
-                refresh: function() {
-                    this.view.data({clicks: this.clicks});
+                refresh: {
+                    inject_init: true,
+                    value: function() {
+                        this.view.data({clicks: this.clicks});
+                    }
                 }
 
             });

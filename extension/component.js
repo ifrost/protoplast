@@ -31,13 +31,6 @@
         },
 
         /**
-         * Injected handler
-         */
-        injected: function() {
-            this.init();
-        },
-
-        /**
          * Add a child component
          * @param {Component} child
          */
