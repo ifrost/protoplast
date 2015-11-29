@@ -9,7 +9,7 @@ gulp.task('clean', function() {
 });
 
 gulp.task('concat', ['clean'], function() {
-    return gulp.src(['protoplast.js', 'extension/aop.js', 'extension/dispatcher.js', 'extension/di.js', 'extension/component.js'])
+    return gulp.src(['protoplast.js', 'ext/aop.js', 'ext/dispatcher.js', 'ext/di.js', 'ext/component.js'])
         .pipe(concat('protoplast.js'))
         .pipe(gulp.dest('./dist'));
 });
