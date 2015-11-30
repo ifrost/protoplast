@@ -3,7 +3,7 @@
 
     var App = window.Protoplast.extend({
         run: function(config) {
-            var context = window.ProtoplastExt.Context.create();
+            var context = window.Protoplast.Context.create();
             for (var controller in config.controllers) {
                 context.register(controller, config.controllers[controller]);
             }
@@ -12,7 +12,7 @@
             }
             context.build();
 
-            this.root = window.ProtoplastExt.Component.Root(config.root_node, context);
+            this.root = window.Protoplast.Component.Root(config.root_node, context);
             config.root_views.forEach(function(view) {
                 this.root.add(view);
             }, this);

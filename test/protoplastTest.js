@@ -1,8 +1,11 @@
-describe('Protoplast', function() {
+var chai = require('chai'),
+    sinon = require('sinon'),
+    Protoplast = require('./../main'),
+    Dispatcher = Protoplast.Dispatcher,
+    Aop = Protoplast.Aop,
+    Context = Protoplast.Context;
 
-    var Dispatcher = ProtoplastExt.Dispatcher,
-        Context = ProtoplastExt.Context,
-        Aop = ProtoplastExt.Aop;
+describe('Protoplast', function() {
 
     describe('Metadata', function() {
 

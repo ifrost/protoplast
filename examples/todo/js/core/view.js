@@ -1,7 +1,7 @@
 (function(window) {
     'use strict';
 
-    window.View = window.ProtoplastExt.Component.extend({
+    window.View = window.Protoplast.Component.extend({
         
         pub: {
             inject: 'pub'

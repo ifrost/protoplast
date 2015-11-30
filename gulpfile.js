@@ -1,6 +1,7 @@
 var gulp = require('gulp'),
     clean = require('gulp-clean'),
-    concat = require('gulp-concat'),
+    browserify = require('gulp-browserify'),
+    rename = require('gulp-rename'),
     uglify = require('gulp-uglifyjs');
 
 gulp.task('clean', function() {
@@ -14,7 +15,18 @@ gulp.task('concat', ['clean'], function() {
         .pipe(gulp.dest('./dist'));
 });
 
-gulp.task('build', ['concat'], function() {
+gulp.task('browserify', function() {
+    // Single entry point to browserify
+    gulp.src('main.js')
+        .pipe(browserify({
+            insertGlobals : true,
+            debug : false
+        }))
+        .pipe(rename('protoplast.js'))
+        .pipe(gulp.dest('./dist'))
+});
+
+gulp.task('build', ['browserify'], function() {
     gulp.src('dist/*')
         .pipe(uglify('protoplast.min.js'))
         .pipe(gulp.dest('dist'));
