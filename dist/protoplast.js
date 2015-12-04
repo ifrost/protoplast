@@ -16,7 +16,7 @@ var protoplast = {
 
 global.Protoplast = protoplast;
 module.exports = protoplast;
-}).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/fake_46e74558.js","/")
+}).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/fake_d7a06d4e.js","/")
 },{"./js/aop":2,"./js/component":3,"./js/di":4,"./js/dispatcher":5,"./js/protoplast":6,"buffer":7,"v229Ge":10}],2:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 
@@ -191,7 +191,10 @@ var Context = Protoplast.extend({
             this.process(obj);
         }.bind(this);
 
-        this.inject(instance, instance.$meta.inject);
+        if (instance.$meta.inject) {
+            this.inject(instance, instance.$meta.inject);
+        }
+
     },
 
     process: function(obj) {

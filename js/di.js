@@ -51,7 +51,10 @@ var Context = Protoplast.extend({
             this.process(obj);
         }.bind(this);
 
-        this.inject(instance, instance.$meta.inject);
+        if (instance.$meta.inject) {
+            this.inject(instance, instance.$meta.inject);
+        }
+
     },
 
     process: function(obj) {
