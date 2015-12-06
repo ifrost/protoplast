@@ -126,6 +126,12 @@ Protoplast.extend = function(mixins, definition) {
 
     proto.$meta = merge(meta, this.$meta);
 
+    if (proto.$meta.$processors) {
+        proto.$meta.$processors.forEach(function(processor) {
+            processor(proto);
+        });
+    }
+
     return proto;
 };
 

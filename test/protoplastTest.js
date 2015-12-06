@@ -524,6 +524,25 @@ describe('Protoplast', function() {
         });
     });
 
+    describe('Processors', function() {
+
+        it('inherits and runs processors', function() {
+
+            var Base, Sub, base_processor = sinon.spy(), sub_processor = sinon.spy();
+
+            Base = Protoplast.extend({$meta: {$processors: [base_processor]}});
+            Sub = Base.extend({$meta: {$processors: [sub_processor]}});
+
+            sinon.assert.calledOnce(sub_processor);
+            sinon.assert.calledWith(sub_processor, Sub);
+
+            sinon.assert.calledTwice(base_processor);
+            sinon.assert.calledWith(base_processor, Base);
+            sinon.assert.calledWith(base_processor, Sub);
+        });
+
+    });
+
     describe('Examples', function() {
         it('flux example', function() {
 

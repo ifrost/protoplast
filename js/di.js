@@ -22,6 +22,7 @@ var Context = Protoplast.extend({
                 };
             }
         };
+        this._unknows = [];
 
         this._dispatcher = Dispatcher.create();
     },
@@ -41,6 +42,7 @@ var Context = Protoplast.extend({
     register: function(id, instance) {
         if (arguments.length == 1) {
             instance = id;
+            this._unknows.push(instance);
         }
         else {
             this._objects[id] = instance;
@@ -51,7 +53,7 @@ var Context = Protoplast.extend({
             this.process(obj);
         }.bind(this);
 
-        if (instance.$meta.inject) {
+        if (instance.$meta && instance.$meta.inject) {
             this.inject(instance, instance.$meta.inject);
         }
 
@@ -96,7 +98,10 @@ var Context = Protoplast.extend({
         Object.keys(this._objects).forEach(function(id) {
             var instance = this._objects[id];
             this.process(instance);
-        }.bind(this));
+        }, this);
+        this._unknows.forEach(function(instance){
+            this.process(instance);
+        }, this);
     }
 
 });
