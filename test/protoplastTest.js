@@ -194,6 +194,28 @@ describe('Protoplast', function() {
             chai.assert.equal(sub.get_value(), 10);
         });
 
+        it('allows to create getters and setters', function(){
+
+            var Base = Protoplast.extend({
+                value: {
+                    get: function() {
+                        return 10;
+                    }
+                },
+                setter: {
+                    set: function(value) {
+                        this.setter_value = value;
+                    }
+                }
+            });
+
+            var b = Base.create();
+            chai.assert.equal(b.value, 10);
+
+            b.setter = 11;
+            chai.assert.equal(b.setter_value, 11);
+        });
+
         it('allows to run base methods', function() {
 
             var Base, Sub, base, sub;

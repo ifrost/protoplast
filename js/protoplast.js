@@ -111,12 +111,12 @@ Protoplast.extend = function(mixins, definition) {
             for (var d in desc) {
                 if (['value', 'get', 'set', 'writable', 'enumerable'].indexOf(d) === -1) {
                     meta[d] = meta[d] || {};
-        meta[d][property] = desc[d];
+                    meta[d][property] = desc[d];
                     delete desc[d];
-        }
-        else {
-        defined = true;
-        }
+                }
+                else {
+                    defined = true;
+                }
             }
         }
         if (defined) {
