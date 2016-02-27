@@ -565,6 +565,48 @@ describe('Protoplast', function() {
 
     });
 
+    describe('Autobinding', function() {
+
+        it('autobinds methods if autobind is enabled', function() {
+
+            var Base = Protoplast.extend({
+
+                $meta: {
+                    name: 'Base'
+                },
+
+                $create: function(value) {
+                    this._value = value;
+                },
+
+                get_value: function() {
+                    return this._value;
+                }
+
+            });
+
+            var Sub = Base.extend({
+                $meta: {
+                    autobind: true
+                }
+            });
+
+            var base = Base.create(2);
+            var sub = Sub.create(3);
+;
+            var base_get = base.get_value;
+            var sub_get = sub.get_value;
+
+            chai.assert.strictEqual(base.get_value(), 2);
+            chai.assert.strictEqual(sub.get_value(), 3);
+
+            chai.assert.isUndefined(base_get());
+            chai.assert.strictEqual(sub_get(), 3);
+
+        });
+
+    });
+
     describe('Examples', function() {
         it('flux example', function() {
 

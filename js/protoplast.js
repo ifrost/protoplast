@@ -71,7 +71,15 @@ function factory(base, fn) {
 var Protoplast = {
     $meta: {},
     create: function() {
-        return Object.create(this);
+        var instance = Object.create(this);
+        if (this.$meta.autobind) {
+            for (var property in instance) {
+                if (typeof(instance[property]) === "function" && property !== 'create' && property !== 'extend') {
+                    instance[property] = this[property].bind(instance);
+                }
+            }
+        }
+        return instance;
     }
 };
 

@@ -16,7 +16,7 @@ var protoplast = {
 
 global.Protoplast = protoplast;
 module.exports = protoplast;
-}).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/fake_6ce07091.js","/")
+}).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/fake_e4debc5.js","/")
 },{"./js/aop":2,"./js/component":3,"./js/di":4,"./js/dispatcher":5,"./js/protoplast":6,"buffer":7,"v229Ge":10}],2:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 
@@ -106,6 +106,12 @@ var Component = Protoplast.extend({
      * @param {Component} child
      */
     add: function(child) {
+        if (!child) {
+            throw new Error('Child component cannot be null');
+        }
+        if (!child.root) {
+            throw new Error('Child component should have root property');
+        }
         this._children.push(child);
         this.__fastinject__(child);
         this.root.appendChild(child.root);
@@ -269,6 +275,9 @@ var Dispatcher = Protoplast.extend({
     },
 
     on: function(topic, handler, context) {
+        if (!handler) {
+            throw new Error('Handler is required for event ' + topic);
+        }
         this._topics = this._topics || {};
         this._topics[topic] = this._topics[topic] || [];
         this._topics[topic].push({handler: handler, context: context});
@@ -360,7 +369,15 @@ function factory(base, fn) {
 var Protoplast = {
     $meta: {},
     create: function() {
-        return Object.create(this);
+        var instance = Object.create(this);
+        if (this.$meta.autobind) {
+            for (var property in instance) {
+                if (typeof(instance[property]) === "function" && property !== 'create' && property !== 'extend') {
+                    instance[property] = this[property].bind(instance);
+                }
+            }
+        }
+        return instance;
     }
 };
 
@@ -400,12 +417,12 @@ Protoplast.extend = function(mixins, definition) {
             for (var d in desc) {
                 if (['value', 'get', 'set', 'writable', 'enumerable'].indexOf(d) === -1) {
                     meta[d] = meta[d] || {};
-        meta[d][property] = desc[d];
+                    meta[d][property] = desc[d];
                     delete desc[d];
-        }
-        else {
-        defined = true;
-        }
+                }
+                else {
+                    defined = true;
+                }
             }
         }
         if (defined) {
@@ -414,6 +431,12 @@ Protoplast.extend = function(mixins, definition) {
     }
 
     proto.$meta = merge(meta, this.$meta);
+
+    if (proto.$meta.$processors) {
+        proto.$meta.$processors.forEach(function(processor) {
+            processor(proto);
+        });
+    }
 
     return proto;
 };

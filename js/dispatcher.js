@@ -15,6 +15,9 @@ var Dispatcher = Protoplast.extend({
     },
 
     on: function(topic, handler, context) {
+        if (!handler) {
+            throw new Error('Handler is required for event ' + topic);
+        }
         this._topics = this._topics || {};
         this._topics[topic] = this._topics[topic] || [];
         this._topics[topic].push({handler: handler, context: context});

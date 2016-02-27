@@ -34,6 +34,12 @@ var Component = Protoplast.extend({
      * @param {Component} child
      */
     add: function(child) {
+        if (!child) {
+            throw new Error('Child component cannot be null');
+        }
+        if (!child.root) {
+            throw new Error('Child component should have root property');
+        }
         this._children.push(child);
         this.__fastinject__(child);
         this.root.appendChild(child.root);
