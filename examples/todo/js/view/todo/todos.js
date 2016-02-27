@@ -16,8 +16,8 @@
 
             this.$root.classed('todo-list', true);
 
-            this.todos.on('updated', this.render, this);
-            this.view_state.on('updated', this.render, this);
+            this.todos.on('updated', this.render);
+            this.view_state.on('updated', this.render);
 
             var self = this;
             d3.select(window)

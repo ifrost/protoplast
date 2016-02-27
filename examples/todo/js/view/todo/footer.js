@@ -29,10 +29,10 @@
                 .text('Clear completed')
                 .on('click', this.pub.bind(this, 'todos/clear_done'));
 
-            this.todos.on('updated', this.update_counter, this);
+            this.todos.on('updated', this.update_counter);
             this.update_counter();
 
-            this.view_state.on('updated', this.update_selection, this);
+            this.view_state.on('updated', this.update_selection);
             this.update_selection();
         },
 

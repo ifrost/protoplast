@@ -22,7 +22,7 @@
             this.$root.append('label').attr('for', 'toggle-all').text('Mark all as complete');
 
             this.add(TodosView.create());
-            this.todos.on('updated', this.update_toggle, this);
+            this.todos.on('updated', this.update_toggle);
             this.update_toggle();
         },
 
