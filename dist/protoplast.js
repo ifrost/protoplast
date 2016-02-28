@@ -4,20 +4,25 @@ var Protoplast = require('./js/protoplast'),
     Aop = require('./js/aop'),
     Dispatcher = require('./js/dispatcher'),
     Context = require('./js/di'),
-    Component = require('./js/component');
+    Component = require('./js/component'),
+    utils = require('./js/utils'),
+    constructors = require('./js/constructors');
 
 var protoplast = {
     extend: Protoplast.extend.bind(Protoplast),
+    create: Protoplast.create.bind(Protoplast),
     Dispatcher: Dispatcher,
     Aop: Aop,
     Context: Context,
-    Component: Component
+    Component: Component,
+    constructors: constructors,
+    utils: utils
 };
 
 global.Protoplast = protoplast;
 module.exports = protoplast;
-}).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/fake_e4debc5.js","/")
-},{"./js/aop":2,"./js/component":3,"./js/di":4,"./js/dispatcher":5,"./js/protoplast":6,"buffer":7,"v229Ge":10}],2:[function(require,module,exports){
+}).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/fake_dc3c2721.js","/")
+},{"./js/aop":2,"./js/component":3,"./js/constructors":4,"./js/di":5,"./js/dispatcher":6,"./js/protoplast":7,"./js/utils":8,"buffer":9,"v229Ge":12}],2:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 
 /**
@@ -68,7 +73,7 @@ module.exports = Aop;
 
 
 }).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/js\\aop.js","/js")
-},{"buffer":7,"v229Ge":10}],3:[function(require,module,exports){
+},{"buffer":9,"v229Ge":12}],3:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 
 var Protoplast = require('./protoplast');
@@ -142,7 +147,28 @@ module.exports = Component;
 
 
 }).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/js\\component.js","/js")
-},{"./protoplast":6,"buffer":7,"v229Ge":10}],4:[function(require,module,exports){
+},{"./protoplast":7,"buffer":9,"v229Ge":12}],4:[function(require,module,exports){
+(function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
+var utils = require('./utils');
+
+var constructors = {
+
+    uniqueId: function() {
+        this.$id = utils.uniqueId(this.$meta.$prefix);
+    },
+
+    autobind: function () {;
+        for (var property in this) {
+            if (typeof(this[property]) === "function" && property !== 'create' && property !== 'extend') {
+                this[property] = this[property].bind(this);
+            }
+        }
+    }
+};
+
+module.exports = constructors;
+}).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/js\\constructors.js","/js")
+},{"./utils":8,"buffer":9,"v229Ge":12}],5:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 
 var Protoplast = require('./protoplast'),
@@ -256,7 +282,7 @@ module.exports = Context;
 
 
 }).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/js\\di.js","/js")
-},{"./dispatcher":5,"./protoplast":6,"buffer":7,"v229Ge":10}],5:[function(require,module,exports){
+},{"./dispatcher":6,"./protoplast":7,"buffer":9,"v229Ge":12}],6:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 
 var Protoplast = require('./protoplast');
@@ -294,8 +320,109 @@ var Dispatcher = Protoplast.extend({
 module.exports = Dispatcher;
 
 }).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/js\\dispatcher.js","/js")
-},{"./protoplast":6,"buffer":7,"v229Ge":10}],6:[function(require,module,exports){
+},{"./protoplast":7,"buffer":9,"v229Ge":12}],7:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
+var utils = require('./utils');
+
+/**
+ * Base protoplast
+ */
+var Protoplast = {
+    $meta: {},
+    create: function() {
+        return utils.createObject(this, arguments);
+    }
+};
+
+/**
+ * Creates new factory function
+ * @param [mixins]
+ * @param definition
+ * @returns {Object}
+ */
+Protoplast.extend = function(mixins, definition) {
+    var proto = Object.create(this), meta, desc, defined;
+
+    // set defaults
+    if (!(mixins instanceof Array)) {
+        definition = mixins;
+        mixins = [];
+    }
+    definition = definition || {};
+    mixins = mixins || [];
+    meta = definition.$meta || {};
+    delete definition.$meta;
+
+    if (definition.$create !== undefined) {
+        meta.$constructors = meta.$constructors || [];
+        meta.$constructors.push(definition.$create);
+        delete definition.$create;
+    }
+
+    proto = utils.mixin(proto, mixins);
+
+    for (var property in definition) {
+        defined = false;
+
+        if (Object.prototype.toString.call(definition[property]) !== "[object Object]") {
+            defined = true;
+            desc = {value: definition[property], writable: true, enumerable: true};
+        } else {
+            desc = definition[property];
+            for (var d in desc) {
+                if (['value', 'get', 'set', 'writable', 'enumerable'].indexOf(d) === -1) {
+                    meta[d] = meta[d] || {};
+                    meta[d][property] = desc[d];
+                    delete desc[d];
+                }
+                else {
+                    defined = true;
+                }
+            }
+        }
+        if (defined) {
+            Object.defineProperty(proto, property, desc);
+        }
+    }
+
+    proto.$meta = utils.merge(meta, this.$meta);
+
+    utils.processPrototype(proto);
+
+    return proto;
+};
+
+module.exports = Protoplast;
+
+
+
+}).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/js\\protoplast.js","/js")
+},{"./utils":8,"buffer":9,"v229Ge":12}],8:[function(require,module,exports){
+(function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
+var idCounter = 0;
+
+function uniqueId(prefix) {
+    var id = ++idCounter;
+    return (prefix || '') + id;
+}
+
+function createObject(proto, args) {
+    var instance = Object.create(proto);
+    if (instance.$meta.$constructors) {
+        instance.$meta.$constructors.forEach(function(constructor){
+            constructor.apply(instance, args);
+        });
+    }
+    return instance;
+}
+
+function processPrototype(proto) {
+    if (proto.$meta.$processors) {
+        proto.$meta.$processors.forEach(function(processor) {
+            processor(proto);
+        });
+    }
+}
 
 /**
  * Merges source object into destination. Arrays are concatenated, primitives taken from the source if not
@@ -325,14 +452,14 @@ function merge(destination, source) {
 }
 
 /**
- * Mixes mixin source properties into destination object
+ * Mixes mixin source properties into destination object unless the property starts with __
  * @param {Object} destination
  * @param {Object} source
  * @returns {Object}
  */
 function mix(destination, source) {
     for (var property in source) {
-        if (source.hasOwnProperty(property) && property.substr(0, 2) !== '__') {
+        if (property.substr(0, 2) !== '__') {
             destination[property] = source[property];
         }
     }
@@ -352,101 +479,16 @@ function mixin(instance, mixins) {
     return instance;
 }
 
-/**
- * Instance factory for create method
- */
-function factory(base, fn) {
-    return function() {
-        var instance = base.create.apply(this, arguments);
-        fn.apply(instance, arguments);
-        return instance;
-    };
-}
-
-/**
- * Base protoplast
- */
-var Protoplast = {
-    $meta: {},
-    create: function() {
-        var instance = Object.create(this);
-        if (this.$meta.autobind) {
-            for (var property in instance) {
-                if (typeof(instance[property]) === "function" && property !== 'create' && property !== 'extend') {
-                    instance[property] = this[property].bind(instance);
-                }
-            }
-        }
-        return instance;
-    }
+module.exports = {
+    createObject: createObject,
+    processPrototype: processPrototype,
+    merge: merge,
+    mixin: mixin,
+    uniqueId: uniqueId
 };
 
-/**
- * Creates new factory function
- * @param [mixins]
- * @param definition
- * @returns {Object}
- */
-Protoplast.extend = function(mixins, definition) {
-    var proto = Object.create(this), meta, desc, defined;
-
-    // set defaults
-    if (!(mixins instanceof Array)) {
-        definition = mixins;
-        mixins = [];
-    }
-    definition = definition || {};
-    mixins = mixins || [];
-    meta = definition.$meta || {};
-    delete definition.$meta;
-
-    if (definition.$create !== undefined) {
-        proto.create = factory(this, definition.$create);
-        delete definition.$create;
-    }
-    proto = mixin(proto, mixins);
-
-    for (var property in definition) {
-        defined = false;
-
-        if (Object.prototype.toString.call(definition[property]) !== "[object Object]") {
-            defined = true;
-            desc = {value: definition[property], writable: true, enumerable: true};
-        } else {
-            desc = definition[property];
-            for (var d in desc) {
-                if (['value', 'get', 'set', 'writable', 'enumerable'].indexOf(d) === -1) {
-                    meta[d] = meta[d] || {};
-                    meta[d][property] = desc[d];
-                    delete desc[d];
-                }
-                else {
-                    defined = true;
-                }
-            }
-        }
-        if (defined) {
-            Object.defineProperty(proto, property, desc);
-        }
-    }
-
-    proto.$meta = merge(meta, this.$meta);
-
-    if (proto.$meta.$processors) {
-        proto.$meta.$processors.forEach(function(processor) {
-            processor(proto);
-        });
-    }
-
-    return proto;
-};
-
-module.exports = Protoplast;
-
-
-
-}).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/js\\protoplast.js","/js")
-},{"buffer":7,"v229Ge":10}],7:[function(require,module,exports){
+}).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/js\\utils.js","/js")
+},{"buffer":9,"v229Ge":12}],9:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 /*!
  * The buffer module from node.js, for the browser.
@@ -1559,7 +1601,7 @@ function assert (test, message) {
 }
 
 }).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/node_modules\\gulp-browserify\\node_modules\\browserify\\node_modules\\buffer\\index.js","/node_modules\\gulp-browserify\\node_modules\\browserify\\node_modules\\buffer")
-},{"base64-js":8,"buffer":7,"ieee754":9,"v229Ge":10}],8:[function(require,module,exports){
+},{"base64-js":10,"buffer":9,"ieee754":11,"v229Ge":12}],10:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
@@ -1687,7 +1729,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
 }).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/node_modules\\gulp-browserify\\node_modules\\browserify\\node_modules\\buffer\\node_modules\\base64-js\\lib\\b64.js","/node_modules\\gulp-browserify\\node_modules\\browserify\\node_modules\\buffer\\node_modules\\base64-js\\lib")
-},{"buffer":7,"v229Ge":10}],9:[function(require,module,exports){
+},{"buffer":9,"v229Ge":12}],11:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
@@ -1775,7 +1817,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 }
 
 }).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/node_modules\\gulp-browserify\\node_modules\\browserify\\node_modules\\buffer\\node_modules\\ieee754\\index.js","/node_modules\\gulp-browserify\\node_modules\\browserify\\node_modules\\buffer\\node_modules\\ieee754")
-},{"buffer":7,"v229Ge":10}],10:[function(require,module,exports){
+},{"buffer":9,"v229Ge":12}],12:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 // shim for using process in browser
 
@@ -1842,4 +1884,4 @@ process.chdir = function (dir) {
 };
 
 }).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/node_modules\\gulp-browserify\\node_modules\\browserify\\node_modules\\process\\browser.js","/node_modules\\gulp-browserify\\node_modules\\browserify\\node_modules\\process")
-},{"buffer":7,"v229Ge":10}]},{},[1])
+},{"buffer":9,"v229Ge":12}]},{},[1])
