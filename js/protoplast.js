@@ -1,69 +1,4 @@
-
-/**
- * Merges source object into destination. Arrays are concatenated, primitives taken from the source if not
- * defined and complex object merged recursively
- * @param destination
- * @param source
- * @returns {Object}
- */
-function merge(destination, source) {
-    for (var property in source) {
-        if (source.hasOwnProperty(property)) {
-            if (source[property] instanceof Array) {
-                destination[property] = source[property].concat(destination[property] || []);
-            }
-            else if (['number', 'boolean', 'string'].indexOf(typeof(source[property])) !== -1) {
-                if (!destination.hasOwnProperty(property)) {
-                    destination[property] = source[property];
-                }
-            }
-            else {
-                destination[property] = destination[property] || {};
-                merge(destination[property], source[property]);
-            }
-        }
-    }
-    return destination;
-}
-
-/**
- * Mixes mixin source properties into destination object
- * @param {Object} destination
- * @param {Object} source
- * @returns {Object}
- */
-function mix(destination, source) {
-    for (var property in source) {
-        if (source.hasOwnProperty(property) && property.substr(0, 2) !== '__') {
-            destination[property] = source[property];
-        }
-    }
-    return destination;
-}
-
-/**
- * Mixes all mixins into the instance
- * @param {Object} instance
- * @param {Object[]} mixins
- * @returns {Object}
- */
-function mixin(instance, mixins) {
-    mixins.forEach(function(Mixin) {
-        mix(instance, Mixin);
-    });
-    return instance;
-}
-
-/**
- * Instance factory for create method
- */
-function factory(base, fn) {
-    return function() {
-        var instance = base.create.apply(this, arguments);
-        fn.apply(instance, arguments);
-        return instance;
-    };
-}
+var utils = require('./utils');
 
 /**
  * Base protoplast
@@ -71,15 +6,7 @@ function factory(base, fn) {
 var Protoplast = {
     $meta: {},
     create: function() {
-        var instance = Object.create(this);
-        if (this.$meta.autobind) {
-            for (var property in instance) {
-                if (typeof(instance[property]) === "function" && property !== 'create' && property !== 'extend') {
-                    instance[property] = this[property].bind(instance);
-                }
-            }
-        }
-        return instance;
+        return utils.createObject(this, arguments);
     }
 };
 
@@ -103,10 +30,12 @@ Protoplast.extend = function(mixins, definition) {
     delete definition.$meta;
 
     if (definition.$create !== undefined) {
-        proto.create = factory(this, definition.$create);
+        meta.$constructors = meta.$constructors || [];
+        meta.$constructors.push(definition.$create);
         delete definition.$create;
     }
-    proto = mixin(proto, mixins);
+
+    proto = utils.mixin(proto, mixins);
 
     for (var property in definition) {
         defined = false;
@@ -132,13 +61,9 @@ Protoplast.extend = function(mixins, definition) {
         }
     }
 
-    proto.$meta = merge(meta, this.$meta);
+    proto.$meta = utils.merge(meta, this.$meta);
 
-    if (proto.$meta.$processors) {
-        proto.$meta.$processors.forEach(function(processor) {
-            processor(proto);
-        });
-    }
+    utils.processPrototype(proto);
 
     return proto;
 };

@@ -138,15 +138,101 @@ describe('Protoplast', function() {
                 }
             });
 
-            chai.assert.deepEqual(Sub.$meta, {
-                inject: {
-                    foo: "dependency2"
-                },
-                content: {
-                    foo: {
-                        list: ['foo','bar','foobar']
-                    }
+            chai.assert.deepEqual(Sub.$meta.inject, {
+                foo: "dependency2"
+            });
+
+            chai.assert.deepEqual(Sub.$meta.content, {
+                foo: {
+                    list: ['foo','bar','foobar']
                 }
+            });
+        });
+
+    });
+
+    describe('Constructors', function() {
+
+        it('constructors are run starting from the base prototype', function() {
+
+            var Base = Protoplast.extend({
+                $create: function() {
+                    this.value = '1'
+                }
+            });
+            var Sub = Base.extend({
+                $meta: {
+                    $constructors: [function(){
+                        this.value += '2';
+                    },
+                    function(){
+                        this.value += '3'
+                    }]
+                }
+            });
+            var SubSub = Sub.extend({
+                $create: function() {
+                    this.value += '4';
+                }
+            });
+            var subSub = SubSub.create();
+            chai.assert.strictEqual(subSub.value, '1234');
+        });
+
+        describe('UniqueId', function() {
+
+            it('adds unique id to created instances', function() {
+                var Base = Protoplast.extend({
+                    $meta: {
+                        $constructors: [Protoplast.constructors.uniqueId]
+                    }
+                });
+                chai.assert.isUndefined(Base.$id);
+
+                var instance = Base.create();
+                chai.assert.isDefined(instance.$id);
+            });
+
+        });
+
+        describe('Autobinding', function() {
+
+            it('autobinds methods', function() {
+
+                var Base = Protoplast.extend({
+
+                    $meta: {
+                        name: 'Base'
+                    },
+
+                    $create: function(value) {
+                        this._value = value;
+                    },
+
+                    get_value: function() {
+                        return this._value;
+                    }
+
+                });
+
+                var Sub = Base.extend({
+                    $meta: {
+                        $constructors: [Protoplast.constructors.autobind]
+                    }
+                });
+
+                var base = Base.create(2);
+                var sub = Sub.create(3);
+
+                var base_get = base.get_value;
+                var sub_get = sub.get_value;
+
+                chai.assert.strictEqual(base.get_value(), 2);
+                chai.assert.strictEqual(sub.get_value(), 3);
+
+                chai.assert.isUndefined(base_get());
+                chai.assert.strictEqual(sub_get(), 3);
+
             });
 
         });
@@ -526,9 +612,13 @@ describe('Protoplast', function() {
     describe('Mixins', function() {
         it('allows to mixin objects', function() {
 
-            var Foo, Bar, FooBar, foobar;
+            var BaseFoo, Foo, Bar, FooBar, foobar;
 
-            Foo = Protoplast.extend({
+            BaseFoo = Protoplast.extend({
+                basefoo: 'basefoo'
+            });
+
+            Foo = BaseFoo.extend({
                 foo: 'foo'
             });
 
@@ -540,6 +630,7 @@ describe('Protoplast', function() {
 
             foobar = FooBar.create();
 
+            chai.assert.equal(foobar.basefoo, 'basefoo');
             chai.assert.equal(foobar.foo, 'foo');
             chai.assert.equal(foobar.bar, 'bar');
 
@@ -561,48 +652,6 @@ describe('Protoplast', function() {
             sinon.assert.calledTwice(base_processor);
             sinon.assert.calledWith(base_processor, Base);
             sinon.assert.calledWith(base_processor, Sub);
-        });
-
-    });
-
-    describe('Autobinding', function() {
-
-        it('autobinds methods if autobind is enabled', function() {
-
-            var Base = Protoplast.extend({
-
-                $meta: {
-                    name: 'Base'
-                },
-
-                $create: function(value) {
-                    this._value = value;
-                },
-
-                get_value: function() {
-                    return this._value;
-                }
-
-            });
-
-            var Sub = Base.extend({
-                $meta: {
-                    autobind: true
-                }
-            });
-
-            var base = Base.create(2);
-            var sub = Sub.create(3);
-;
-            var base_get = base.get_value;
-            var sub_get = sub.get_value;
-
-            chai.assert.strictEqual(base.get_value(), 2);
-            chai.assert.strictEqual(sub.get_value(), 3);
-
-            chai.assert.isUndefined(base_get());
-            chai.assert.strictEqual(sub_get(), 3);
-
         });
 
     });
