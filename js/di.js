@@ -2,6 +2,10 @@
 var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher');
 
+/**
+ * Dependency Injection context builder
+ * @type {Object}
+ */
 var Context = Protoplast.extend({
 
     $create: function() {

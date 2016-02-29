@@ -1,10 +1,21 @@
 var idCounter = 0;
 
+/**
+ * Generate a unique id prefixed with prefix if defined
+ * @param {String} prefix
+ * @returns {String}
+ */
 function uniqueId(prefix) {
     var id = ++idCounter;
     return (prefix || '') + id;
 }
 
+/**
+ * Create an object for the prototype
+ * @param {Object} proto
+ * @param {Object[]} args
+ * @returns {Object}
+ */
 function createObject(proto, args) {
     var instance = Object.create(proto);
     if (instance.$meta.$constructors) {
@@ -15,6 +26,10 @@ function createObject(proto, args) {
     return instance;
 }
 
+/**
+ * Run all processors from metadata on a prototype
+ * @param {Object} proto
+ */
 function processPrototype(proto) {
     if (proto.$meta.$processors) {
         proto.$meta.$processors.forEach(function(processor) {

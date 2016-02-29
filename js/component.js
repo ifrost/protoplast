@@ -1,4 +1,3 @@
-
 var Protoplast = require('./protoplast');
 
 /**
@@ -10,6 +9,18 @@ var Component = Protoplast.extend({
     $create: function() {
         this._children = [];
         this.root = document.createElement(this.tag || 'div');
+    },
+
+    __fastinject__: {
+        get: function() {return this.___fastinject___},
+        set: function(value) {
+            this.___fastinject___ = value;
+            // fastinject all the children
+            this._children.forEach(function(child) {
+                this.__fastinject__(child);
+                child.__fastinject__ = this.__fastinject__;
+            }, this);
+        }
     },
 
     /**
@@ -41,7 +52,9 @@ var Component = Protoplast.extend({
             throw new Error('Child component should have root property');
         }
         this._children.push(child);
-        this.__fastinject__(child);
+        if (this.__fastinject__) {
+            this.__fastinject__(child);
+        } // otherwise it will be injected when __fastinject__ is set
         this.root.appendChild(child.root);
     },
 

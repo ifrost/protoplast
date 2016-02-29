@@ -1,8 +1,10 @@
 var chai = require('chai'),
     sinon = require('sinon'),
+    jsdom = require('jsdom'),
     Protoplast = require('./../main'),
     Dispatcher = Protoplast.Dispatcher,
     Aop = Protoplast.Aop,
+    Component = Protoplast.Component,
     Context = Protoplast.Context;
 
 describe('Protoplast', function() {
@@ -474,6 +476,111 @@ describe('Protoplast', function() {
 
             chai.assert.equal(message, 'hello');
         });
+
+        it('throws and exception if handler is not provided', function() {
+            var CustomDispatcher, dispatcher, message = '';
+
+            CustomDispatcher = Protoplast.extend([Dispatcher], {
+                hello: function() {
+                    this.dispatch('message', 'hello');
+                }
+            });
+
+            dispatcher = CustomDispatcher.create();
+
+            chai.assert.throws(dispatcher.on.bind('test'));
+
+        });
+
+        it('removes handlers', function() {
+            var CustomDispatcher, dispatcher, message = '';
+
+            CustomDispatcher = Protoplast.extend([Dispatcher], {
+                hello: function() {
+                    this.dispatch('message', 'hello');
+                }
+            });
+
+            dispatcher = CustomDispatcher.create();
+
+            var removed_handler = sinon.spy();
+            var active_handler = sinon.spy();
+
+            dispatcher.on('message', removed_handler);
+            dispatcher.on('message', active_handler);
+            dispatcher.off('message', removed_handler);
+
+            dispatcher.hello();
+
+            sinon.assert.called(active_handler);
+            sinon.assert.notCalled(removed_handler);
+
+        });
+    });
+
+    describe('Component', function() {
+
+        beforeEach(function(done) {
+            jsdom.env('<html><body></body></html>', function(err, window){
+                global.document = window.document;
+                done();
+            })
+        });
+
+        it('creates a component with default DIV tag', function() {
+
+            var component = Component.create();
+            chai.assert.isNotNull(component.root);
+            chai.assert.strictEqual(component.root.tagName, 'DIV');
+        });
+
+        it('add a child to a component', function() {
+            var Root = Component.extend({tag: 'div'});
+            var Child = Component.extend({tag: 'span'});
+
+            var root = Root.create();
+            var child = Child.create();
+
+            root.add(child);
+
+            chai.assert.lengthOf(root.root.children, 1);
+        });
+
+
+    });
+
+    describe('Components Depenendecy Injection', function() {
+
+        it('injects all dependencies to children element', function() {
+
+            var context = Context.create();
+            context.register('foo', 'foo');
+
+            var Root = Component.extend({
+                tag: 'div',
+                foo: {inject: 'foo'}
+            });
+            var Child = Component.extend({
+                tag: 'span',
+                init: function() {
+                    this.bar = this.foo
+                },
+                foo: {inject: 'foo'}
+            });
+
+            var root = Root.create();
+            var child = Child.create();
+
+            root.add(child);
+
+            chai.assert.strictEqual(child.bar, undefined);
+
+            context.register(root);
+            chai.assert.strictEqual(root.foo, 'foo');
+            chai.assert.strictEqual(child.foo, 'foo');
+            chai.assert.strictEqual(child.bar, 'foo');
+        });
+
     });
 
     describe('Dependency Injection', function() {
