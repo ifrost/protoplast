@@ -6,13 +6,14 @@ var constructors = {
         this.$id = utils.uniqueId(this.$meta.$prefix);
     },
 
-    autobind: function () {;
+    autobind: function () {
         for (var property in this) {
-            if (typeof(this[property]) === "function" && property !== 'create' && property !== 'extend') {
+            if (typeof(this[property]) === "function") {
                 this[property] = this[property].bind(this);
             }
         }
     }
+
 };
 
 module.exports = constructors;

@@ -62,6 +62,7 @@ Protoplast.extend = function(mixins, definition) {
     }
 
     proto.$meta = utils.merge(meta, this.$meta);
+    proto.$super = this;
 
     utils.processPrototype(proto);
 

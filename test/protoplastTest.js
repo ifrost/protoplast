@@ -314,7 +314,7 @@ describe('Protoplast', function() {
 
             Sub = Base.extend({
                 test: function() {
-                    return Base.test.call(this) * 2;
+                    return this.$super.test.call(this) * 2;
                 }
             });
 
