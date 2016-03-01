@@ -1,6 +1,6 @@
 {
   "name": "protoplast",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -22,7 +22,6 @@
     "chai": "^3.4.0",
     "gulp": "^3.9.0",
     "gulp-browserify": "^0.5.1",
-    "gulp-bump": "^1.0.0",
     "gulp-clean": "^0.3.1",
     "gulp-concat": "^2.6.0",
     "gulp-rename": "^1.2.2",

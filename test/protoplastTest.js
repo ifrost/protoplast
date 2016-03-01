@@ -454,6 +454,16 @@ describe('Protoplast', function() {
             sinon.assert.calledTwice(after);
             sinon.assert.calledTwice(before);
         });
+
+        it('throws an exception when on an attempt to wrap non-exiting method', function() {
+            var Foo = Protoplast.extend({
+                foo: function() {}
+            });
+
+            chai.assert.throws(function(){
+                Aop(Foo).aop('bar', {after: function() {}});
+            });
+        });
     });
 
     describe('EventDispatcher', function() {
@@ -534,7 +544,7 @@ describe('Protoplast', function() {
             chai.assert.strictEqual(component.root.tagName, 'DIV');
         });
 
-        it('add a child to a component', function() {
+        it('adds a child to a component', function() {
             var Root = Component.extend({tag: 'div'});
             var Child = Component.extend({tag: 'span'});
 
@@ -546,6 +556,92 @@ describe('Protoplast', function() {
             chai.assert.lengthOf(root.root.children, 1);
         });
 
+        it('removes children', function() {
+            var root = Component.create(),
+                childA = Component.create(),
+                childB = Component.create();
+
+            root.add(childA);
+            root.add(childB);
+
+            root.remove(childA);
+
+            chai.assert.strictEqual(root.root, childB.root.parentNode);
+            chai.assert.isNull(childA.root.parentNode);
+        });
+
+        it('destroys all children when removing', function() {
+            var destroy = sinon.stub(),
+                Child = Component.extend({destroy: destroy});
+
+            var root = Component.create(),
+                childA = Child.create(),
+                childB = Child.create();
+
+            root.add(childA);
+            root.add(childB);
+
+            root.remove(childA);
+
+            sinon.assert.calledOnce(destroy);
+        });
+
+        it('destroys all children when parent is destroyed', function() {
+            var destroy = sinon.stub(),
+                Child = Component.extend({destroy: destroy});
+
+            var root = Component.create(),
+                childA = Child.create(),
+                childB = Child.create();
+
+            root.add(childA);
+            root.add(childB);
+
+            root.destroy();
+
+            sinon.assert.calledTwice(destroy);
+        });
+
+        it('root component attached element and register object in context', function() {
+            var element = document.createElement('div'),
+                context = {register: sinon.stub()},
+                component;
+
+            component = Component.Root(element, context);
+            chai.assert.strictEqual(element, component.root);
+            sinon.assert.calledWith(context.register, component);
+        });
+
+        it('throws an exception when adding non-child component', function() {
+
+            var component = Component.create();
+
+            chai.assert.throws(component.add.bind(component, null));
+            chai.assert.throws(component.add.bind(component, {}));
+
+        });
+
+        it('initialises children when root is added to context', function() {
+            var context,
+                init = sinon.stub(),
+                Child = Component.extend({init: init});
+
+            var root = Component.create(),
+                childA = Child.create(),
+                childB = Child.create(),
+                childC = Child.create();
+
+            root.add(childA);
+            root.add(childB);
+
+            context = Context.create();
+            context.register(root);
+
+            root.add(childC);
+
+            sinon.assert.calledThrice(init);
+
+        });
 
     });
 

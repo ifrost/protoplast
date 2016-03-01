@@ -35,7 +35,7 @@ var Component = Protoplast.extend({
      * Destroy the component and all child components
      */
     destroy: function() {
-        this._children.forEach(function(child) {
+        this._children.concat().forEach(function(child) {
             this.remove(child);
         }, this);
     },
@@ -72,10 +72,19 @@ var Component = Protoplast.extend({
     }
 });
 
+/**
+ *
+ * @param {HTMLElement} element
+ * @param {Context} [context]
+ * @returns {Component}
+ * @constructor
+ */
 Component.Root = function(element, context) {
     var component = Component.create();
     component.root = element;
-    context.register(component);
+    if (context) {
+        context.register(component);
+    }
     return component;
 };
 

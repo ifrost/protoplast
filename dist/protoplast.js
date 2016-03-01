@@ -21,7 +21,7 @@ var protoplast = {
 
 global.Protoplast = protoplast;
 module.exports = protoplast;
-}).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/fake_dc3c2721.js","/")
+}).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/fake_96fcc189.js","/")
 },{"./js/aop":2,"./js/component":3,"./js/constructors":4,"./js/di":5,"./js/dispatcher":6,"./js/protoplast":7,"./js/utils":8,"buffer":9,"v229Ge":12}],2:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 
@@ -75,7 +75,6 @@ module.exports = Aop;
 }).call(this,require("v229Ge"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/js\\aop.js","/js")
 },{"buffer":9,"v229Ge":12}],3:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
-
 var Protoplast = require('./protoplast');
 
 /**
@@ -87,6 +86,18 @@ var Component = Protoplast.extend({
     $create: function() {
         this._children = [];
         this.root = document.createElement(this.tag || 'div');
+    },
+
+    __fastinject__: {
+        get: function() {return this.___fastinject___},
+        set: function(value) {
+            this.___fastinject___ = value;
+            // fastinject all the children
+            this._children.forEach(function(child) {
+                this.__fastinject__(child);
+                child.__fastinject__ = this.__fastinject__;
+            }, this);
+        }
     },
 
     /**
@@ -101,7 +112,7 @@ var Component = Protoplast.extend({
      * Destroy the component and all child components
      */
     destroy: function() {
-        this._children.forEach(function(child) {
+        this._children.concat().forEach(function(child) {
             this.remove(child);
         }, this);
     },
@@ -118,7 +129,9 @@ var Component = Protoplast.extend({
             throw new Error('Child component should have root property');
         }
         this._children.push(child);
-        this.__fastinject__(child);
+        if (this.__fastinject__) {
+            this.__fastinject__(child);
+        } // otherwise it will be injected when __fastinject__ is set
         this.root.appendChild(child.root);
     },
 
@@ -136,10 +149,19 @@ var Component = Protoplast.extend({
     }
 });
 
+/**
+ *
+ * @param {HTMLElement} element
+ * @param {Context} [context]
+ * @returns {Component}
+ * @constructor
+ */
 Component.Root = function(element, context) {
     var component = Component.create();
     component.root = element;
-    context.register(component);
+    if (context) {
+        context.register(component);
+    }
     return component;
 };
 
@@ -151,19 +173,29 @@ module.exports = Component;
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 var utils = require('./utils');
 
+/**
+ * Collection of constructors
+ */
 var constructors = {
 
+    /**
+     * Add unique id to the object
+     */
     uniqueId: function() {
         this.$id = utils.uniqueId(this.$meta.$prefix);
     },
 
-    autobind: function () {;
+    /**
+     * Bind all the function to the instance
+     */
+    autobind: function () {
         for (var property in this) {
-            if (typeof(this[property]) === "function" && property !== 'create' && property !== 'extend') {
+            if (typeof(this[property]) === "function") {
                 this[property] = this[property].bind(this);
             }
         }
     }
+
 };
 
 module.exports = constructors;
@@ -174,6 +206,10 @@ module.exports = constructors;
 var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher');
 
+/**
+ * Dependency Injection context builder
+ * @type {Object}
+ */
 var Context = Protoplast.extend({
 
     $create: function() {
@@ -386,6 +422,7 @@ Protoplast.extend = function(mixins, definition) {
     }
 
     proto.$meta = utils.merge(meta, this.$meta);
+    proto.$super = this;
 
     utils.processPrototype(proto);
 
@@ -401,11 +438,22 @@ module.exports = Protoplast;
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 var idCounter = 0;
 
+/**
+ * Generate a unique id prefixed with prefix if defined
+ * @param {String} prefix
+ * @returns {String}
+ */
 function uniqueId(prefix) {
     var id = ++idCounter;
     return (prefix || '') + id;
 }
 
+/**
+ * Create an object for the prototype
+ * @param {Object} proto
+ * @param {Object[]} args
+ * @returns {Object}
+ */
 function createObject(proto, args) {
     var instance = Object.create(proto);
     if (instance.$meta.$constructors) {
@@ -416,6 +464,10 @@ function createObject(proto, args) {
     return instance;
 }
 
+/**
+ * Run all processors from metadata on a prototype
+ * @param {Object} proto
+ */
 function processPrototype(proto) {
     if (proto.$meta.$processors) {
         proto.$meta.$processors.forEach(function(processor) {
