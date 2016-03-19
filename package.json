@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec",
-    "install": "gulp build"
+    "build": "gulp build"
   },
   "repository": {
     "type": "git",
