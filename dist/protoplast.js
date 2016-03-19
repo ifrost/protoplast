@@ -21,7 +21,7 @@ var protoplast = {
 
 global.Protoplast = protoplast;
 module.exports = protoplast;
-}).call(this,require("IrXUsu"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/fake_c5bb38.js","/")
+}).call(this,require("IrXUsu"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer,arguments[3],arguments[4],arguments[5],arguments[6],"/fake_599b464a.js","/")
 },{"./js/aop":2,"./js/component":3,"./js/constructors":4,"./js/di":5,"./js/dispatcher":6,"./js/protoplast":7,"./js/utils":8,"IrXUsu":12,"buffer":9}],2:[function(require,module,exports){
 (function (process,global,Buffer,__argument0,__argument1,__argument2,__argument3,__filename,__dirname){
 
