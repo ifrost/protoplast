@@ -9,7 +9,7 @@
     "build": "gulp build",
     "preversion": "npm test",
     "version": "npm run build && git add .",
-    "postversion": "git push && git push --tags"
+    "postversion": "git push && git push --tags && npm publish"
   },
   "repository": {
     "type": "git",
