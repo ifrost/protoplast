@@ -7,7 +7,7 @@
     "test": "mocha",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec",
     "preversion": "npm test",
-    "version": "npm run build && git add .",
+    "version": "gulp build && git add .",
     "postversion": "git push && git push --tags && npm publish"
   },
   "repository": {
