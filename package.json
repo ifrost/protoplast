@@ -6,7 +6,6 @@
   "scripts": {
     "test": "mocha",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec",
-    "build": "gulp build",
     "preversion": "npm test",
     "version": "npm run build && git add .",
     "postversion": "git push && git push --tags && npm publish"
