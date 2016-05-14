@@ -4,9 +4,9 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "mocha",
+    "test": "mocha test/protoplast.test.js",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec",
-    "build": "browserify --debug test/protoplastTest.js -o test/protoplastTest.browser.js && browserify -s p main.js -o dist/protoplast.js && uglifyjs dist/protoplast.js -o dist/protoplast.min.js -c -m",
+    "build": "browserify --debug test/protoplast.test.js -o test/protoplast.test.browser.js && browserify -s p main.js -o dist/protoplast.js && uglifyjs dist/protoplast.js -o dist/protoplast.min.js -c -m",
     "preversion": "npm test",
     "version": "npm run build && git add .",
     "postversion": "git push && git push --tags && npm publish"
