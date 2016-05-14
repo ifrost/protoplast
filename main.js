@@ -17,5 +17,4 @@ var protoplast = {
     utils: utils
 };
 
-global.Protoplast = protoplast;
 module.exports = protoplast;

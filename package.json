@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec",
-    "install": "gulp build"
+    "build": "browserify --debug test/protoplastTest.js -o test/protoplastTest.browser.js && browserify -s p main.js -o dist/protoplast.js && uglifyjs dist/protoplast.js -o dist/protoplast.min.js -c -m"
   },
   "repository": {
     "type": "git",
@@ -20,12 +20,6 @@
   "homepage": "https://github.com/ifrost/protoplast#readme",
   "devDependencies": {
     "chai": "^3.4.0",
-    "gulp": "^3.9.0",
-    "gulp-browserify": "^0.5.1",
-    "gulp-clean": "^0.3.1",
-    "gulp-concat": "^2.6.0",
-    "gulp-rename": "^1.2.2",
-    "gulp-uglifyjs": "^0.6.2",
     "jsdom": "^6.5.1",
     "mocha": "^2.3.3",
     "sinon": "^1.17.2"
