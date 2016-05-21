@@ -26,8 +26,18 @@ Protoplast.extend = function(mixins, definition) {
     }
     definition = definition || {};
     mixins = mixins || [];
+
+    if (definition.$meta && definition.$meta.hooks) {
+        definition.$meta.hooks.forEach(function(hook) {
+            if (hook.desc) {
+                hook.desc(definition);
+            }
+        });
+    }
+
     meta = definition.$meta || {};
     meta.properties = meta.properties || {};
+
     delete definition.$meta;
 
     if (definition.$create !== undefined) {

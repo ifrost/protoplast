@@ -200,6 +200,27 @@ describe('Protoplast', function() {
             
             describe('Prototype hooks', function() {
 
+                it('hooks to prototype descriptions', function() {
+
+                    var Base, description, hook;
+
+                    hook = {
+                        desc: sinon.spy()
+                    };
+
+                    description = {
+                        $meta: {
+                            hooks: [hook]
+                        }
+                    };
+
+                    Base = Protoplast.extend(description);
+
+                    sinon.assert.calledOnce(hook.desc);
+                    sinon.assert.calledWith(hook.desc, description);
+
+                });
+
                 it('hooks to prototype definitions', function() {
 
                     var Base, hook;
