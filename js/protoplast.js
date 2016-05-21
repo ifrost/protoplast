@@ -13,47 +13,47 @@ var Protoplast = {
 /**
  * Creates new factory function
  * @param [mixins]
- * @param definition
+ * @param description
  * @returns {Object}
  */
-Protoplast.extend = function(mixins, definition) {
+Protoplast.extend = function(mixins, description) {
     var proto = Object.create(this), meta, desc, defined, property_hooks = [];
 
     // set defaults
     if (!(mixins instanceof Array)) {
-        definition = mixins;
+        description = mixins;
         mixins = [];
     }
-    definition = definition || {};
+    description = description || {};
     mixins = mixins || [];
 
-    if (definition.$meta && definition.$meta.hooks) {
-        definition.$meta.hooks.forEach(function(hook) {
+    if (description.$meta && description.$meta.hooks) {
+        description.$meta.hooks.forEach(function(hook) {
             if (hook.desc) {
-                hook.desc(definition);
+                hook.desc(description);
             }
         });
     }
 
-    meta = definition.$meta || {};
+    meta = description.$meta || {};
     meta.properties = meta.properties || {};
 
-    delete definition.$meta;
+    delete description.$meta;
 
-    if (definition.$create !== undefined) {
+    if (description.$create !== undefined) {
         meta.constructors = meta.constructors || [];
-        meta.constructors.push(definition.$create);
-        delete definition.$create;
+        meta.constructors.push(description.$create);
+        delete description.$create;
     }
 
     proto = utils.mixin(proto, mixins);
 
-    for (var property in definition) {
+    for (var property in description) {
         defined = false;
 
-        if (definition[property] && definition[property].hooks) {
+        if (description[property] && description[property].hooks) {
             (function(property, desc){
-                definition[property].hooks.forEach(function(hook) {
+                description[property].hooks.forEach(function(hook) {
                     if (hook.desc) {
                         hook.desc(proto, property, desc);
                     }
@@ -71,14 +71,14 @@ Protoplast.extend = function(mixins, definition) {
                         });
                     }
                 });
-            }(property, definition[property]));
+            }(property, description[property]));
         }
         
-        if (Object.prototype.toString.call(definition[property]) !== "[object Object]") {
+        if (Object.prototype.toString.call(description[property]) !== "[object Object]") {
             defined = true;
-            desc = {value: definition[property], writable: true, enumerable: true, configurable: true};
+            desc = {value: description[property], writable: true, enumerable: true, configurable: true};
         } else {
-            desc = definition[property];
+            desc = description[property];
             for (var d in desc) {
                 if (['value', 'get', 'set', 'writable', 'enumerable', 'configurable'].indexOf(d) === -1) {
                     meta.properties[d] = meta.properties[d] || {};
