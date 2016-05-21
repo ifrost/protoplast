@@ -5,11 +5,12 @@
 
         tag: 'ul',
 
-        $meta: {
-            inject: {
-                todos: 'todos',
-                view_state: 'viewstate'
-            }
+        todos: {
+            inject: 'todos',
+        },
+
+        view_state: {
+            inject: 'viewstate'
         },
 
         init: function () {

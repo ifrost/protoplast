@@ -4,7 +4,7 @@
     window.View = window.Protoplast.Component.extend({
 
         $meta: {
-            $constructors: [Protoplast.constructors.autobind]
+            constructors: [Protoplast.constructors.autobind]
         },
 
         pub: {

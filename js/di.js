@@ -57,21 +57,21 @@ var Context = Protoplast.extend({
             this.process(obj);
         }.bind(this);
 
-        if (instance.$meta && instance.$meta.inject) {
-            this.inject(instance, instance.$meta.inject);
+        if (instance.$meta && instance.$meta.properties && instance.$meta.properties.inject) {
+            this.inject(instance, instance.$meta.properties.inject);
         }
 
     },
 
     process: function(obj) {
-        if (obj.$meta && obj.$meta.inject_init) {
-            Object.keys(obj.$meta.inject_init).forEach(function(handler){
+        if (obj.$meta && obj.$meta.properties && obj.$meta.properties.inject_init) {
+            Object.keys(obj.$meta.properties.inject_init).forEach(function(handler){
                 obj[handler]();
             }, this);
         }
-        if (obj.$meta && obj.$meta.sub) {
-            Object.keys(obj.$meta.sub).forEach(function(handler){
-                this._objects.sub.call(obj, obj.$meta.sub[handler]).add(obj[handler]);
+        if (obj.$meta && obj.$meta.properties && obj.$meta.properties.sub) {
+            Object.keys(obj.$meta.properties.sub).forEach(function(handler){
+                this._objects.sub.call(obj, obj.$meta.properties.sub[handler]).add(obj[handler]);
             }, this);
         }
     },

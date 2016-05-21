@@ -18,24 +18,12 @@ function uniqueId(prefix) {
  */
 function createObject(proto, args) {
     var instance = Object.create(proto);
-    if (instance.$meta.$constructors) {
-        instance.$meta.$constructors.forEach(function(constructor){
+    if (instance.$meta.constructors) {
+        instance.$meta.constructors.forEach(function(constructor){
             constructor.apply(instance, args);
         });
     }
     return instance;
-}
-
-/**
- * Run all processors from metadata on a prototype
- * @param {Object} proto
- */
-function processPrototype(proto) {
-    if (proto.$meta.$processors) {
-        proto.$meta.$processors.forEach(function(processor) {
-            processor(proto);
-        });
-    }
 }
 
 /**
@@ -95,7 +83,6 @@ function mixin(instance, mixins) {
 
 module.exports = {
     createObject: createObject,
-    processPrototype: processPrototype,
     merge: merge,
     mixin: mixin,
     uniqueId: uniqueId

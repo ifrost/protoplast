@@ -17,7 +17,7 @@ var Protoplast = {
  * @returns {Object}
  */
 Protoplast.extend = function(mixins, definition) {
-    var proto = Object.create(this), meta, desc, defined, property_processors = [];
+    var proto = Object.create(this), meta, desc, defined, property_hooks = [];
 
     // set defaults
     if (!(mixins instanceof Array)) {
@@ -27,11 +27,12 @@ Protoplast.extend = function(mixins, definition) {
     definition = definition || {};
     mixins = mixins || [];
     meta = definition.$meta || {};
+    meta.properties = meta.properties || {};
     delete definition.$meta;
 
     if (definition.$create !== undefined) {
-        meta.$constructors = meta.$constructors || [];
-        meta.$constructors.push(definition.$create);
+        meta.constructors = meta.constructors || [];
+        meta.constructors.push(definition.$create);
         delete definition.$create;
     }
 
@@ -48,14 +49,14 @@ Protoplast.extend = function(mixins, definition) {
                     }
                     if (hook.proto) {
                         (function(fn) {
-                            property_processors.push(function(proto) {
+                            property_hooks.push(function(proto) {
                                 proto[property] = (fn(proto[property], proto));
                             });
                         }(hook.proto));
                     }
                     if (hook.instance) {
-                        meta.$constructors = meta.$constructors || [];
-                        meta.$constructors.push(function() {
+                        meta.constructors = meta.constructors || [];
+                        meta.constructors.push(function() {
                             this[property] = (hook.instance(this[property], proto, this));
                         });
                     }
@@ -70,8 +71,8 @@ Protoplast.extend = function(mixins, definition) {
             desc = definition[property];
             for (var d in desc) {
                 if (['value', 'get', 'set', 'writable', 'enumerable', 'configurable'].indexOf(d) === -1) {
-                    meta[d] = meta[d] || {};
-                    meta[d][property] = desc[d];
+                    meta.properties[d] = meta.properties[d] || {};
+                    meta.properties[d][property] = desc[d];
                     delete desc[d];
                 }
                 else {
@@ -96,10 +97,15 @@ Protoplast.extend = function(mixins, definition) {
     proto.$meta = utils.merge(meta, this.$meta);
     proto.$super = this;
 
-    property_processors.forEach(function(property_processor) {
+    property_hooks.forEach(function(property_processor) {
         property_processor(proto);
     });
-    utils.processPrototype(proto);
+    
+    (proto.$meta.hooks || []).forEach(function(hook) {
+        if (hook.proto) {
+            hook.proto(proto);
+        }
+    });
 
     return proto;
 };
