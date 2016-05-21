@@ -1,53 +1,4 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.p = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-
-/**
- * Wraps the method with aspects
- * @param {Object} proto
- * @param {String} method
- * @param {{before: Function, after:Function}} aspects
- */
-function wrap(proto, method, aspects) {
-    var origin = proto[method];
-    if (!proto[method]) {
-        throw Error("Can't create aspect for method " + method + ". Method does not exist.")
-    }
-    proto[method] = function() {
-        if (aspects.before) aspects.before.apply(this, arguments);
-        var result = origin.apply(this, arguments);
-        if (aspects.after) result = aspects.after.call(this, result, arguments);
-        return result;
-    }
-}
-
-/**
- * AOP Manager. Allows to add aspects to a prototype
- */
-var Aop = function(proto) {
-    return {
-        /**
-         * Applies aspects
-         * @param {String[]|String} methods
-         * @param {{before: Function, after: Function}} aspects
-         */
-        aop: function(methods, aspects) {
-
-            if (!(methods instanceof Array)) {
-                methods = [methods];
-            }
-
-            methods.forEach(function(method) {
-                wrap(proto, method, aspects);
-            }, this);
-            return this;
-        }
-
-    }
-};
-
-module.exports = Aop;
-
-
-},{}],2:[function(require,module,exports){
 var Protoplast = require('./protoplast');
 
 /**
@@ -141,7 +92,7 @@ Component.Root = function(element, context) {
 module.exports = Component;
 
 
-},{"./protoplast":6}],3:[function(require,module,exports){
+},{"./protoplast":5}],2:[function(require,module,exports){
 var utils = require('./utils');
 
 /**
@@ -170,7 +121,7 @@ var constructors = {
 };
 
 module.exports = constructors;
-},{"./utils":7}],4:[function(require,module,exports){
+},{"./utils":6}],3:[function(require,module,exports){
 
 var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher');
@@ -286,7 +237,7 @@ var Context = Protoplast.extend({
 module.exports = Context;
 
 
-},{"./dispatcher":5,"./protoplast":6}],5:[function(require,module,exports){
+},{"./dispatcher":4,"./protoplast":5}],4:[function(require,module,exports){
 
 var Protoplast = require('./protoplast');
 
@@ -322,7 +273,7 @@ var Dispatcher = Protoplast.extend({
 
 module.exports = Dispatcher;
 
-},{"./protoplast":6}],6:[function(require,module,exports){
+},{"./protoplast":5}],5:[function(require,module,exports){
 var utils = require('./utils');
 
 /**
@@ -342,7 +293,7 @@ var Protoplast = {
  * @returns {Object}
  */
 Protoplast.extend = function(mixins, definition) {
-    var proto = Object.create(this), meta, desc, defined;
+    var proto = Object.create(this), meta, desc, defined, property_processors = [];
 
     // set defaults
     if (!(mixins instanceof Array)) {
@@ -365,13 +316,36 @@ Protoplast.extend = function(mixins, definition) {
     for (var property in definition) {
         defined = false;
 
+        if (definition[property] && definition[property].hooks) {
+            (function(property, desc){
+                definition[property].hooks.forEach(function(hook) {
+                    if (hook.desc) {
+                        hook.desc(proto, property, desc);
+                    }
+                    if (hook.proto) {
+                        (function(fn) {
+                            property_processors.push(function(proto) {
+                                proto[property] = (fn(proto[property], proto));
+                            });
+                        }(hook.proto));
+                    }
+                    if (hook.instance) {
+                        meta.$constructors = meta.$constructors || [];
+                        meta.$constructors.push(function() {
+                            this[property] = (hook.instance(this[property], proto, this));
+                        });
+                    }
+                });
+            }(property, definition[property]));
+        }
+        
         if (Object.prototype.toString.call(definition[property]) !== "[object Object]") {
             defined = true;
-            desc = {value: definition[property], writable: true, enumerable: true};
+            desc = {value: definition[property], writable: true, enumerable: true, configurable: true};
         } else {
             desc = definition[property];
             for (var d in desc) {
-                if (['value', 'get', 'set', 'writable', 'enumerable'].indexOf(d) === -1) {
+                if (['value', 'get', 'set', 'writable', 'enumerable', 'configurable'].indexOf(d) === -1) {
                     meta[d] = meta[d] || {};
                     meta[d][property] = desc[d];
                     delete desc[d];
@@ -379,6 +353,15 @@ Protoplast.extend = function(mixins, definition) {
                 else {
                     defined = true;
                 }
+            }
+            if (!desc.hasOwnProperty('writable') && !desc.hasOwnProperty('set') && !desc.hasOwnProperty('get')) {
+                desc.writable = true;
+            }
+            if (!desc.hasOwnProperty('enumerable')) {
+                desc.enumerable = true;
+            }
+            if (!desc.hasOwnProperty('configurable')) {
+                desc.configurable = true;
             }
         }
         if (defined) {
@@ -389,6 +372,9 @@ Protoplast.extend = function(mixins, definition) {
     proto.$meta = utils.merge(meta, this.$meta);
     proto.$super = this;
 
+    property_processors.forEach(function(property_processor) {
+        property_processor(proto);
+    });
     utils.processPrototype(proto);
 
     return proto;
@@ -398,7 +384,7 @@ module.exports = Protoplast;
 
 
 
-},{"./utils":7}],7:[function(require,module,exports){
+},{"./utils":6}],6:[function(require,module,exports){
 var idCounter = 0;
 
 /**
@@ -502,9 +488,9 @@ module.exports = {
     uniqueId: uniqueId
 };
 
-},{}],8:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
+(function (global){
 var Protoplast = require('./js/protoplast'),
-    Aop = require('./js/aop'),
     Dispatcher = require('./js/dispatcher'),
     Context = require('./js/di'),
     Component = require('./js/component'),
@@ -515,13 +501,14 @@ var protoplast = {
     extend: Protoplast.extend.bind(Protoplast),
     create: Protoplast.create.bind(Protoplast),
     Dispatcher: Dispatcher,
-    Aop: Aop,
     Context: Context,
     Component: Component,
     constructors: constructors,
     utils: utils
 };
 
+global.Protoplast = protoplast;
 module.exports = protoplast;
-},{"./js/aop":1,"./js/component":2,"./js/constructors":3,"./js/di":4,"./js/dispatcher":5,"./js/protoplast":6,"./js/utils":7}]},{},[8])(8)
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./js/component":1,"./js/constructors":2,"./js/di":3,"./js/dispatcher":4,"./js/protoplast":5,"./js/utils":6}]},{},[7])(7)
 });

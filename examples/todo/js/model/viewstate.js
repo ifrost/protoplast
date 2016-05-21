@@ -1,6 +1,8 @@
 (function(window) {
     'use strict';
 
+    var auto_update = window.Model.auto_update;
+
     window.ViewStateModel = window.Model.extend({
 
         $meta: {
@@ -11,8 +13,11 @@
             this._state = window.ViewStateModel.ALL;
         },
 
-        change: function(state) {
-            this._state = state;
+        change: {
+            hooks: [auto_update],
+            value: function(state) {
+                this._state = state;
+            }
         },
 
         get_state: function() {
@@ -23,7 +28,5 @@
     window.ViewStateModel.ALL = 'all';
     window.ViewStateModel.DONE = 'done';
     window.ViewStateModel.UNDONE = 'undone';
-
-    window.Model.auto_update(window.ViewStateModel);
-
+    
 })(window);

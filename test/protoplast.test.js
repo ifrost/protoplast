@@ -3,7 +3,6 @@ var chai = require('chai'),
     jsdom = require('jsdom'),
     Protoplast = require('./../main'),
     Dispatcher = Protoplast.Dispatcher,
-    Aop = Protoplast.Aop,
     Component = Protoplast.Component,
     Context = Protoplast.Context;
 
@@ -197,6 +196,179 @@ describe('Protoplast', function() {
 
         });
 
+        describe('Hooks', function() {
+
+            it('hooks to descriptors definitions', function() {
+
+                var decorator = {
+                    desc: function(proto, name, desc) {
+                        desc.value = function() {
+                            return 2;
+                        }
+                    }
+                };
+
+                var Base = Protoplast.extend({
+                    foo: {
+                        hooks: [decorator],
+                        value: function() {
+                            return 1;
+                        }
+                    }
+                });
+
+                var base = Base.create();
+
+                chai.assert.strictEqual(2, Base.foo());
+                chai.assert.strictEqual(2, base.foo());
+            });
+
+            it('hooks to prototype functions', function() {
+
+                var decorator = {
+                    proto: function(fn){
+                        return function() {
+                            return fn() + 1;
+                        }
+                    }
+                };
+
+                var Base = Protoplast.extend({
+
+                    foo: {
+                        hooks: [decorator],
+                        value: function() {
+                            return 1;
+                        }
+                    }
+                });
+
+                var base = Base.create();
+
+                chai.assert.strictEqual(2, Base.foo());
+                chai.assert.strictEqual(2, base.foo());
+            });
+
+            it('hooks to instance functions', function() {
+
+                var decorator = {
+                    instance: function(fn){
+                        return function() {
+                            return fn() + 1;
+                        }
+                    }
+                };
+
+                var Base = Protoplast.extend({
+                    foo: {
+                        hooks: [decorator],
+                        value: function() {
+                            return 1;
+                        }
+                    }
+                });
+
+                var base = Base.create();
+                
+                chai.assert.strictEqual(1, Base.foo());
+                chai.assert.strictEqual(2, base.foo());
+            });
+
+            it('inherits instance hooks', function() {
+
+                var add = function(value) {
+                    return {
+                        instance: function(fn) {
+                            return function() {
+                                return fn.apply(this, arguments) + value;
+                            }
+                        }
+                    }
+                };
+
+                var multiply = function(value) {
+                    return {
+                        instance: function(fn) {
+                            return function() {
+                                return fn.apply(this, arguments) * value;
+                            }
+                        }
+                    }
+                };
+
+                var Base = Protoplast.extend({
+                    foo: {
+                        hooks: [add(1)],
+                        value: function() {
+                            return 1;
+                        }
+                    }
+                });
+
+                var Sub = Base.extend({
+                    foo: {
+                        hooks: [multiply(2)]
+                    }
+                });
+
+                var base = Base.create();
+                var sub = Sub.create();
+
+                chai.assert.strictEqual(1, Base.foo());
+                chai.assert.strictEqual(2, base.foo());
+                chai.assert.strictEqual(1, Sub.foo());
+                chai.assert.strictEqual(4, sub.foo());
+
+            });
+
+            it('does not inherit proto hooks', function() {
+
+                var add = function(value) {
+                    return {
+                        proto: function(fn) {
+                            return function() {
+                                return fn.apply(this, arguments) + value;
+                            }
+                        }
+                    }
+                };
+
+                var multiply = function(value) {
+                    return {
+                        proto: function(fn) {
+                            return function() {
+                                return fn.apply(this, arguments) * value;
+                            }
+                        }
+                    }
+                };
+
+                var Base = Protoplast.extend({
+                    foo: {
+                        hooks: [add(1)],
+                        value: function() {
+                            return 1;
+                        }
+                    }
+                });
+
+                var Sub = Base.extend({
+                    foo: {
+                        hooks: [multiply(2)]
+                    }
+                });
+
+                var base = Base.create();
+                var sub = Sub.create();
+
+                chai.assert.strictEqual(2, Base.foo());
+                chai.assert.strictEqual(2, base.foo());
+                chai.assert.strictEqual(4, Sub.foo());
+                chai.assert.strictEqual(4, sub.foo());
+
+            });
+        });
+
         describe('Autobinding', function() {
 
             it('autobinds methods', function() {
@@ -327,143 +499,6 @@ describe('Protoplast', function() {
             chai.assert.equal(sub.test(), 20);
         });
 
-    });
-
-    describe('AOP', function() {
-        it('allows to add after aspect', function() {
-
-            var Foo, foo;
-
-            Foo = Protoplast.extend({
-                $create: function(text) {
-                    this.text = text;
-                },
-                append: function(text) {
-                    this.text += text;
-                }
-            });
-
-            foo = Foo.create('text');
-            foo.append('text');
-            chai.assert.equal(foo.text, 'texttext');
-
-            Aop(Foo).aop('append', {
-                after: function() {
-                    this.text += '!';
-                }
-            });
-
-            foo = Foo.create('text');
-            foo.append('text');
-            chai.assert.equal(foo.text, 'texttext!');
-        });
-
-        it('allows to add before aspect', function() {
-
-            var Foo, foo;
-
-            Foo = Protoplast.extend({
-                $create: function(text) {
-                    this.text = text;
-                },
-                append: function(text) {
-                    this.text += text;
-                }
-            });
-
-            foo = Foo.create('text');
-            foo.append('text');
-            chai.assert.equal(foo.text, 'texttext');
-
-            Aop(Foo).aop('append', {
-                before: function() {
-                    this.text += ',';
-                }
-            });
-
-            foo = Foo.create('text');
-            foo.append('text');
-            chai.assert.equal(foo.text, 'text,text');
-        });
-
-        it('runs aspects on subinstances', function() {
-
-            var Text, UCText, text;
-
-            Text = Protoplast.extend({
-                $create: function(text) {
-                    this.text = text;
-                },
-                append: function(text) {
-                    this.text += text;
-                }
-            });
-
-            UCText = Text.extend({
-                toUpperCase: function() {
-                    this.text = this.text.toUpperCase();
-                }
-            });
-
-            var aop = Aop(UCText);
-
-            aop.aop('append', {
-                after: function() {
-                    this.toUpperCase();
-                }
-            });
-
-            aop.aop('append', {
-                before: function() {
-                    this.text += ',';
-                }
-            });
-
-            text = UCText.create('test');
-            text.append('test');
-            chai.assert.equal(text.text, 'TEST,TEST');
-        });
-
-        it('runs wraps all methods with aspects', function() {
-            var Foo, foo, before = sinon.spy(), after = sinon.spy();
-
-            Foo = Protoplast.extend({
-                a: function() {
-                },
-                b: function() {
-                }
-            });
-
-            Aop(Foo).aop(['a', 'b'], {
-                after: after,
-                before: before
-            });
-
-            foo = Foo.create();
-
-            sinon.assert.notCalled(after);
-            sinon.assert.notCalled(before);
-
-            foo.a();
-
-            sinon.assert.calledOnce(after);
-            sinon.assert.calledOnce(before);
-
-            foo.b();
-
-            sinon.assert.calledTwice(after);
-            sinon.assert.calledTwice(before);
-        });
-
-        it('throws an exception when on an attempt to wrap non-exiting method', function() {
-            var Foo = Protoplast.extend({
-                foo: function() {}
-            });
-
-            chai.assert.throws(function(){
-                Aop(Foo).aop('bar', {after: function() {}});
-            });
-        });
     });
 
     describe('EventDispatcher', function() {
