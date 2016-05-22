@@ -17,7 +17,7 @@ var Person = Protoplast.extend({
    }
 });
 
-// create an instance an initialise it
+// create an instance and initialise it
 var louie = Person.create("Louie", 30); // Person.$create called
 console.log(louie.hello()); // "My name is Louie. I am 30 years old."
 
@@ -57,8 +57,8 @@ var LiarLiar = Liar.extend({
    }
 });
 var fletcher = LiarLiar.create("Fletcher", 35);
-console.log(fletcher.hello()); // "My name is Fletcher. I am 35 years old. I am not lying!"; hoo modified writable property
-console.log(fletcher.hello()); // "My name is Fletcher. I am 35 years old. I am not lying!"; hoo modified writable property
+console.log(fletcher.hello()); // "My name is Fletcher. I am 35 years old. I am not lying!"; hook modified writable property
+console.log(fletcher.hello()); // "My name is Fletcher. I am 35 years old. I am not lying!"; 
 ```
 
 ## Usage - a long ride
@@ -84,7 +84,7 @@ charlie.name = "Charlie";
 console.log(charlie.name + ": " + charlie.ask("What is your name?"));
 ```
 
-We may move settings the name to `init` method:
+We may move setting the name to `init` method:
 
 ``` javascript
 var simple_bot = {
