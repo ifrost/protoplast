@@ -1,6 +1,6 @@
 # Protoplast
 
-Fed up with "classes" in JavaScript? Want to use prototypical inheritance? `Protoplast` will help you to create prototypes, inheritance hierarchy, instantiate objects, annotate prototypes and properties with metadata, wrap methods with decorators and use mixins!
+Fed up with "classes" in JavaScript? Want to use prototypal inheritance? `Protoplast` will help you to create prototypes, inheritance hierarchy, instantiate objects, annotate prototypes and properties with metadata, wrap methods with decorators and use mixins!
 
 ## Basic usage - a quick ride
 
