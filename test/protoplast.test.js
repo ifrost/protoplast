@@ -152,6 +152,250 @@ describe('Protoplast', function() {
 
     });
 
+    describe('Hooks', function() {
+
+        describe('Prototype hooks', function() {
+
+            it('hooks to prototype descriptions', function() {
+
+                var Base, description, hook;
+
+                hook = {
+                    desc: sinon.spy()
+                };
+
+                description = {
+                    $meta: {
+                        hooks: [hook]
+                    }
+                };
+
+                Base = Protoplast.extend(description);
+
+                sinon.assert.calledOnce(hook.desc);
+                sinon.assert.calledWith(hook.desc, description);
+
+            });
+
+            it('hooks to prototype definitions', function() {
+
+                var Base, hook;
+
+                hook = {
+                    proto: sinon.spy()
+                };
+
+                Base = Protoplast.extend({
+                    $meta: {
+                        hooks: [hook]
+                    }
+                });
+
+                sinon.assert.calledOnce(hook.proto);
+                sinon.assert.calledWith(hook.proto, Base);
+            });
+
+            it('inherits prototype hooks', function() {
+
+                var Base, Sub;
+
+                var base_hook = {
+                    proto: sinon.spy()
+                };
+
+                var sub_hook = {
+                    proto: sinon.spy()
+                };
+
+                Base = Protoplast.extend({$meta: {hooks: [base_hook]}});
+                Sub = Base.extend({$meta: {hooks: [sub_hook]}});
+
+                sinon.assert.calledOnce(sub_hook.proto);
+                sinon.assert.calledWith(sub_hook.proto, Sub);
+
+                sinon.assert.calledTwice(base_hook.proto);
+                sinon.assert.calledWith(base_hook.proto, Base);
+                sinon.assert.calledWith(base_hook.proto, Sub);
+            });
+
+        });
+
+        describe('Properties hooks', function() {
+
+            it('hooks to descriptors definitions', function() {
+
+                var decorator = {
+                    desc: function(proto, name, desc) {
+                        desc.value = function() {
+                            return 2;
+                        }
+                    }
+                };
+
+                var Base = Protoplast.extend({
+                    foo: {
+                        hooks: [decorator],
+                        value: function() {
+                            return 1;
+                        }
+                    }
+                });
+
+                var base = Base.create();
+
+                chai.assert.strictEqual(2, Base.foo());
+                chai.assert.strictEqual(2, base.foo());
+            });
+
+            it('hooks to prototype functions', function() {
+
+                var decorator = {
+                    proto: function(fn){
+                        return function() {
+                            return fn() + 1;
+                        }
+                    }
+                };
+
+                var Base = Protoplast.extend({
+
+                    foo: {
+                        hooks: [decorator],
+                        value: function() {
+                            return 1;
+                        }
+                    }
+                });
+
+                var base = Base.create();
+
+                chai.assert.strictEqual(2, Base.foo());
+                chai.assert.strictEqual(2, base.foo());
+            });
+
+            it('hooks to instance functions', function() {
+
+                var decorator = {
+                    instance: function(fn){
+                        return function() {
+                            return fn() + 1;
+                        }
+                    }
+                };
+
+                var Base = Protoplast.extend({
+                    foo: {
+                        hooks: [decorator],
+                        value: function() {
+                            return 1;
+                        }
+                    }
+                });
+
+                var base = Base.create();
+
+                chai.assert.strictEqual(1, Base.foo());
+                chai.assert.strictEqual(2, base.foo());
+            });
+
+            it('inherits instance hooks', function() {
+
+                var add = function(value) {
+                    return {
+                        instance: function(fn) {
+                            return function() {
+                                return fn.apply(this, arguments) + value;
+                            }
+                        }
+                    }
+                };
+
+                var multiply = function(value) {
+                    return {
+                        instance: function(fn) {
+                            return function() {
+                                return fn.apply(this, arguments) * value;
+                            }
+                        }
+                    }
+                };
+
+                var Base = Protoplast.extend({
+                    foo: {
+                        hooks: [add(1)],
+                        value: function() {
+                            return 1;
+                        }
+                    }
+                });
+
+                var Sub = Base.extend({
+                    foo: {
+                        hooks: [multiply(2)]
+                    }
+                });
+
+                var base = Base.create();
+                var sub = Sub.create();
+
+                chai.assert.strictEqual(1, Base.foo());
+                chai.assert.strictEqual(2, base.foo());
+                chai.assert.strictEqual(1, Sub.foo());
+                chai.assert.strictEqual(4, sub.foo());
+
+            });
+
+            it('does not inherit proto hooks', function() {
+
+                var add = function(value) {
+                    return {
+                        proto: function(fn) {
+                            return function() {
+                                return fn.apply(this, arguments) + value;
+                            }
+                        }
+                    }
+                };
+
+                var multiply = function(value) {
+                    return {
+                        proto: function(fn) {
+                            return function() {
+                                return fn.apply(this, arguments) * value;
+                            }
+                        }
+                    }
+                };
+
+                var Base = Protoplast.extend({
+                    foo: {
+                        hooks: [add(1)],
+                        value: function() {
+                            return 1;
+                        }
+                    }
+                });
+
+                var Sub = Base.extend({
+                    foo: {
+                        hooks: [multiply(2)]
+                    }
+                });
+
+                var base = Base.create();
+                var sub = Sub.create();
+
+                chai.assert.strictEqual(2, Base.foo());
+                chai.assert.strictEqual(2, base.foo());
+                chai.assert.strictEqual(4, Sub.foo());
+                chai.assert.strictEqual(4, sub.foo());
+
+            });
+
+        });
+
+    });
+
     describe('Constructors', function() {
 
         it('constructors are run starting from the base prototype', function() {
@@ -192,250 +436,6 @@ describe('Protoplast', function() {
 
                 var instance = Base.create();
                 chai.assert.isDefined(instance.$id);
-            });
-
-        });
-
-        describe('Hooks', function() {
-            
-            describe('Prototype hooks', function() {
-
-                it('hooks to prototype descriptions', function() {
-
-                    var Base, description, hook;
-
-                    hook = {
-                        desc: sinon.spy()
-                    };
-
-                    description = {
-                        $meta: {
-                            hooks: [hook]
-                        }
-                    };
-
-                    Base = Protoplast.extend(description);
-
-                    sinon.assert.calledOnce(hook.desc);
-                    sinon.assert.calledWith(hook.desc, description);
-
-                });
-
-                it('hooks to prototype definitions', function() {
-
-                    var Base, hook;
-
-                    hook = {
-                        proto: sinon.spy()
-                    };
-
-                    Base = Protoplast.extend({
-                        $meta: {
-                            hooks: [hook]
-                        }
-                    });
-
-                    sinon.assert.calledOnce(hook.proto);
-                    sinon.assert.calledWith(hook.proto, Base);
-                });
-
-                it('inherits prototype hooks', function() {
-
-                    var Base, Sub;
-
-                    var base_hook = {
-                        proto: sinon.spy()
-                    };
-
-                    var sub_hook = {
-                        proto: sinon.spy()
-                    };
-
-                    Base = Protoplast.extend({$meta: {hooks: [base_hook]}});
-                    Sub = Base.extend({$meta: {hooks: [sub_hook]}});
-
-                    sinon.assert.calledOnce(sub_hook.proto);
-                    sinon.assert.calledWith(sub_hook.proto, Sub);
-
-                    sinon.assert.calledTwice(base_hook.proto);
-                    sinon.assert.calledWith(base_hook.proto, Base);
-                    sinon.assert.calledWith(base_hook.proto, Sub);
-                });
-                
-            });
-            
-            describe('Properties hooks', function() {
-
-                it('hooks to descriptors definitions', function() {
-
-                    var decorator = {
-                        desc: function(proto, name, desc) {
-                            desc.value = function() {
-                                return 2;
-                            }
-                        }
-                    };
-
-                    var Base = Protoplast.extend({
-                        foo: {
-                            hooks: [decorator],
-                            value: function() {
-                                return 1;
-                            }
-                        }
-                    });
-
-                    var base = Base.create();
-
-                    chai.assert.strictEqual(2, Base.foo());
-                    chai.assert.strictEqual(2, base.foo());
-                });
-
-                it('hooks to prototype functions', function() {
-
-                    var decorator = {
-                        proto: function(fn){
-                            return function() {
-                                return fn() + 1;
-                            }
-                        }
-                    };
-
-                    var Base = Protoplast.extend({
-
-                        foo: {
-                            hooks: [decorator],
-                            value: function() {
-                                return 1;
-                            }
-                        }
-                    });
-
-                    var base = Base.create();
-
-                    chai.assert.strictEqual(2, Base.foo());
-                    chai.assert.strictEqual(2, base.foo());
-                });
-
-                it('hooks to instance functions', function() {
-
-                    var decorator = {
-                        instance: function(fn){
-                            return function() {
-                                return fn() + 1;
-                            }
-                        }
-                    };
-
-                    var Base = Protoplast.extend({
-                        foo: {
-                            hooks: [decorator],
-                            value: function() {
-                                return 1;
-                            }
-                        }
-                    });
-
-                    var base = Base.create();
-
-                    chai.assert.strictEqual(1, Base.foo());
-                    chai.assert.strictEqual(2, base.foo());
-                });
-
-                it('inherits instance hooks', function() {
-
-                    var add = function(value) {
-                        return {
-                            instance: function(fn) {
-                                return function() {
-                                    return fn.apply(this, arguments) + value;
-                                }
-                            }
-                        }
-                    };
-
-                    var multiply = function(value) {
-                        return {
-                            instance: function(fn) {
-                                return function() {
-                                    return fn.apply(this, arguments) * value;
-                                }
-                            }
-                        }
-                    };
-
-                    var Base = Protoplast.extend({
-                        foo: {
-                            hooks: [add(1)],
-                            value: function() {
-                                return 1;
-                            }
-                        }
-                    });
-
-                    var Sub = Base.extend({
-                        foo: {
-                            hooks: [multiply(2)]
-                        }
-                    });
-
-                    var base = Base.create();
-                    var sub = Sub.create();
-
-                    chai.assert.strictEqual(1, Base.foo());
-                    chai.assert.strictEqual(2, base.foo());
-                    chai.assert.strictEqual(1, Sub.foo());
-                    chai.assert.strictEqual(4, sub.foo());
-
-                });
-
-                it('does not inherit proto hooks', function() {
-
-                    var add = function(value) {
-                        return {
-                            proto: function(fn) {
-                                return function() {
-                                    return fn.apply(this, arguments) + value;
-                                }
-                            }
-                        }
-                    };
-
-                    var multiply = function(value) {
-                        return {
-                            proto: function(fn) {
-                                return function() {
-                                    return fn.apply(this, arguments) * value;
-                                }
-                            }
-                        }
-                    };
-
-                    var Base = Protoplast.extend({
-                        foo: {
-                            hooks: [add(1)],
-                            value: function() {
-                                return 1;
-                            }
-                        }
-                    });
-
-                    var Sub = Base.extend({
-                        foo: {
-                            hooks: [multiply(2)]
-                        }
-                    });
-
-                    var base = Base.create();
-                    var sub = Sub.create();
-
-                    chai.assert.strictEqual(2, Base.foo());
-                    chai.assert.strictEqual(2, base.foo());
-                    chai.assert.strictEqual(4, Sub.foo());
-                    chai.assert.strictEqual(4, sub.foo());
-
-                });
-                
             });
 
         });
@@ -545,29 +545,6 @@ describe('Protoplast', function() {
 
             b.setter = 11;
             chai.assert.equal(b.setter_value, 11);
-        });
-
-        it('allows to run base methods', function() {
-
-            var Base, Sub, base, sub;
-
-            Base = Protoplast.extend({
-                test: function() {
-                    return 10;
-                }
-            });
-
-            Sub = Base.extend({
-                test: function() {
-                    return this.$super.test.call(this) * 2;
-                }
-            });
-
-            base = Base.create();
-            sub = Sub.create();
-
-            chai.assert.equal(base.test(), 10);
-            chai.assert.equal(sub.test(), 20);
         });
 
     });
@@ -959,6 +936,90 @@ describe('Protoplast', function() {
     });
 
     describe('Examples', function() {
+
+        describe('README.md', function() {
+            it('Quick ride', function() {
+
+                var Person = Protoplast.extend({
+                    $create: function(name, age) {
+                        this.name = name;
+                        this.age = age;
+                    },
+                    hello: function() {
+                        return 'My name is ' + this.name + '. I am ' + this.age + ' years old.';
+                    }
+                });
+
+                var louie = Person.create("Louie", 30);
+                chai.assert.equal(louie.hello(), "My name is Louie. I am 30 years old.");
+
+                var Liar = Person.extend({
+                    $create: function(name, age) {
+                        this.name = "Barbara"; // no need to call Person.$create
+                    },
+                    hello: function() {
+                        this.age--;
+                        return Person.hello.call(this) + " I am not lying!"
+                    }
+                });
+                var anne = Liar.create("Anne", 30);
+                chai.assert.equal(anne.name, "Barbara");
+                chai.assert.equal(anne.age, 30);
+                chai.assert.equal(anne.hello(), "My name is Barbara. I am 29 years old. I am not lying!");
+                chai.assert.equal(anne.hello(), "My name is Barbara. I am 28 years old. I am not lying!");
+                chai.assert.equal(anne.age, 28);
+
+                var cant_lie = {
+                    instance: function(value, name, proto, instance) {
+                        Object.defineProperty(instance, name, {writable: false});
+                        return value;
+                    }
+                };
+
+                var LiarLiar = Liar.extend({
+                    $create: function(name, age) {
+                        this.name = name;
+                    },
+                    age: {
+                        hooks: [cant_lie]
+                    }
+                });
+                var fletcher = LiarLiar.create("Fletcher", 35);
+                chai.assert.equal(fletcher.hello(), "My name is Fletcher. I am 35 years old. I am not lying!");
+                chai.assert.equal(fletcher.hello(), "My name is Fletcher. I am 35 years old. I am not lying!");
+            });
+
+            it('constructors order', function() {
+                var foo = sinon.spy(), bar = sinon.spy(), create = sinon.spy();
+                var Foo = Protoplast.extend({
+                    $meta: {
+                        constructors: [foo, bar]
+                    },
+                    $create: create
+                });
+                Foo.create();
+                sinon.assert.callOrder(foo, bar, create);
+            });
+
+            it('merging meta-data', function() {
+                var Foo = Protoplast.extend({
+                    $meta: {
+                        list: [1,2]
+                    }
+                });
+
+                var Bar = Foo.extend({
+                    $meta: {
+                        list: [3, 4]
+                    }
+                });
+
+                chai.assert.deepEqual(Bar.$meta.list, [1,2,3,4]);
+
+            });
+
+        });
+
         it('flux example', function() {
 
             var RootView, View, ActionDispatcher, Repository, view, repository, _view;

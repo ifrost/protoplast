@@ -17,7 +17,7 @@ var Protoplast = {
  * @returns {Object}
  */
 Protoplast.extend = function(mixins, description) {
-    var proto = Object.create(this), meta, desc, defined, property_hooks = [];
+    var proto = Object.create(this), meta, mixins_meta, desc, defined, property_hooks = [];
 
     // set defaults
     if (!(mixins instanceof Array)) {
@@ -60,14 +60,14 @@ Protoplast.extend = function(mixins, description) {
                     if (hook.proto) {
                         (function(fn) {
                             property_hooks.push(function(proto) {
-                                proto[property] = (fn(proto[property], proto));
+                                proto[property] = (fn(proto[property], property, proto));
                             });
                         }(hook.proto));
                     }
                     if (hook.instance) {
                         meta.constructors = meta.constructors || [];
                         meta.constructors.push(function() {
-                            this[property] = (hook.instance(this[property], proto, this));
+                            this[property] = (hook.instance(this[property], property, proto, this));
                         });
                     }
                 });
@@ -104,8 +104,11 @@ Protoplast.extend = function(mixins, description) {
         }
     }
 
+    mixins_meta = (mixins || []).reduce(function(current, next) {
+        return utils.merge(current, next.$meta);
+    }, {});
+    meta = utils.merge(meta, mixins_meta);
     proto.$meta = utils.merge(meta, this.$meta);
-    proto.$super = this;
 
     property_hooks.forEach(function(property_processor) {
         property_processor(proto);

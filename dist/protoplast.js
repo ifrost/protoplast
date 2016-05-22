@@ -247,8 +247,11 @@ var Protoplast = require('./protoplast');
  */
 var Dispatcher = Protoplast.extend({
 
+    $create: function() {
+        this._topics = {};
+    },
+
     dispatch: function(topic, message) {
-        this._topics = this._topics || {};
         (this._topics[topic] || []).forEach(function(config) {
             config.handler.call(config.context, message);
         })
@@ -258,13 +261,11 @@ var Dispatcher = Protoplast.extend({
         if (!handler) {
             throw new Error('Handler is required for event ' + topic);
         }
-        this._topics = this._topics || {};
         this._topics[topic] = this._topics[topic] || [];
         this._topics[topic].push({handler: handler, context: context});
     },
 
     off: function(topic, handler, context) {
-        this._topics = this._topics || {};
         this._topics[topic] = this._topics[topic].filter(function(config) {
             return handler ? config.handler !== handler : config.context !== context
         })
@@ -289,62 +290,72 @@ var Protoplast = {
 /**
  * Creates new factory function
  * @param [mixins]
- * @param definition
+ * @param description
  * @returns {Object}
  */
-Protoplast.extend = function(mixins, definition) {
-    var proto = Object.create(this), meta, desc, defined, property_hooks = [];
+Protoplast.extend = function(mixins, description) {
+    var proto = Object.create(this), meta, mixins_meta, desc, defined, property_hooks = [];
 
     // set defaults
     if (!(mixins instanceof Array)) {
-        definition = mixins;
+        description = mixins;
         mixins = [];
     }
-    definition = definition || {};
+    description = description || {};
     mixins = mixins || [];
-    meta = definition.$meta || {};
-    meta.properties = meta.properties || {};
-    delete definition.$meta;
 
-    if (definition.$create !== undefined) {
+    if (description.$meta && description.$meta.hooks) {
+        description.$meta.hooks.forEach(function(hook) {
+            if (hook.desc) {
+                hook.desc(description);
+            }
+        });
+    }
+
+    meta = description.$meta || {};
+    meta.properties = meta.properties || {};
+
+    delete description.$meta;
+
+    if (description.$create !== undefined) {
         meta.constructors = meta.constructors || [];
-        meta.constructors.push(definition.$create);
-        delete definition.$create;
+        meta.constructors.push(description.$create);
+        delete description.$create;
     }
 
     proto = utils.mixin(proto, mixins);
 
-    for (var property in definition) {
+    for (var property in description) {
         defined = false;
 
-        if (definition[property] && definition[property].hooks) {
+        if (description[property] && description[property].hooks) {
             (function(property, desc){
-                definition[property].hooks.forEach(function(hook) {
+                description[property].hooks.forEach(function(hook) {
                     if (hook.desc) {
                         hook.desc(proto, property, desc);
                     }
                     if (hook.proto) {
                         (function(fn) {
                             property_hooks.push(function(proto) {
-                                proto[property] = (fn(proto[property], proto));
+                                proto[property] = (fn(proto[property], property, proto));
                             });
                         }(hook.proto));
                     }
                     if (hook.instance) {
                         meta.constructors = meta.constructors || [];
                         meta.constructors.push(function() {
-                            this[property] = (hook.instance(this[property], proto, this));
+                            this[property] = (hook.instance(this[property], property, proto, this));
                         });
                     }
                 });
-            }(property, definition[property]));
+            }(property, description[property]));
         }
         
-        if (Object.prototype.toString.call(definition[property]) !== "[object Object]") {
+        if (Object.prototype.toString.call(description[property]) !== "[object Object]") {
             defined = true;
-            desc = {value: definition[property], writable: true, enumerable: true, configurable: true};
+            desc = {value: description[property], writable: true, enumerable: true, configurable: true};
         } else {
-            desc = definition[property];
+            desc = description[property];
             for (var d in desc) {
                 if (['value', 'get', 'set', 'writable', 'enumerable', 'configurable'].indexOf(d) === -1) {
                     meta.properties[d] = meta.properties[d] || {};
@@ -370,8 +381,11 @@ Protoplast.extend = function(mixins, definition) {
         }
     }
 
+    mixins_meta = (mixins || []).reduce(function(current, next) {
+        return utils.merge(current, next.$meta);
+    }, {});
+    meta = utils.merge(meta, mixins_meta);
     proto.$meta = utils.merge(meta, this.$meta);
-    proto.$super = this;
 
     property_hooks.forEach(function(property_processor) {
         property_processor(proto);

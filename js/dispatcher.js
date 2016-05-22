@@ -7,8 +7,11 @@ var Protoplast = require('./protoplast');
  */
 var Dispatcher = Protoplast.extend({
 
+    $create: function() {
+        this._topics = {};
+    },
+
     dispatch: function(topic, message) {
-        this._topics = this._topics || {};
         (this._topics[topic] || []).forEach(function(config) {
             config.handler.call(config.context, message);
         })
@@ -18,13 +21,11 @@ var Dispatcher = Protoplast.extend({
         if (!handler) {
             throw new Error('Handler is required for event ' + topic);
         }
-        this._topics = this._topics || {};
         this._topics[topic] = this._topics[topic] || [];
         this._topics[topic].push({handler: handler, context: context});
     },
 
     off: function(topic, handler, context) {
-        this._topics = this._topics || {};
         this._topics[topic] = this._topics[topic].filter(function(config) {
             return handler ? config.handler !== handler : config.context !== context
         })
