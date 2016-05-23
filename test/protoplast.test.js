@@ -11,13 +11,14 @@ describe('Protoplast', function() {
     describe('Metadata', function() {
 
         it('assings metadata to the prototype', function() {
-            var Base;
+            var Base, fn = sinon.stub();
 
             Base = Protoplast.extend({
                 $meta: {
                     num: 1,
                     bool: true,
                     str: 'text',
+                    fn: fn,
                     obj: {test: 'test'}
                 }
             });
@@ -25,18 +26,20 @@ describe('Protoplast', function() {
             chai.assert.equal(Base.$meta.num, 1);
             chai.assert.equal(Base.$meta.bool, true);
             chai.assert.equal(Base.$meta.str, 'text');
+            chai.assert.equal(Base.$meta.fn, fn);
             chai.assert.equal(Base.$meta.obj.test, 'test');
         });
 
         it('merges primitive values in metadata', function() {
 
-            var Base, Sub;
+            var Base, Sub, fn = sinon.stub();
 
             Base = Protoplast.extend({
                 $meta: {
                     num: 1,
                     bool: true,
-                    str: 'text'
+                    str: 'text',
+                    fn: fn
                 }
             });
 
@@ -45,6 +48,7 @@ describe('Protoplast', function() {
             chai.assert.equal(Sub.$meta.num, 1);
             chai.assert.equal(Sub.$meta.bool, true);
             chai.assert.equal(Sub.$meta.str, 'text');
+            chai.assert.equal(Sub.$meta.fn, fn);
         });
 
         it('overrides primitive values in metadata', function() {
