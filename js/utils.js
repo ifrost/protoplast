@@ -39,7 +39,7 @@ function merge(destination, source) {
             if (source[property] instanceof Array) {
                 destination[property] = source[property].concat(destination[property] || []);
             }
-            else if (['number', 'boolean', 'string'].indexOf(typeof(source[property])) !== -1) {
+            else if (['number', 'boolean', 'string', 'function'].indexOf(typeof(source[property])) !== -1) {
                 if (!destination.hasOwnProperty(property)) {
                     destination[property] = source[property];
                 }
