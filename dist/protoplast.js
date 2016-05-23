@@ -17,10 +17,7 @@ var Component = Protoplast.extend({
         set: function(value) {
             this.___fastinject___ = value;
             // fastinject all the children
-            this._children.forEach(function(child) {
-                this.__fastinject__(child);
-                child.__fastinject__ = this.__fastinject__;
-            }, this);
+            this._children.forEach(this.__fastinject__, this);
         }
     },
 
