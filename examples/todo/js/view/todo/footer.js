@@ -13,21 +13,19 @@
             inject: 'viewstate'
         },
 
+        html: '<footer class="footer">' +
+            '<span class="todo-count" data-prop="counter"></span>' +
+            '<ul class="filters" data-prop="filters">' +
+            '<li><a data-prop="filter_all" href="#/">All</a></li>' +
+            '<li><a data-prop="filter_undone" href="#/active">Active</a></li>' +
+            '<li><a data-prop="filter_done" href="#/completed">Completed</a></li>' +
+            '</ul>' +
+            '<button class="clear-completed" data-prop="clear_all">Clear completed</button>' +
+            '</footer>',
+
         init: function () {
 
-            this.$root.classed('footer', true);
-
-            this.counter = this.$root.append('span').classed('todo-count', true);
-            this.filters = this.$root.append('ul').classed('filters', true);
-            this.filter_all = this.filters.append('li').append('a').attr('href', '#/').text('All');
-            this.filter_undone = this.filters.append('li').append('a').attr('href', '#/active').text('Active');
-            this.filter_done = this.filters.append('li').append('a').attr('href', '#/completed').text('Completed');
-
-            this.clear_all = this.$root
-                .append('button')
-                .classed('clear-completed', true)
-                .text('Clear completed')
-                .on('click', this.pub.bind(this, 'todos/clear_done'));
+            this.clear_all.on('click', this.pub.bind(this, 'todos/clear_done'));
 
             this.todos.on('updated', this.update_counter);
             this.update_counter();

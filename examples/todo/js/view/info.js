@@ -3,17 +3,12 @@
 
     window.InfoView = window.View.extend({
 
-        tag: 'footer',
-
-        init: function() {
-
-            this.$root.classed('info', true);
-
-            this.$root.append('p').html('Double-click to edit a todo');
-            this.$root.append('p').html('Template by <a href="http://sindresorhus.com">Sindre Sorhus</a>');
-            this.$root.append('p').html('Created by <a href="http://todomvc.com">Piotr Jamroz</a>');
-            this.$root.append('p').html('Part of <a href="http://todomvc.com">TodoMVC</a>');
-        }
+        html: '<footer class="info">' +
+            '<p>Double-click to edit a todo</p>' +
+            '<p>Template by <a href="http://sindresorhus.com">Sindre Sorhus</a></p>' +
+            '<p>Created by <a href="http://todomvc.com">Piotr Jamroz</a>' +
+            '<p>Part of <a href="http://todomvc.com">TodoMVC</a>' +
+            '</footer>'
 
     });
 

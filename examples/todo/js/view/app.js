@@ -7,15 +7,22 @@
 
     window.AppView = window.View.extend({
 
-        tag: 'section',
+        html: '<section class="todoapp">' +
+            '<div data-comp="header"></div>' +
+            '<div data-comp="main"></div>' +
+            '<div data-comp="footer"></div>' +
+        '</section>',
 
-        init: function() {
+        header: {
+            component: HeaderView
+        },
 
-            this.$root.classed('todoapp', true);
+        main: {
+            component: MainView
+        },
 
-            this.add(HeaderView.create());
-            this.add(MainView.create());
-            this.add(FooterView.create());
+        footer: {
+            component: FooterView
         }
 
     });

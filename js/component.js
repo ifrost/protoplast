@@ -6,9 +6,60 @@ var Protoplast = require('./protoplast');
  */
 var Component = Protoplast.extend({
 
+    tag: '',
+
+    html: '',
+
+    root: {
+        get: function() {
+            return this._root;
+        },
+        set: function(value) {
+            this._root = value;
+            this._process_root();
+        }
+    },
+
+    _process_root: function() {
+        if (this._root) {
+            var elem, prop, child,
+                data_components = this._root.querySelectorAll('[data-comp]'),
+                data_properties = this._root.querySelectorAll('[data-prop]');
+            for (var i = 0; i < data_components.length; i++) {
+                elem = data_components[i];
+                prop = elem.getAttribute('data-comp');
+                child = this[prop] = this.$meta.properties.component[prop].create();
+                this._children.push(child);
+                this.root.insertBefore(child.root, elem);
+                this.root.removeChild(elem);
+            }
+            for (var i = 0; i < data_properties.length; i++) {
+                elem = data_properties[i];
+                (function(elem){
+                    this[elem.getAttribute('data-prop')] = elem;
+                    if (this.$meta.element_wrapper) {
+                        this[elem.getAttribute('data-prop')] = this.$meta.element_wrapper(this[elem.getAttribute('data-prop')]);
+                    }
+                }.bind(this))(elem);
+            }
+
+        }
+    },
+
     $create: function() {
         this._children = [];
-        this.root = document.createElement(this.tag || 'div');
+
+        if (!this.tag && !this.html) {
+            this.tag = 'div';
+        }
+
+        if (this.tag && !this.html) {
+            this.html = '<' + this.tag + '></' + this.tag + '>';
+        }
+
+        var container = document.createElement('div');
+        container.innerHTML = this.html;
+        this.root = container.firstChild;
     },
 
     __fastinject__: {

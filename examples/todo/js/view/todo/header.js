@@ -3,18 +3,16 @@
 
     window.HeaderView = window.View.extend({
 
-        tag: 'header',
+        html: '<header class="header">' +
+            '<h1 data-prop="header">todos</h1>' +
+            '<input data-prop="input" class="new-todo" placeholder="What needs to be done?" autofocus></input>' +
+        '</header>',
 
         init: function () {
 
             this.$root.classed('header', true);
 
-            this.header = this.$root.append('h1').text('todos');
-            this.input = this.$root.append('input')
-                .classed('new-todo', true)
-                .attr('placeholder', 'What needs to be done?')
-                .property('autofocus', true)
-                .on('keypress', function () {
+            this.input.on('keypress', function () {
                     if (d3.event.keyCode === 13) {
                         this.submit_todo();
                     }
