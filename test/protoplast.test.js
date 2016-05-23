@@ -732,7 +732,87 @@ describe('Protoplast', function() {
 
     });
 
-    describe('Components Depenendecy Injection', function() {
+    describe('Components Dependency Injection', function() {
+
+        beforeEach(function(done) {
+            jsdom.env('<html><body></body></html>', function(err, window){
+                global.document = window.document;
+                done();
+            })
+        });
+
+        it('injects all dependencies to children element with __fastinject__', function() {
+
+            var element = document.createElement('div'), main,
+                context = Context.create();
+
+            context.register('foo', 'foo');
+            main = Component.Root(element, context);
+
+            var Root = Component.extend({
+                tag: 'div',
+                foo: {inject: 'foo'}
+            });
+            var Child = Component.extend({
+                tag: 'span',
+                init: function() {
+                    this.bar = this.foo
+                },
+                foo: {inject: 'foo'}
+            });
+            var GrandChild = Component.extend({
+                tag: 'p',
+                foo: {inject: 'foo'}
+            });
+
+            var root = Root.create();
+            var child = Child.create();
+            var grand = GrandChild.create();
+
+            root.add(child);
+            child.add(grand);
+
+            main.add(root);
+
+            chai.assert.strictEqual(root.foo, 'foo');
+            chai.assert.strictEqual(child.foo, 'foo');
+            chai.assert.strictEqual(grand.foo, 'foo');
+            chai.assert.strictEqual(child.bar, 'foo');
+        });
+
+
+        it('initialises component trees after attaching to the parent', function() {
+
+            var context = Context.create();
+
+            context.register('foo', 'foo');
+
+            var Root = Component.extend({
+                tag: 'div',
+                foo: {inject: 'foo'}
+            });
+            var Child = Component.extend({
+                tag: 'span',
+                foo: {inject: 'foo'}
+            });
+            var GrandChild = Component.extend({
+                tag: 'p',
+                foo: {inject: 'foo'}
+            });
+
+            var root = Root.create();
+            var child = Child.create();
+            var grand = GrandChild.create();
+
+            root.add(child);
+            child.add(grand);
+
+            context.register(root);
+
+            chai.assert.strictEqual(root.foo, 'foo');
+            chai.assert.strictEqual(child.foo, 'foo');
+            chai.assert.strictEqual(grand.foo, 'foo');
+        });
 
         it('injects all dependencies to children element', function() {
 
