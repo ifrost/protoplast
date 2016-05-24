@@ -3,8 +3,6 @@
 
     window.FooterView = window.View.extend({
 
-        tag: 'footer',
-
         todos: {
             inject: 'todos'
         },

@@ -844,6 +844,77 @@ describe('Protoplast', function() {
             chai.assert.strictEqual(child.bar, 'foo');
         });
 
+        it('processes template processors', function() {
+
+            var processor = {
+                attribute: 'data-test',
+                process: sinon.spy()
+            };
+
+            var Root = Component.extend({
+                $meta: {
+                    dom_processors: [processor]
+                },
+                html: '<div><span data-test="foo"></span></div>'
+            });
+
+            var root = Root.create();
+
+            sinon.assert.calledOnce(processor.process);
+            sinon.assert.calledWith(processor.process, root, sinon.match.any, 'foo')
+
+        });
+
+        it('does not process the root', function() {
+
+            var processor = {
+                attribute: 'data-test',
+                process: sinon.spy()
+            };
+
+            var Root = Component.extend({
+                $meta: {
+                    dom_processors: [processor]
+                },
+                html: '<span data-test="foo"></span>'
+            });
+
+            var root = Root.create();
+
+            sinon.assert.notCalled(processor.process);
+
+        });
+
+        it('injects elements marked with data-prop', function() {
+
+            var Root = Component.extend({
+                html: '<div><span data-prop="foo">test</span></div>'
+            });
+
+            var root = Root.create();
+
+            chai.assert.isNotNull(root.foo);
+            chai.assert.equal(root.foo.innerHTML, 'test');
+        });
+
+        it('creates components and replaces elements marked with data-comp', function() {
+
+            var Child = Component.extend({
+                foo: 'foo'
+            });
+
+            var Root = Component.extend({
+                foo: {component: Child},
+                html: '<div><span data-comp="foo"></span></div>'
+            });
+
+            var root = Root.create();
+
+            chai.assert.isNotNull(root.foo);
+            chai.assert.equal(root.foo.foo, 'foo');
+
+        });
+
     });
 
     describe('Dependency Injection', function() {

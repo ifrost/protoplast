@@ -81,9 +81,46 @@ function mixin(instance, mixins) {
     return instance;
 }
 
+
+/**
+ * Inject Element processor. Parses the template for elements with [data-prop] and injects the element to the
+ * property passed as the value of the data-prop attribute. If a wrapper is defined the element is wrapped before
+ * setting on the component
+ */
+var inject_element = {
+    attribute: 'data-prop',
+    process: function(component, element, value) {
+        (function(element){
+            component[value] = element;
+            if (component.$meta.element_wrapper) {
+                component[value] = component.$meta.element_wrapper(component[value]);
+            }
+        })(element);
+    }
+};
+
+/**
+ * Create Component processor. Replaces an element annotated with data-comp attribute with a component set in a property
+ * of name passes as the value of the attribute, example
+ * <div data-comp="foo"></div>
+ */
+var create_component = {
+    attribute: 'data-comp',
+    process: function(component, element, value) {
+        var child = component[value] = component.$meta.properties.component[value].create();
+        component.attach(child, element);
+    }
+};
+
+var dom_processors = {
+    inject_element: inject_element,
+    create_component: create_component
+};
+
 module.exports = {
     createObject: createObject,
     merge: merge,
     mixin: mixin,
-    uniqueId: uniqueId
+    uniqueId: uniqueId,
+    dom_processors: dom_processors
 };

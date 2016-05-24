@@ -1,10 +1,15 @@
-var Protoplast = require('./protoplast');
+var Protoplast = require('./protoplast'),
+    utils = require('./utils');
 
 /**
  * Creates a simple component tree-like architecture for the view layer. Used with DI
  * @alias Component
  */
 var Component = Protoplast.extend({
+
+    $meta: {
+        dom_processors: [utils.dom_processors.create_component, utils.dom_processors.inject_element]
+    },
 
     tag: '',
 
@@ -16,38 +21,33 @@ var Component = Protoplast.extend({
         },
         set: function(value) {
             this._root = value;
-            this._process_root();
+            this.process_root();
         }
     },
 
-    _process_root: function() {
+    /**
+     * Process DOM using defined DOM processors
+     */
+    process_root: function() {
+        var i, elements, element, value;
         if (this._root) {
-            var elem, prop, child,
-                data_components = this._root.querySelectorAll('[data-comp]'),
-                data_properties = this._root.querySelectorAll('[data-prop]');
-            for (var i = 0; i < data_components.length; i++) {
-                elem = data_components[i];
-                prop = elem.getAttribute('data-comp');
-                child = this[prop] = this.$meta.properties.component[prop].create();
-                this._children.push(child);
-                this.root.insertBefore(child.root, elem);
-                this.root.removeChild(elem);
-            }
-            for (var i = 0; i < data_properties.length; i++) {
-                elem = data_properties[i];
-                (function(elem){
-                    this[elem.getAttribute('data-prop')] = elem;
-                    if (this.$meta.element_wrapper) {
-                        this[elem.getAttribute('data-prop')] = this.$meta.element_wrapper(this[elem.getAttribute('data-prop')]);
-                    }
-                }.bind(this))(elem);
-            }
-
+            (this.$meta.dom_processors || []).forEach(function(processor) {
+                elements =  this._root.querySelectorAll('[' + processor.attribute + ']');
+                for (i = 0; i < elements.length; i++) {
+                    element = elements[i];
+                    value = element.getAttribute(processor.attribute);
+                    processor.process(this, element, value);
+                }
+            }, this);
         }
     },
 
+    /**
+     * Init the object, construct and process DOM
+     */
     $create: function() {
         this._children = [];
+        this._inlines = [];
 
         if (!this.tag && !this.html) {
             this.tag = 'div';
@@ -67,7 +67,7 @@ var Component = Protoplast.extend({
         set: function(value) {
             this.___fastinject___ = value;
             // fastinject all the children
-            this._children.forEach(this.__fastinject__, this);
+            (this._children.concat(this._inlines)).forEach(this.__fastinject__, this);
         }
     },
 
@@ -83,7 +83,7 @@ var Component = Protoplast.extend({
      * Destroy the component and all child components
      */
     destroy: function() {
-        this._children.concat().forEach(function(child) {
+        (this._children.concat(this._inlines)).forEach(function(child) {
             this.remove(child);
         }, this);
     },
@@ -117,6 +117,17 @@ var Component = Protoplast.extend({
             this.root.removeChild(child.root);
             child.destroy();
         }
+    },
+
+    /**
+     * Attaches a component by replacing the provided element. Element must be an element inside the parent component.
+     * @param {Component} child
+     * @param {Element} element
+     */
+    attach: function(child, element) {
+        this._inlines.push(child);
+        this.root.insertBefore(child.root, element);
+        this.root.removeChild(element);
     }
 });
 

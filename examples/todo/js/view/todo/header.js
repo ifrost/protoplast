@@ -12,11 +12,12 @@
 
             this.$root.classed('header', true);
 
+            this.input = d3.select(this.input.node());
             this.input.on('keypress', function () {
-                    if (d3.event.keyCode === 13) {
-                        this.submit_todo();
-                    }
-                }.bind(this));
+                if (d3.event.keyCode === 13) {
+                    this.submit_todo();
+                }
+            }.bind(this));
         },
 
         submit_todo: function () {

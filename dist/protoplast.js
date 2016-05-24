@@ -1,11 +1,16 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.p = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var Protoplast = require('./protoplast');
+var Protoplast = require('./protoplast'),
+    utils = require('./utils');
 
 /**
  * Creates a simple component tree-like architecture for the view layer. Used with DI
  * @alias Component
  */
 var Component = Protoplast.extend({
+
+    $meta: {
+        dom_processors: [utils.dom_processors.create_component, utils.dom_processors.inject_element]
+    },
 
     tag: '',
 
@@ -17,38 +22,33 @@ var Component = Protoplast.extend({
         },
         set: function(value) {
             this._root = value;
-            this._process_root();
+            this.process_root();
         }
     },
 
-    _process_root: function() {
+    /**
+     * Process DOM using defined DOM processors
+     */
+    process_root: function() {
+        var i, elements, element, value;
         if (this._root) {
-            var elem, prop, child,
-                data_components = this._root.querySelectorAll('[data-comp]'),
-                data_properties = this._root.querySelectorAll('[data-prop]');
-            for (var i = 0; i < data_components.length; i++) {
-                elem = data_components[i];
-                prop = elem.getAttribute('data-comp');
-                child = this[prop] = this.$meta.properties.component[prop].create();
-                this._children.push(child);
-                this.root.insertBefore(child.root, elem);
-                this.root.removeChild(elem);
-            }
-            for (var i = 0; i < data_properties.length; i++) {
-                elem = data_properties[i];
-                (function(elem){
-                    this[elem.getAttribute('data-prop')] = elem;
-                    if (this.$meta.element_wrapper) {
-                        this[elem.getAttribute('data-prop')] = this.$meta.element_wrapper(this[elem.getAttribute('data-prop')]);
-                    }
-                }.bind(this))(elem);
-            }
-
+            (this.$meta.dom_processors || []).forEach(function(processor) {
+                elements =  this._root.querySelectorAll('[' + processor.attribute + ']');
+                for (i = 0; i < elements.length; i++) {
+                    element = elements[i];
+                    value = element.getAttribute(processor.attribute);
+                    processor.process(this, element, value);
+                }
+            }, this);
         }
     },
 
+    /**
+     * Init the object, construct and process DOM
+     */
     $create: function() {
         this._children = [];
+        this._inlines = [];
 
         if (!this.tag && !this.html) {
             this.tag = 'div';
@@ -68,7 +68,7 @@ var Component = Protoplast.extend({
         set: function(value) {
             this.___fastinject___ = value;
             // fastinject all the children
-            this._children.forEach(this.__fastinject__, this);
+            (this._children.concat(this._inlines)).forEach(this.__fastinject__, this);
         }
     },
 
@@ -84,7 +84,7 @@ var Component = Protoplast.extend({
      * Destroy the component and all child components
      */
     destroy: function() {
-        this._children.concat().forEach(function(child) {
+        (this._children.concat(this._inlines)).forEach(function(child) {
             this.remove(child);
         }, this);
     },
@@ -118,6 +118,17 @@ var Component = Protoplast.extend({
             this.root.removeChild(child.root);
             child.destroy();
         }
+    },
+
+    /**
+     * Attaches a component by replacing the provided element. Element must be an element inside the parent component.
+     * @param {Component} child
+     * @param {Element} element
+     */
+    attach: function(child, element) {
+        this._inlines.push(child);
+        this.root.insertBefore(child.root, element);
+        this.root.removeChild(element);
     }
 });
 
@@ -140,7 +151,7 @@ Component.Root = function(element, context) {
 module.exports = Component;
 
 
-},{"./protoplast":5}],2:[function(require,module,exports){
+},{"./protoplast":5,"./utils":6}],2:[function(require,module,exports){
 var utils = require('./utils');
 
 /**
@@ -536,11 +547,48 @@ function mixin(instance, mixins) {
     return instance;
 }
 
+
+/**
+ * Inject Element processor. Parses the template for elements with [data-prop] and injects the element to the
+ * property passed as the value of the data-prop attribute. If a wrapper is defined the element is wrapped before
+ * setting on the component
+ */
+var inject_element = {
+    attribute: 'data-prop',
+    process: function(component, element, value) {
+        (function(element){
+            component[value] = element;
+            if (component.$meta.element_wrapper) {
+                component[value] = component.$meta.element_wrapper(component[value]);
+            }
+        })(element);
+    }
+};
+
+/**
+ * Create Component processor. Replaces an element annotated with data-comp attribute with a component set in a property
+ * of name passes as the value of the attribute, example
+ * <div data-comp="foo"></div>
+ */
+var create_component = {
+    attribute: 'data-comp',
+    process: function(component, element, value) {
+        var child = component[value] = component.$meta.properties.component[value].create();
+        component.attach(child, element);
+    }
+};
+
+var dom_processors = {
+    inject_element: inject_element,
+    create_component: create_component
+};
+
 module.exports = {
     createObject: createObject,
     merge: merge,
     mixin: mixin,
-    uniqueId: uniqueId
+    uniqueId: uniqueId,
+    dom_processors: dom_processors
 };
 
 },{}],7:[function(require,module,exports){
