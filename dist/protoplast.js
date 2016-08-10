@@ -8,18 +8,6 @@ var Protoplast = require('./protoplast'),
  */
 var Component = Protoplast.extend({
 
-    $meta: {
-        dom_processors: [utils.dom_processors.create_component, utils.dom_processors.inject_element],
-        hooks: [{
-            proto: function(proto) {
-                if (proto.$meta.tag) {
-                    console.log('registering' + proto.$meta.tag);
-                    proto.__registry[proto.$meta.tag] = proto;
-                }
-            }
-        }]
-    },
-
     __registry: {
         value: {}
     },
@@ -42,9 +30,8 @@ var Component = Protoplast.extend({
      * Process DOM using defined DOM processors
      */
     process_root: function() {
-        var i, elements, element, value, component;
+        var i, elements, element, value;
         if (this._root) {
-
             (this.$meta.dom_processors || []).forEach(function(processor) {
                 elements =  this._root.querySelectorAll('[' + processor.attribute + ']');
                 for (i = 0; i < elements.length; i++) {
@@ -53,23 +40,6 @@ var Component = Protoplast.extend({
                     processor.process(this, element, value);
                 }
             }, this);
-
-            elements = this._root.getElementsByTagName('*');
-            for (i = 0; i < elements.length; i++) {
-                element = elements[i];
-                var tag = element.tagName ? element.tagName.toLowerCase() : '';
-                if (tag && this.__registry[tag]) {
-                    component = this.__registry[tag].create();
-                    this.attach(component, element);
-                    if (element.getAttribute('data-id')) {
-                        this[element.getAttribute('data-id')] = component;
-                    }
-                }
-            }
-
-            for (var property in this.$meta.properties.$) {
-                this[property] = this._root.querySelector(this.$meta.properties.$[property]);
-            }
         }
     },
 
@@ -181,7 +151,7 @@ Component.Root = function(element, context) {
 module.exports = Component;
 
 
-},{"./protoplast":5,"./utils":6}],2:[function(require,module,exports){
+},{"./protoplast":5,"./utils":7}],2:[function(require,module,exports){
 var utils = require('./utils');
 
 /**
@@ -210,7 +180,7 @@ var constructors = {
 };
 
 module.exports = constructors;
-},{"./utils":6}],3:[function(require,module,exports){
+},{"./utils":7}],3:[function(require,module,exports){
 
 var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher');
@@ -364,6 +334,7 @@ var Dispatcher = Protoplast.extend({
 module.exports = Dispatcher;
 
 },{"./protoplast":5}],5:[function(require,module,exports){
+(function (global){
 var utils = require('./utils');
 
 /**
@@ -489,11 +460,78 @@ Protoplast.extend = function(mixins, description) {
     return proto;
 };
 
+global.Protoplast = Protoplast;
 module.exports = Protoplast;
 
 
 
-},{"./utils":6}],6:[function(require,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./utils":7}],6:[function(require,module,exports){
+var Component = require('./component'),
+    utils = require('./utils');
+
+
+/**
+ * Component with additional DOM processing
+ */
+var TagComponent = Component.extend({
+
+    $meta: {
+        dom_processors: [utils.dom_processors.create_component, utils.dom_processors.inject_element],
+        hooks: [{
+            proto: function(proto) {
+                if (proto.$meta.tag) {
+                    proto.__registry[proto.$meta.tag] = proto;
+                }
+            }
+        }]
+    },
+
+    $create: function() {
+        var init_func = this.init.bind(this);
+        this.init = function() {
+            init_func();
+            if (this.$meta.presenter) {
+                var presenter = this.$meta.presenter.create();
+                presenter.view = this;
+                this.presenter = presenter;
+                this.___fastinject___(presenter);
+                this.presenter_ready();
+            }
+        }
+    },
+
+    presenter_ready: function() {},
+
+    process_root: function() {
+
+        var elements, component, element;
+
+        Component.process_root.call(this);
+
+        elements = this._root.getElementsByTagName('*');
+        for (var i = 0; i < elements.length; i++) {
+            element = elements[i];
+            var tag = element.tagName ? element.tagName.toLowerCase() : '';
+            if (tag && this.__registry[tag]) {
+                component = this.__registry[tag].create();
+                this.attach(component, element);
+                if (element.getAttribute('data-id')) {
+                    this[element.getAttribute('data-id')] = component;
+                }
+            }
+        }
+
+        for (var property in this.$meta.properties.$) {
+            this[property] = this._root.querySelector(this.$meta.properties.$[property]);
+        }
+
+    }
+
+});
+
+module.exports = TagComponent;
+},{"./component":1,"./utils":7}],7:[function(require,module,exports){
 var idCounter = 0;
 
 /**
@@ -621,12 +659,13 @@ module.exports = {
     dom_processors: dom_processors
 };
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 (function (global){
 var Protoplast = require('./js/protoplast'),
     Dispatcher = require('./js/dispatcher'),
     Context = require('./js/di'),
     Component = require('./js/component'),
+    TagComponent = require('./js/tag-component'),
     utils = require('./js/utils'),
     constructors = require('./js/constructors');
 
@@ -636,6 +675,7 @@ var protoplast = {
     Dispatcher: Dispatcher,
     Context: Context,
     Component: Component,
+    TagComponent: TagComponent,
     constructors: constructors,
     utils: utils
 };
@@ -643,5 +683,5 @@ var protoplast = {
 global.Protoplast = protoplast;
 module.exports = protoplast;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./js/component":1,"./js/constructors":2,"./js/di":3,"./js/dispatcher":4,"./js/protoplast":5,"./js/utils":6}]},{},[7])(7)
+},{"./js/component":1,"./js/constructors":2,"./js/di":3,"./js/dispatcher":4,"./js/protoplast":5,"./js/tag-component":6,"./js/utils":7}]},{},[8])(8)
 });

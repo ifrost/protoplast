@@ -18,6 +18,22 @@ var TagComponent = Component.extend({
         }]
     },
 
+    $create: function() {
+        var init_func = this.init.bind(this);
+        this.init = function() {
+            init_func();
+            if (this.$meta.presenter) {
+                var presenter = this.$meta.presenter.create();
+                presenter.view = this;
+                this.presenter = presenter;
+                this.___fastinject___(presenter);
+                this.presenter_ready();
+            }
+        }
+    },
+
+    presenter_ready: function() {},
+
     process_root: function() {
 
         var elements, component, element;

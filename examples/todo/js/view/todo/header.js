@@ -4,7 +4,8 @@
     window.HeaderView = window.View.extend({
         
         $meta: {
-            tag: 'header-view'
+            tag: 'header-view',
+            presenter: window.HeaderPresenter
         },
 
         html: '<header class="header">' +
@@ -27,7 +28,8 @@
         submit_todo: function () {
             var text = this.input.property('value').trim();
             if (text.length) {
-                this.pub('todos/add', text);
+//                this.dispatch('submit', text);
+                this.presenter.submit_todo(text);
                 this.input.property('value', '');
             }
         }

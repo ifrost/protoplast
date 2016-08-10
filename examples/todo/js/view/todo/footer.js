@@ -4,15 +4,8 @@
     window.FooterView = window.View.extend({
 
         $meta: {
-            tag: 'footer-view'
-        },
-
-        todos: {
-            inject: 'todos'
-        },
-
-        view_state: {
-            inject: 'viewstate'
+            tag: 'footer-view',
+            presenter: window.FooterPresenter
         },
 
         html: '<footer class="footer">' +
@@ -26,26 +19,19 @@
             '</footer>',
 
         init: function () {
-
-            this.clear_all.on('click', this.pub.bind(this, 'todos/clear_done'));
-
-            this.todos.on('updated', this.update_counter);
-            this.update_counter();
-
-            this.view_state.on('updated', this.update_selection);
-            this.update_selection();
+            this.clear_all.on('click', function() {
+                this.presenter.clear_all();
+            }.bind(this));
         },
 
-        update_selection: function () {
-            this.filter_all.classed('selected', this.view_state.get_state() === window.ViewStateModel.ALL);
-            this.filter_undone.classed('selected', this.view_state.get_state() === window.ViewStateModel.UNDONE);
-            this.filter_done.classed('selected', this.view_state.get_state() === window.ViewStateModel.DONE);
+        update_selection: function (state) {
+            this.filter_all.classed('selected', state === window.ViewStateModel.ALL);
+            this.filter_undone.classed('selected', state === window.ViewStateModel.UNDONE);
+            this.filter_done.classed('selected', state === window.ViewStateModel.DONE);
         },
 
-        update_counter: function () {
-            var count_undone = this.todos.undone().length,
-                count_all = this.todos.all().length,
-                count_done = this.todos.done().length,
+        update_items: function (count_done, count_undone) {
+            var count_all = count_done + count_undone,
                 items = count_undone === 1 ? 'item' : 'items';
 
             this.counter.html('<strong>' + count_undone + '</strong> ' + items + ' left');

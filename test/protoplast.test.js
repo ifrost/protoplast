@@ -887,6 +887,47 @@ describe('Protoplast', function() {
         });
 
         describe('TagComponent', function() {
+
+            it.only('creates presenter', function(){
+
+                var init = sinon.stub();
+
+                var Presenter = Protoplast.extend({
+                    init: {
+                        inject_init: true,
+                        value: init
+                    },
+                    foo: {
+                        inject: 'foo'
+                    }
+                });
+
+                var context = Context.create();
+
+                context.register('foo', 'foo');
+
+                var Root = TagComponent.extend({
+                    $meta: {
+                        presenter: Presenter
+                    },
+                    tag: 'div',
+                    foo: {inject: 'foo'}
+                });
+
+                sinon.spy(Presenter, 'create');
+
+                var root = Root.create();
+                context.register(root);
+                context.build();
+
+                sinon.assert.calledOnce(Presenter.create);
+
+                var presenter = Presenter.create.returnValues[0];
+
+                chai.assert.strictEqual(presenter.view, root);
+                chai.assert.strictEqual(presenter.foo, 'foo');
+            });
+
             it('injects elements by query selector', function() {
 
                 var Root = TagComponent.extend({
