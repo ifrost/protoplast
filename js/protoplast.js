@@ -123,6 +123,7 @@ Protoplast.extend = function(mixins, description) {
     return proto;
 };
 
+global.Protoplast = Protoplast;
 module.exports = Protoplast;
 
 

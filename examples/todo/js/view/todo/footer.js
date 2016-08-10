@@ -3,6 +3,10 @@
 
     window.FooterView = window.View.extend({
 
+        $meta: {
+            tag: 'footer-view'
+        },
+
         todos: {
             inject: 'todos'
         },

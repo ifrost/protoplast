@@ -2,6 +2,10 @@
     'use strict';
 
     window.HeaderView = window.View.extend({
+        
+        $meta: {
+            tag: 'header-view'
+        },
 
         html: '<header class="header">' +
             '<h1 data-prop="header">todos</h1>' +

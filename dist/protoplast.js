@@ -9,7 +9,19 @@ var Protoplast = require('./protoplast'),
 var Component = Protoplast.extend({
 
     $meta: {
-        dom_processors: [utils.dom_processors.create_component, utils.dom_processors.inject_element]
+        dom_processors: [utils.dom_processors.create_component, utils.dom_processors.inject_element],
+        hooks: [{
+            proto: function(proto) {
+                if (proto.$meta.tag) {
+                    console.log('registering' + proto.$meta.tag);
+                    proto.__registry[proto.$meta.tag] = proto;
+                }
+            }
+        }]
+    },
+
+    __registry: {
+        value: {}
     },
 
     tag: '',
@@ -30,8 +42,9 @@ var Component = Protoplast.extend({
      * Process DOM using defined DOM processors
      */
     process_root: function() {
-        var i, elements, element, value;
+        var i, elements, element, value, component;
         if (this._root) {
+
             (this.$meta.dom_processors || []).forEach(function(processor) {
                 elements =  this._root.querySelectorAll('[' + processor.attribute + ']');
                 for (i = 0; i < elements.length; i++) {
@@ -40,6 +53,23 @@ var Component = Protoplast.extend({
                     processor.process(this, element, value);
                 }
             }, this);
+
+            elements = this._root.getElementsByTagName('*');
+            for (i = 0; i < elements.length; i++) {
+                element = elements[i];
+                var tag = element.tagName ? element.tagName.toLowerCase() : '';
+                if (tag && this.__registry[tag]) {
+                    component = this.__registry[tag].create();
+                    this.attach(component, element);
+                    if (element.getAttribute('data-id')) {
+                        this[element.getAttribute('data-id')] = component;
+                    }
+                }
+            }
+
+            for (var property in this.$meta.properties.$) {
+                this[property] = this._root.querySelector(this.$meta.properties.$[property]);
+            }
         }
     },
 

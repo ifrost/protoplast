@@ -1,10 +1,12 @@
 (function (window) {
     'use strict';
 
-    var TodosView = window.TodosView;
-
     window.MainView = window.View.extend({
 
+        $meta: {
+            tag: 'main-view'
+        },
+        
         todos: {
             inject: 'todos'
         },
@@ -12,12 +14,8 @@
         html: '<section class="main">' +
             '<input class="toggle-all" data-prop="toggle_all" type="checkbox"></input>' +
             '<label for="toggle-all">Mark all as complete</label>' +
-            '<div data-comp="main_view"></div>' +
+            '<todos-view></todos-view>' +
         '</section>',
-
-        main_view: {
-            component: TodosView
-        },
 
         init: function () {
 
