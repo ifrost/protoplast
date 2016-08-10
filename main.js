@@ -2,6 +2,7 @@ var Protoplast = require('./js/protoplast'),
     Dispatcher = require('./js/dispatcher'),
     Context = require('./js/di'),
     Component = require('./js/component'),
+    TagComponent = require('./js/tag-component'),
     utils = require('./js/utils'),
     constructors = require('./js/constructors');
 
@@ -11,6 +12,7 @@ var protoplast = {
     Dispatcher: Dispatcher,
     Context: Context,
     Component: Component,
+    TagComponent: TagComponent,
     constructors: constructors,
     utils: utils
 };

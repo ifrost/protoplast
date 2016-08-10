@@ -4,6 +4,7 @@ var chai = require('chai'),
     Protoplast = require('./../main'),
     Dispatcher = Protoplast.Dispatcher,
     Component = Protoplast.Component,
+    TagComponent = Protoplast.TagComponent,
     Context = Protoplast.Context;
 
 describe('Protoplast', function() {
@@ -885,68 +886,71 @@ describe('Protoplast', function() {
 
         });
 
-        it('injects elements by query selector', function() {
+        describe('TagComponent', function() {
+            it('injects elements by query selector', function() {
 
-            var Root = Component.extend({
-                html: '<div><span class="foo">test</span></div>',
-                foo: {
-                    $: '.foo'
-                }
+                var Root = TagComponent.extend({
+                    html: '<div><span class="foo">test</span></div>',
+                    foo: {
+                        $: '.foo'
+                    }
+                });
+
+                var root = Root.create();
+
+                chai.assert.isNotNull(root.foo);
+                chai.assert.equal(root.foo.innerHTML, 'test');
             });
 
-            var root = Root.create();
+            it('injects elements marked with data-prop', function() {
 
-            chai.assert.isNotNull(root.foo);
-            chai.assert.equal(root.foo.innerHTML, 'test');
-        });
+                var Root = TagComponent.extend({
+                    html: '<div><span data-prop="foo">test</span></div>'
+                });
 
-        it('injects elements marked with data-prop', function() {
+                var root = Root.create();
 
-            var Root = Component.extend({
-                html: '<div><span data-prop="foo">test</span></div>'
+                chai.assert.isNotNull(root.foo);
+                chai.assert.equal(root.foo.innerHTML, 'test');
             });
 
-            var root = Root.create();
+            it('creates components and replaces elements marked with data-comp', function() {
 
-            chai.assert.isNotNull(root.foo);
-            chai.assert.equal(root.foo.innerHTML, 'test');
-        });
+                var Child = TagComponent.extend({
+                    foo: 'foo'
+                });
 
-        it('creates components and replaces elements marked with data-comp', function() {
+                var Root = TagComponent.extend({
+                    foo: {component: Child},
+                    html: '<div><span data-comp="foo"></span></div>'
+                });
 
-            var Child = Component.extend({
-                foo: 'foo'
+                var root = Root.create();
+
+                chai.assert.isNotNull(root.foo);
+                chai.assert.equal(root.foo.foo, 'foo');
+
             });
 
-            var Root = Component.extend({
-                foo: {component: Child},
-                html: '<div><span data-comp="foo"></span></div>'
+            it('creates components and replaces elements marked with custom tags', function() {
+
+                var Child = TagComponent.extend({
+                    $meta: {
+                        tag: 'test-child'
+                    },
+                    foo: 'foo'
+                });
+
+                var Root = TagComponent.extend({
+                    html: '<div><test-child data-id="foo"/></span></div>'
+                });
+
+                var root = Root.create();
+
+                chai.assert.isNotNull(root.foo);
+                chai.assert.equal(root.foo.foo, 'foo');
+
             });
-
-            var root = Root.create();
-
-            chai.assert.isNotNull(root.foo);
-            chai.assert.equal(root.foo.foo, 'foo');
-
-        });
-
-        it('creates components and replaces elements marked with custom tags', function() {
-
-            var Child = Component.extend({
-                $meta: {
-                    tag: 'test-child'
-                },
-                foo: 'foo'
-            });
-
-            var Root = Component.extend({
-                html: '<div><test-child data-id="foo"/></span></div>'
-            });
-
-            var root = Root.create();
-
-            chai.assert.isNotNull(root.foo);
-            chai.assert.equal(root.foo.foo, 'foo');
 
         });
 
