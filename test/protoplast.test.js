@@ -888,7 +888,7 @@ describe('Protoplast', function() {
 
         describe('TagComponent', function() {
 
-            it.only('creates presenter', function(){
+            it('creates presenter', function(){
 
                 var init = sinon.stub();
 
