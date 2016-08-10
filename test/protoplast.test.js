@@ -885,6 +885,21 @@ describe('Protoplast', function() {
 
         });
 
+        it('injects elements by query selector', function() {
+
+            var Root = Component.extend({
+                html: '<div><span class="foo">test</span></div>',
+                foo: {
+                    $: '.foo'
+                }
+            });
+
+            var root = Root.create();
+
+            chai.assert.isNotNull(root.foo);
+            chai.assert.equal(root.foo.innerHTML, 'test');
+        });
+
         it('injects elements marked with data-prop', function() {
 
             var Root = Component.extend({
@@ -906,6 +921,26 @@ describe('Protoplast', function() {
             var Root = Component.extend({
                 foo: {component: Child},
                 html: '<div><span data-comp="foo"></span></div>'
+            });
+
+            var root = Root.create();
+
+            chai.assert.isNotNull(root.foo);
+            chai.assert.equal(root.foo.foo, 'foo');
+
+        });
+
+        it('creates components and replaces elements marked with custom tags', function() {
+
+            var Child = Component.extend({
+                $meta: {
+                    tag: 'test-child'
+                },
+                foo: 'foo'
+            });
+
+            var Root = Component.extend({
+                html: '<div><test-child data-id="foo"/></span></div>'
             });
 
             var root = Root.create();
