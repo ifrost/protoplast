@@ -998,7 +998,7 @@ describe('Protoplast', function() {
 
     });
 
-    describe.only('Model', function() {
+    describe('Model', function() {
 
         var foo = sinon.stub(),
             bar = sinon.stub();
@@ -1150,6 +1150,39 @@ describe('Protoplast', function() {
                 chai.assert.strictEqual(spy.address.city, 'Liverpool');
             });
 
+            it('computed property', function() {
+
+                var calc_counter = 0;
+
+                var ExtPerson = Person.extend({
+
+                    info: {
+                        computed: ['address.city', 'address.street'],
+                        value: function() {
+                            calc_counter++;
+                            return this.name + ' address: ' + this.address.street + ', ' + this.address.city;
+                        }
+                    }
+
+                });
+
+                var john = ExtPerson.create('John', 'Baker', 'London');
+
+                chai.assert.strictEqual(calc_counter, 0);
+                chai.assert.strictEqual(john.info, 'John address: Baker, London');
+                chai.assert.strictEqual(calc_counter, 1);
+
+                john.address.street = 'West';
+                chai.assert.strictEqual(calc_counter, 1);
+                john.info; // getter
+                chai.assert.strictEqual(calc_counter, 2);
+
+                chai.assert.strictEqual(john.info, 'John address: West, London');
+
+                john.address = Address.create('East', 'Liverpool');
+                chai.assert.strictEqual(john.info, 'John address: East, Liverpool');
+
+            });
         });
 
     });

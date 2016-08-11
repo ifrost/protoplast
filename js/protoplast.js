@@ -48,6 +48,8 @@ Protoplast.extend = function(mixins, description) {
 
     proto = utils.mixin(proto, mixins);
 
+    var property_definitions = [];
+
     for (var property in description) {
         defined = false;
 
@@ -100,14 +102,10 @@ Protoplast.extend = function(mixins, description) {
             }
         }
         if (defined) {
-            if (proto.$meta && proto.$meta.hooks) {
-                proto.$meta.hooks.forEach(function(hook) {
-                    if (hook.def) {
-                        hook.def(property, desc, proto);
-                    }
-                });
-            }
-            Object.defineProperty(proto, property, desc);
+            property_definitions.push({
+                property : property,
+                desc: desc
+            });
         }
     }
 
@@ -116,6 +114,20 @@ Protoplast.extend = function(mixins, description) {
     }, {});
     meta = utils.merge(meta, mixins_meta);
     proto.$meta = utils.merge(meta, this.$meta);
+
+    property_definitions.forEach(function(definition) {
+        var property = definition.property,
+            desc = definition.desc;
+
+        if (proto.$meta && proto.$meta.hooks) {
+            proto.$meta.hooks.forEach(function(hook) {
+                if (hook.def) {
+                    hook.def(property, desc, proto);
+                }
+            });
+        }
+        Object.defineProperty(proto, property, desc);
+    });
 
     property_hooks.forEach(function(property_processor) {
         property_processor(proto);
