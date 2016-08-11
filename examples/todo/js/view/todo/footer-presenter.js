@@ -20,16 +20,11 @@
             this.todos.on('updated', this.update_counter);
             this.update_counter();
 
-            this.view_state.on('updated', this.update_selection);
-            this.update_selection();
+            window.Protoplast.utils.bind(this.view_state, 'state', this.view.update_selection);
         },
 
         clear_all: function() {
             this.pub('todos/clear_done');
-        },
-
-        update_selection: function () {
-            this.view.update_selection(this.view_state.get_state());
         },
 
         update_counter: function () {

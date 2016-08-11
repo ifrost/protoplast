@@ -22,7 +22,8 @@
             this.$root.classed('todo-list', true);
 
             this.todos.on('updated', this.render);
-            this.view_state.on('updated', this.render);
+
+            window.Protoplast.utils.bind(this.view_state, 'state', this.render);
 
             var self = this;
             d3.select(window)
@@ -36,12 +37,10 @@
                         self.exit_edit_mode();
                     }
                 });
-
-            this.render();
         },
 
         get_data: function () {
-            var state = this.view_state.get_state(), data;
+            var state = this.view_state.state, data;
             if (state == window.ViewStateModel.ALL) {
                 data = this.todos.all();
             }

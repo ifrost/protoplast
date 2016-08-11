@@ -1,28 +1,14 @@
 (function(window) {
     'use strict';
 
-    var auto_update = window.Model.auto_update;
+    window.ViewStateModel = window.Protoplast.Model.extend({
 
-    window.ViewStateModel = window.Model.extend({
-
-        $meta: {
-            update_after: ['change']
-        },
+        state: null,
 
         $create: function() {
-            this._state = window.ViewStateModel.ALL;
-        },
-
-        change: {
-            hooks: [auto_update],
-            value: function(state) {
-                this._state = state;
-            }
-        },
-
-        get_state: function() {
-            return this._state;
+            this.state = window.ViewStateModel.ALL;
         }
+
     });
 
     window.ViewStateModel.ALL = 'all';

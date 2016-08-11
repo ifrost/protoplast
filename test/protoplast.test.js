@@ -1007,7 +1007,10 @@ describe('Protoplast', function() {
 
             var TestModel = Model.extend({
                 foo: null,
-                bar: 1
+                bar: 1,
+                fn: function() {
+                    return 'test';
+                }
             });
 
             var model = TestModel.create();
@@ -1017,6 +1020,8 @@ describe('Protoplast', function() {
 
             model.on('foo_changed', foo);
             model.on('bar_changed', bar);
+
+            chai.assert.strictEqual(model.fn(), 'test');
 
             model.foo = null;
             model.bar = 1;

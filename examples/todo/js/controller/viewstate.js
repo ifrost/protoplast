@@ -10,7 +10,7 @@
         change_view_state: {
             sub: 'view/change',
             value: function(state) {
-                this.view_state.change(state);
+                this.view_state.state = state;
             }
         }
 
