@@ -100,6 +100,13 @@ Protoplast.extend = function(mixins, description) {
             }
         }
         if (defined) {
+            if (proto.$meta && proto.$meta.hooks) {
+                proto.$meta.hooks.forEach(function(hook) {
+                    if (hook.def) {
+                        hook.def(property, desc, proto);
+                    }
+                });
+            }
             Object.defineProperty(proto, property, desc);
         }
     }

@@ -4,6 +4,7 @@ var chai = require('chai'),
     Protoplast = require('./../main'),
     Dispatcher = Protoplast.Dispatcher,
     Component = Protoplast.Component,
+    Model = Protoplast.Model,
     TagComponent = Protoplast.TagComponent,
     Context = Protoplast.Context;
 
@@ -150,7 +151,7 @@ describe('Protoplast', function() {
 
             chai.assert.deepEqual(Sub.$meta.properties.content, {
                 foo: {
-                    list: ['foo','bar','foobar']
+                    list: ['foo', 'bar', 'foobar']
                 }
             });
         });
@@ -255,7 +256,7 @@ describe('Protoplast', function() {
             it('hooks to prototype functions', function() {
 
                 var decorator = {
-                    proto: function(fn){
+                    proto: function(fn) {
                         return function() {
                             return fn() + 1;
                         }
@@ -281,7 +282,7 @@ describe('Protoplast', function() {
             it('hooks to instance functions', function() {
 
                 var decorator = {
-                    instance: function(fn){
+                    instance: function(fn) {
                         return function() {
                             return fn() + 1;
                         }
@@ -412,12 +413,12 @@ describe('Protoplast', function() {
             });
             var Sub = Base.extend({
                 $meta: {
-                    constructors: [function(){
+                    constructors: [function() {
                         this.value += '2';
                     },
-                    function(){
-                        this.value += '3'
-                    }]
+                        function() {
+                            this.value += '3'
+                        }]
                 }
             });
             var SubSub = Sub.extend({
@@ -530,7 +531,7 @@ describe('Protoplast', function() {
             chai.assert.equal(sub.get_value(), 10);
         });
 
-        it('allows to create getters and setters', function(){
+        it('allows to create getters and setters', function() {
 
             var Base = Protoplast.extend({
                 value: {
@@ -619,7 +620,7 @@ describe('Protoplast', function() {
     describe('Component', function() {
 
         beforeEach(function(done) {
-            jsdom.env('<html><body></body></html>', function(err, window){
+            jsdom.env('<html><body></body></html>', function(err, window) {
                 global.document = window.document;
                 done();
             })
@@ -736,7 +737,7 @@ describe('Protoplast', function() {
     describe('Components Dependency Injection', function() {
 
         beforeEach(function(done) {
-            jsdom.env('<html><body></body></html>', function(err, window){
+            jsdom.env('<html><body></body></html>', function(err, window) {
                 global.document = window.document;
                 done();
             })
@@ -888,7 +889,7 @@ describe('Protoplast', function() {
 
         describe('TagComponent', function() {
 
-            it('creates presenter', function(){
+            it('creates presenter', function() {
 
                 var init = sinon.stub();
 
@@ -992,6 +993,50 @@ describe('Protoplast', function() {
                 chai.assert.equal(root.foo.foo, 'foo');
 
             });
+
+        });
+
+    });
+
+    describe('Model', function() {
+
+        var foo = sinon.stub(),
+            bar = sinon.stub();
+
+        it('creates observable setters', function() {
+
+            var TestModel = Model.extend({
+                foo: null,
+                bar: 1
+            });
+
+            var model = TestModel.create();
+
+            chai.assert.strictEqual(model.foo, null);
+            chai.assert.strictEqual(model.bar, 1);
+
+            model.on('foo_changed', foo);
+            model.on('bar_changed', bar);
+
+            model.foo = null;
+            model.bar = 1;
+
+            sinon.assert.notCalled(foo);
+            sinon.assert.notCalled(bar);
+
+            model.foo = 1;
+            model.bar = 2;
+
+            sinon.assert.calledOnce(foo);
+            sinon.assert.calledWith(foo, 1);
+            sinon.assert.calledOnce(bar);
+            sinon.assert.calledWith(bar, 2);
+
+            chai.assert.strictEqual(model.foo, 1);
+            chai.assert.strictEqual(model.bar, 2);
+        });
+
+        it('binding', function() {
 
         });
 
@@ -1239,7 +1284,7 @@ describe('Protoplast', function() {
             it('merging meta-data', function() {
                 var Foo = Protoplast.extend({
                     $meta: {
-                        list: [1,2]
+                        list: [1, 2]
                     }
                 });
 
@@ -1249,7 +1294,7 @@ describe('Protoplast', function() {
                     }
                 });
 
-                chai.assert.deepEqual(Bar.$meta.list, [1,2,3,4]);
+                chai.assert.deepEqual(Bar.$meta.list, [1, 2, 3, 4]);
 
             });
 
@@ -1269,7 +1314,7 @@ describe('Protoplast', function() {
 
                 pub: {
                     inject: 'pub'
-                },                
+                },
 
                 $create: function() {
                     this.view = ViewFactory();
