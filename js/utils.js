@@ -114,8 +114,11 @@ var create_component = {
 
 var resolve_property = function(host, chain, handler) {
     var props = chain.split('.');
-    
-    if (props.length === 1) {
+
+    if (!chain) {
+        handler(host);
+    }
+    else if (props.length === 1) {
         handler(host[chain]);
     }
     else {

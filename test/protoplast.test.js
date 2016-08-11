@@ -1183,6 +1183,48 @@ describe('Protoplast', function() {
                 chai.assert.strictEqual(john.info, 'John address: East, Liverpool');
 
             });
+
+            it('binding to computed properties', function() {
+
+                var calc_counter = 0;
+
+                var ExtPerson = Person.extend({
+
+                    info: {
+                        computed: ['address.city', 'address.street'],
+                        value: function() {
+                            calc_counter++;
+                            return this.name + ' address: ' + this.address.street + ', ' + this.address.city;
+                        }
+                    }
+
+                });
+
+                var Container = Model.extend({
+                    person: null
+                });
+
+                var Destination = Model.extend({
+                    john_info: null
+                });
+
+                var john = ExtPerson.create('John', 'Baker', 'London');
+                var container = Container.create();
+                var destination = Destination.create();
+                var handler = sinon.stub();
+
+                Protoplast.utils.bind(container, 'person.info', handler);
+                chai.assert.strictEqual(calc_counter, 0);
+                Protoplast.utils.bind_property(container, 'person.info', destination, 'john_info');
+                chai.assert.strictEqual(calc_counter, 0);
+
+                container.person = john;
+                chai.assert.strictEqual(calc_counter, 1);
+                sinon.assert.calledOnce(handler);
+                sinon.assert.calledWith(handler, 'John address: Baker, London');
+                chai.assert.strictEqual(destination.john_info, 'John address: Baker, London');
+                chai.assert.strictEqual(calc_counter, 1);
+            });
         });
 
     });
