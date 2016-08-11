@@ -1075,55 +1075,81 @@ describe('Protoplast', function() {
             sinon.assert.notCalled(invalid)
         });
 
-        it('nested binding', function() {
+        describe('complex binding', function() {
 
-            var Address = Model.extend({
-                street: '',
-                city: '',
-                $create: function(street, city) {
-                    this.street = street;
-                    this.city = city;
-                }
-            });
+            var Address, Person;
 
-            var Person = Model.extend({
-                name: '',
-                address: null,
-                $create: function(name, street, city) {
-                    this.name = name;
-                    if (street && city) {
-                        this.address = Address.create(street, city);
+            beforeEach(function() {
+
+                Address = Model.extend({
+                    street: '',
+                    city: '',
+                    $create: function(street, city) {
+                        this.street = street;
+                        this.city = city;
                     }
-                }
+                });
+
+                Person = Model.extend({
+                    name: '',
+                    address: null,
+                    $create: function(name, street, city) {
+                        this.name = name;
+                        if (street && city) {
+                            this.address = Address.create(street, city);
+                        }
+                    }
+                });
+
             });
 
-            var john = Person.create('John', 'Baker', 'London');
-            var hector = Person.create('Hector');
+            it('nested binding', function() {
 
-            var john_city = sinon.stub();
-            var hector_city = sinon.stub();
+                var john = Person.create('John', 'Baker', 'London');
+                var hector = Person.create('Hector');
 
-            Protoplast.utils.bind(john, 'address.city', john_city);
-            Protoplast.utils.bind(hector, 'address.city', hector_city);
+                var john_city = sinon.stub();
+                var hector_city = sinon.stub();
 
-            sinon.assert.calledOnce(john_city); // city already defined
-            sinon.assert.calledWith(john_city, 'London');
-            sinon.assert.notCalled(hector_city); // address not defined
+                Protoplast.utils.bind(john, 'address.city', john_city);
+                Protoplast.utils.bind(hector, 'address.city', hector_city);
 
-            // setting address
-            hector.address = Address.create('East', 'Manchester');
-            sinon.assert.calledOnce(hector_city);
-            sinon.assert.calledWith(hector_city, 'Manchester');
+                sinon.assert.calledOnce(john_city); // city already defined
+                sinon.assert.calledWith(john_city, 'London');
+                sinon.assert.notCalled(hector_city); // address not defined
 
-            // changing address
-            john.address = Address.create('West', 'Liverpool');
-            sinon.assert.calledTwice(john_city);
-            sinon.assert.calledWith(john_city, 'Liverpool');
+                // setting address
+                hector.address = Address.create('East', 'Manchester');
+                sinon.assert.calledOnce(hector_city);
+                sinon.assert.calledWith(hector_city, 'Manchester');
 
-            // changing city directly
-            hector.address.city = 'Southampton';
-            sinon.assert.calledTwice(hector_city);
-            sinon.assert.calledWith(hector_city, 'Southampton');
+                // changing address
+                john.address = Address.create('West', 'Liverpool');
+                sinon.assert.calledTwice(john_city);
+                sinon.assert.calledWith(john_city, 'Liverpool');
+
+                // changing city directly
+                hector.address.city = 'Southampton';
+                sinon.assert.calledTwice(hector_city);
+                sinon.assert.calledWith(hector_city, 'Southampton');
+            });
+
+            it('binding between models', function() {
+
+                var agent = Person.create('Agent', 'Baker', 'London');
+                var spy = Person.create('Spy', 'Secret', '?');
+
+                Protoplast.utils.bind_property(agent, 'address.city', spy, 'address.city');
+
+                chai.assert.strictEqual(spy.address.city, 'London');
+
+                agent.address.city = 'Manchester';
+                chai.assert.strictEqual(spy.address.city, 'Manchester');
+
+                agent.address = Address.create('East', 'Liverpool');
+                chai.assert.strictEqual(spy.address.city, 'Liverpool');
+            });
+
         });
 
     });

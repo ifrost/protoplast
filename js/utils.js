@@ -150,6 +150,23 @@ var bind = function(host, chain, handler) {
 
 };
 
+var bind_property = function(host, host_chain, dest, dest_chain) {
+
+    var props = dest_chain.split('.');
+    var prop = props.pop();
+
+    bind(host, host_chain, function() {
+        resolve_property(host, host_chain, function(value) {
+            resolve_property(dest, props.join('.'), function(final_object) {
+                if (final_object) {
+                    final_object[prop] = value;
+                }
+            })
+        })
+    });
+
+};
+
 var dom_processors = {
     inject_element: inject_element,
     create_component: create_component
@@ -162,5 +179,6 @@ module.exports = {
     uniqueId: uniqueId,
     dom_processors: dom_processors,
     resolve_property: resolve_property,
-    bind: bind
+    bind: bind,
+    bind_property: bind_property
 };
