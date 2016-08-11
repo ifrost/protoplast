@@ -998,7 +998,7 @@ describe('Protoplast', function() {
 
     });
 
-    describe('Model', function() {
+    describe.only('Model', function() {
 
         var foo = sinon.stub(),
             bar = sinon.stub();
@@ -1036,8 +1036,94 @@ describe('Protoplast', function() {
             chai.assert.strictEqual(model.bar, 2);
         });
 
-        it('binding', function() {
+        it('simple binding', function() {
 
+            var foo = sinon.stub();
+
+            var TestModel = Model.extend({
+                foo: null,
+                bar: 1
+            });
+
+            var model = TestModel.create();
+
+            Protoplast.utils.bind(model, 'foo', foo);
+
+            sinon.assert.calledOnce(foo);
+
+            model.foo = 2;
+
+            sinon.assert.calledTwice(foo);
+        });
+
+        it('resolves property chain', function() {
+
+            var valid = sinon.stub(),
+                valid_nested = sinon.stub(),
+                invalid = sinon.stub();
+
+            var object = {foobar: {foo: {bar: 'test'}}};
+
+            Protoplast.utils.resolve_property(object, 'foobar.foo.bar', valid);
+            Protoplast.utils.resolve_property(object, 'foobar.foo', valid_nested);
+            Protoplast.utils.resolve_property(object, 'foobar.invalid.bar', invalid);
+
+            sinon.assert.calledOnce(valid);
+            sinon.assert.calledWith(valid, 'test');
+            sinon.assert.calledOnce(valid_nested);
+            sinon.assert.calledWith(valid_nested, object.foobar.foo);
+            sinon.assert.notCalled(invalid)
+        });
+
+        it('nested binding', function() {
+
+            var Address = Model.extend({
+                street: '',
+                city: '',
+                $create: function(street, city) {
+                    this.street = street;
+                    this.city = city;
+                }
+            });
+
+            var Person = Model.extend({
+                name: '',
+                address: null,
+                $create: function(name, street, city) {
+                    this.name = name;
+                    if (street && city) {
+                        this.address = Address.create(street, city);
+                    }
+                }
+            });
+
+            var john = Person.create('John', 'Baker', 'London');
+            var hector = Person.create('Hector');
+
+            var john_city = sinon.stub();
+            var hector_city = sinon.stub();
+
+            Protoplast.utils.bind(john, 'address.city', john_city);
+            Protoplast.utils.bind(hector, 'address.city', hector_city);
+
+            sinon.assert.calledOnce(john_city); // city already defined
+            sinon.assert.calledWith(john_city, 'London');
+            sinon.assert.notCalled(hector_city); // address not defined
+
+            // setting address
+            hector.address = Address.create('East', 'Manchester');
+            sinon.assert.calledOnce(hector_city);
+            sinon.assert.calledWith(hector_city, 'Manchester');
+
+            // changing address
+            john.address = Address.create('West', 'Liverpool');
+            sinon.assert.calledTwice(john_city);
+            sinon.assert.calledWith(john_city, 'Liverpool');
+
+            // changing city directly
+            hector.address.city = 'Southampton';
+            sinon.assert.calledTwice(hector_city);
+            sinon.assert.calledWith(hector_city, 'Southampton');
         });
 
     });

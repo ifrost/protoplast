@@ -112,6 +112,44 @@ var create_component = {
     }
 };
 
+var resolve_property = function(host, chain, handler) {
+    var props = chain.split('.');
+    
+    if (props.length === 1) {
+        handler(host[chain]);
+    }
+    else {
+        var sub_host = host[props[0]];
+        var sub_chain = props.slice(1).join('.');
+        if (sub_host) {
+            resolve_property(sub_host, sub_chain, handler);
+        }
+    }
+    
+};
+
+var bind = function(host, chain, handler) {
+    var props = chain.split('.');
+
+    if (props.length === 1) {
+        host.on(chain + '_changed', handler);
+        handler(host[chain]);
+    }
+    else {
+        var sub_host = host[props[0]];
+        var sub_chain = props.slice(1).join('.');
+        if (sub_host) {
+            bind(sub_host, sub_chain, function() {
+                resolve_property(sub_host, sub_chain, handler);
+            });
+        }
+        host.on(props[0] + '_changed', function() {
+            bind(host[props[0]], sub_chain, handler);
+        });
+    }
+
+};
+
 var dom_processors = {
     inject_element: inject_element,
     create_component: create_component
@@ -122,5 +160,7 @@ module.exports = {
     merge: merge,
     mixin: mixin,
     uniqueId: uniqueId,
-    dom_processors: dom_processors
+    dom_processors: dom_processors,
+    resolve_property: resolve_property,
+    bind: bind
 };
