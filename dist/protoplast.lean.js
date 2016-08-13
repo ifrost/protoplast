@@ -50,6 +50,8 @@ Protoplast.extend = function(mixins, description) {
 
     proto = utils.mixin(proto, mixins);
 
+    var property_definitions = [];
+
     for (var property in description) {
         defined = false;
 
@@ -102,7 +104,10 @@ Protoplast.extend = function(mixins, description) {
             }
         }
         if (defined) {
-            Object.defineProperty(proto, property, desc);
+            property_definitions.push({
+                property : property,
+                desc: desc
+            });
         }
     }
 
@@ -111,6 +116,20 @@ Protoplast.extend = function(mixins, description) {
     }, {});
     meta = utils.merge(meta, mixins_meta);
     proto.$meta = utils.merge(meta, this.$meta);
+
+    property_definitions.forEach(function(definition) {
+        var property = definition.property,
+            desc = definition.desc;
+
+        if (proto.$meta && proto.$meta.hooks) {
+            proto.$meta.hooks.forEach(function(hook) {
+                if (hook.def) {
+                    hook.def(property, desc, proto);
+                }
+            });
+        }
+        Object.defineProperty(proto, property, desc);
+    });
 
     property_hooks.forEach(function(property_processor) {
         property_processor(proto);
@@ -246,6 +265,64 @@ var create_component = {
     }
 };
 
+var resolve_property = function(host, chain, handler) {
+    var props = chain.split('.');
+
+    if (!chain) {
+        handler(host);
+    }
+    else if (props.length === 1) {
+        handler(host[chain]);
+    }
+    else {
+        var sub_host = host[props[0]];
+        var sub_chain = props.slice(1).join('.');
+        if (sub_host) {
+            resolve_property(sub_host, sub_chain, handler);
+        }
+    }
+    
+};
+
+var bind = function(host, chain, handler) {
+    var props = chain.split('.');
+
+    if (props.length === 1) {
+        host.on(chain + '_changed', handler);
+        handler(host[chain]);
+    }
+    else {
+        var sub_host = host[props[0]];
+        var sub_chain = props.slice(1).join('.');
+        if (sub_host) {
+            bind(sub_host, sub_chain, function() {
+                resolve_property(sub_host, sub_chain, handler);
+            });
+        }
+        host.on(props[0] + '_changed', function() {
+            bind(host[props[0]], sub_chain, handler);
+        });
+    }
+
+};
+
+var bind_property = function(host, host_chain, dest, dest_chain) {
+
+    var props = dest_chain.split('.');
+    var prop = props.pop();
+
+    bind(host, host_chain, function() {
+        resolve_property(host, host_chain, function(value) {
+            resolve_property(dest, props.join('.'), function(final_object) {
+                if (final_object) {
+                    final_object[prop] = value;
+                }
+            })
+        })
+    });
+
+};
+
 var dom_processors = {
     inject_element: inject_element,
     create_component: create_component
@@ -256,7 +333,10 @@ module.exports = {
     merge: merge,
     mixin: mixin,
     uniqueId: uniqueId,
-    dom_processors: dom_processors
+    dom_processors: dom_processors,
+    resolve_property: resolve_property,
+    bind: bind,
+    bind_property: bind_property
 };
 
 },{}]},{},[1])(1)

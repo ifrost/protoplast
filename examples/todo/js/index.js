@@ -1,18 +1,18 @@
 (function(window) {
 
-    var app = App.create();
-    app.run({
-        controllers: {
+    var app = window.Protoplast.App.create();
+    app.start({
+        context: {
             todocontroller: window.TodoController.create(),
             viewstatecontroller: window.ViewStateController.create(),
-            router: window.Router.create()
-        },
-        models: {
+            router: window.Router.create(),
             todos: window.TodosModel.create(),
             viewstate: window.ViewStateModel.create()
         },
-        root_node: document.body,
-        root_views: [window.AppView.create(), window.InfoView.create()]
+        view: {
+            root: document.body,
+            top: [window.AppView.create(), window.InfoView.create()]
+        }
     });
 
 })(window);

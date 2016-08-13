@@ -1,5 +1,43 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.p = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var Protoplast = require('./protoplast'),
+    Component = require('./component'),
+    Context = require('./di');
+
+var App = Protoplast.extend({
+
+    config: null,
+
+    context: null,
+
+    $create: function() {
+        this.context = Context.create();
+    },
+
+    start: function(config) {
+        this.config = config;
+
+        for (var name in this.config.context) {
+            this.context.register(name, this.config.context[name]);
+        }
+
+        this.context.build();
+
+        if (config.view && config.view.root) {
+            this.root = Component.Root(config.view.root, this.context);
+            if (config.view.top) {
+                var tops = config.view.top.constructor === Array ? config.view.top : [config.view.top];
+                tops.forEach(function(view) {
+                    this.root.add(view);
+                }, this);
+            }
+        }
+    }
+
+});
+
+module.exports = App;
+},{"./component":2,"./di":4,"./protoplast":7}],2:[function(require,module,exports){
+var Protoplast = require('./protoplast'),
     utils = require('./utils');
 
 /**
@@ -151,7 +189,7 @@ Component.Root = function(element, context) {
 module.exports = Component;
 
 
-},{"./protoplast":5,"./utils":7}],2:[function(require,module,exports){
+},{"./protoplast":7,"./utils":9}],3:[function(require,module,exports){
 var utils = require('./utils');
 
 /**
@@ -180,7 +218,7 @@ var constructors = {
 };
 
 module.exports = constructors;
-},{"./utils":7}],3:[function(require,module,exports){
+},{"./utils":9}],4:[function(require,module,exports){
 
 var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher');
@@ -296,7 +334,7 @@ var Context = Protoplast.extend({
 module.exports = Context;
 
 
-},{"./dispatcher":4,"./protoplast":5}],4:[function(require,module,exports){
+},{"./dispatcher":5,"./protoplast":7}],5:[function(require,module,exports){
 
 var Protoplast = require('./protoplast');
 
@@ -333,7 +371,76 @@ var Dispatcher = Protoplast.extend({
 
 module.exports = Dispatcher;
 
-},{"./protoplast":5}],5:[function(require,module,exports){
+},{"./protoplast":7}],6:[function(require,module,exports){
+var Protoplast = require('./protoplast'),
+    Dispatcher = require('./dispatcher'),
+    utils = require('./utils');
+
+var define_properties = {
+    def: function(name, desc, proto) {
+        if (proto.$meta.properties.computed && proto.$meta.properties.computed[name]) {
+            var calc = desc.value;
+
+            delete desc.value;
+            delete desc.writable;
+            delete desc.enumerable;
+
+            desc.get = function() {
+                if (this['_' + name] === undefined) {
+                    this['_' + name] = calc.call(this);
+                }
+                return this['_' + name];
+            };
+
+            desc.set = function() {
+                this['_' + name] = undefined;
+                this.dispatch(name + '_changed', undefined);
+            }
+        }
+        else if (!desc.value || ['number', 'boolean', 'string', 'function'].indexOf(typeof(desc.value)) !== -1) {
+            var initial_value = desc.value;
+
+            delete desc.value;
+            delete desc.writable;
+            delete desc.enumerable;
+
+            desc.get = function() {
+                return this['_' + name];
+            };
+            desc.set = function(value) {
+                if (value !== this['_' + name]) {
+                    this['_' + name] = value;
+                    this.dispatch(name + '_changed', value);
+                }
+            };
+            proto['_' + name] = initial_value;
+        }
+
+    }
+};
+
+var Model = Protoplast.extend([Dispatcher], {
+
+    $meta: {
+        hooks: [define_properties]
+    },
+
+    $create: function() {
+        for (var computed_property in this.$meta.properties.computed) {
+            this.$meta.properties.computed[computed_property].forEach(function(chain) {
+                (function(){
+                    utils.bind(this, chain, function() {
+                        this[computed_property] = undefined;
+                    }.bind(this));
+                }.bind(this))(computed_property);
+            }, this);
+        }
+    }
+
+});
+
+module.exports = Model;
+},{"./dispatcher":5,"./protoplast":7,"./utils":9}],7:[function(require,module,exports){
 (function (global){
 var utils = require('./utils');
 
@@ -384,6 +491,8 @@ Protoplast.extend = function(mixins, description) {
     }
 
     proto = utils.mixin(proto, mixins);
+
+    var property_definitions = [];
 
     for (var property in description) {
         defined = false;
@@ -437,7 +546,10 @@ Protoplast.extend = function(mixins, description) {
             }
         }
         if (defined) {
-            Object.defineProperty(proto, property, desc);
+            property_definitions.push({
+                property : property,
+                desc: desc
+            });
         }
     }
 
@@ -446,6 +558,20 @@ Protoplast.extend = function(mixins, description) {
     }, {});
     meta = utils.merge(meta, mixins_meta);
     proto.$meta = utils.merge(meta, this.$meta);
+
+    property_definitions.forEach(function(definition) {
+        var property = definition.property,
+            desc = definition.desc;
+
+        if (proto.$meta && proto.$meta.hooks) {
+            proto.$meta.hooks.forEach(function(hook) {
+                if (hook.def) {
+                    hook.def(property, desc, proto);
+                }
+            });
+        }
+        Object.defineProperty(proto, property, desc);
+    });
 
     property_hooks.forEach(function(property_processor) {
         property_processor(proto);
@@ -466,7 +592,7 @@ module.exports = Protoplast;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./utils":7}],6:[function(require,module,exports){
+},{"./utils":9}],8:[function(require,module,exports){
 var Component = require('./component'),
     utils = require('./utils');
 
@@ -493,7 +619,16 @@ var TagComponent = Component.extend({
             init_func();
             if (this.$meta.presenter) {
                 var presenter = this.$meta.presenter.create();
-                presenter.view = this;
+                var presenter_type = this.$meta.presenter_type || 'both';
+                var presenter_property = this.$meta.presenter_property || 'presenter';
+                var view_property = this.$meta.view_property || 'view';
+
+                if (presenter_type === 'active' || presenter_type === 'both') {
+                    presenter[view_property] = this;
+                }
+                if (presenter_type === 'passive' || presenter_type === 'both') {
+                    this[presenter_property] = this;
+                }
                 this.presenter = presenter;
                 this.___fastinject___(presenter);
                 this.presenter_ready();
@@ -531,7 +666,7 @@ var TagComponent = Component.extend({
 });
 
 module.exports = TagComponent;
-},{"./component":1,"./utils":7}],7:[function(require,module,exports){
+},{"./component":2,"./utils":9}],9:[function(require,module,exports){
 var idCounter = 0;
 
 /**
@@ -646,6 +781,64 @@ var create_component = {
     }
 };
 
+var resolve_property = function(host, chain, handler) {
+    var props = chain.split('.');
+
+    if (!chain) {
+        handler(host);
+    }
+    else if (props.length === 1) {
+        handler(host[chain]);
+    }
+    else {
+        var sub_host = host[props[0]];
+        var sub_chain = props.slice(1).join('.');
+        if (sub_host) {
+            resolve_property(sub_host, sub_chain, handler);
+        }
+    }
+    
+};
+
+var bind = function(host, chain, handler) {
+    var props = chain.split('.');
+
+    if (props.length === 1) {
+        host.on(chain + '_changed', handler);
+        handler(host[chain]);
+    }
+    else {
+        var sub_host = host[props[0]];
+        var sub_chain = props.slice(1).join('.');
+        if (sub_host) {
+            bind(sub_host, sub_chain, function() {
+                resolve_property(sub_host, sub_chain, handler);
+            });
+        }
+        host.on(props[0] + '_changed', function() {
+            bind(host[props[0]], sub_chain, handler);
+        });
+    }
+
+};
+
+var bind_property = function(host, host_chain, dest, dest_chain) {
+
+    var props = dest_chain.split('.');
+    var prop = props.pop();
+
+    bind(host, host_chain, function() {
+        resolve_property(host, host_chain, function(value) {
+            resolve_property(dest, props.join('.'), function(final_object) {
+                if (final_object) {
+                    final_object[prop] = value;
+                }
+            })
+        })
+    });
+
+};
+
 var dom_processors = {
     inject_element: inject_element,
     create_component: create_component
@@ -656,15 +849,20 @@ module.exports = {
     merge: merge,
     mixin: mixin,
     uniqueId: uniqueId,
-    dom_processors: dom_processors
+    dom_processors: dom_processors,
+    resolve_property: resolve_property,
+    bind: bind,
+    bind_property: bind_property
 };
 
-},{}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 (function (global){
 var Protoplast = require('./js/protoplast'),
+    App = require('./js/app'),
     Dispatcher = require('./js/dispatcher'),
     Context = require('./js/di'),
     Component = require('./js/component'),
+    Model = require('./js/model'),
     TagComponent = require('./js/tag-component'),
     utils = require('./js/utils'),
     constructors = require('./js/constructors');
@@ -672,9 +870,11 @@ var Protoplast = require('./js/protoplast'),
 var protoplast = {
     extend: Protoplast.extend.bind(Protoplast),
     create: Protoplast.create.bind(Protoplast),
+    App: App,
     Dispatcher: Dispatcher,
     Context: Context,
     Component: Component,
+    Model: Model,
     TagComponent: TagComponent,
     constructors: constructors,
     utils: utils
@@ -683,5 +883,5 @@ var protoplast = {
 global.Protoplast = protoplast;
 module.exports = protoplast;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./js/component":1,"./js/constructors":2,"./js/di":3,"./js/dispatcher":4,"./js/protoplast":5,"./js/tag-component":6,"./js/utils":7}]},{},[8])(8)
+},{"./js/app":1,"./js/component":2,"./js/constructors":3,"./js/di":4,"./js/dispatcher":5,"./js/model":6,"./js/protoplast":7,"./js/tag-component":8,"./js/utils":9}]},{},[10])(10)
 });
