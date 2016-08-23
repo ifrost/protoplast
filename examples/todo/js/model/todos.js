@@ -13,9 +13,20 @@
         
         $create: function() {
             // TODO: clean up
+            this.init_data();
+
+            window.Protoplast.utils.bind(this, 'todos', this.store.bind(this));
+            this.todos.on('changed', this.store.bind(this));
+
+            this.create_views();
+        },
+
+        init_data: function() {
             this.store_id('todos');
+
             var stored = this.store_read();
             var array = stored ? stored : [];
+            
             array = array.map(function(item) {
                 var todo = window.TodoModel.create();
                 todo.text = item.text;
@@ -23,9 +34,9 @@
                 return todo;
             });
             this.todos = window.Protoplast.Collection.create(array);
-            window.Protoplast.utils.bind(this, 'todos', this.store.bind(this));
-            this.todos.on('changed', this.store.bind(this));
+        },
 
+        create_views: function() {
             this.done = window.Protoplast.CollectionView.create(this.todos);
             this.done.add_filter({
                 properties: ['done'],
