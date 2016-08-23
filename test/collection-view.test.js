@@ -3,7 +3,7 @@ var chai = require('chai'),
     jsdom = require('jsdom'),
     Protoplast = require('./../main'),
     Model = Protoplast.Model,
-    Collection = Protoplast.Array,
+    Collection = Protoplast.Collection,
     CollectionView = Protoplast.CollectionView;
 
 describe('CollectionView', function() {

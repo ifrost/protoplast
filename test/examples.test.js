@@ -2,9 +2,6 @@ var chai = require('chai'),
     sinon = require('sinon'),
     jsdom = require('jsdom'),
     Protoplast = require('./../main'),
-    Model = Protoplast.Model,
-    Collection = Protoplast.Array,
-    CollectionView = Protoplast.CollectionView,
     Context = Protoplast.Context;
 
 describe('Examples', function() {

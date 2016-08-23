@@ -22,7 +22,7 @@
                 todo.done = item.done;
                 return todo;
             });
-            this.todos = window.Protoplast.Array.create(array);
+            this.todos = window.Protoplast.Collection.create(array);
             window.Protoplast.utils.bind(this, 'todos', this.store.bind(this));
             this.todos.on('changed', this.store.bind(this));
 

@@ -1,7 +1,7 @@
 var Model = require('./model');
 
 // TODO: rename: Collection, add tests
-var ModelArray = Model.extend({
+var Collection = Model.extend({
 
     $create: function(array) {
         this.array = array || [];
@@ -36,7 +36,7 @@ var ModelArray = Model.extend({
     },
 
     filter: function(handler, context) {
-        return ModelArray.create(this.array.filter(handler, context));
+        return Collection.create(this.array.filter(handler, context));
     },
 
     toArray: function() {
@@ -49,4 +49,4 @@ var ModelArray = Model.extend({
 
 });
 
-module.exports = ModelArray;
+module.exports = Collection;

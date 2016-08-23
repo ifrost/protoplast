@@ -39,58 +39,7 @@ module.exports = App;
 },{"./component":4,"./di":6,"./protoplast":9}],2:[function(require,module,exports){
 var Model = require('./model');
 
-var ModelArray = Model.extend({
-
-    $create: function(array) {
-        this.array = array || [];
-    },
-
-    length: {
-        get: function() {
-            return this.array.length;
-        }
-    },
-
-    indexOf: function() {
-        return this.array.indexOf.apply(this.array, arguments);
-    },
-
-    add: function(item) {
-        var result = this.array.push(item);
-        this.dispatch('changed', {added: [item], removed: []});
-        return result;
-    },
-    
-    remove: function(item) {
-        var index = this.array.indexOf(item);
-        if (index !== -1) {
-            this.array.splice(index, 1);
-            this.dispatch('changed', {added: [], removed: [item]});
-        }
-    },
-
-    forEach: function(handler, context) {
-        return this.array.forEach(handler, context);
-    },
-
-    filter: function(handler, context) {
-        return ModelArray.create(this.array.filter(handler, context));
-    },
-
-    toArray: function() {
-        return this.array;
-    },
-
-    toJSON: function() {
-        return this.toArray();
-    }
-
-});
-
-module.exports = ModelArray;
-},{"./model":8}],3:[function(require,module,exports){
-var Model = require('./model');
-
+// TODO: tests, concat, each
 var CollectionView = Model.extend({
    
     _filters: null,
@@ -155,6 +104,59 @@ var CollectionView = Model.extend({
 });
 
 module.exports = CollectionView;
+},{"./model":8}],3:[function(require,module,exports){
+var Model = require('./model');
+
+// TODO: rename: Collection, add tests
+var Collection = Model.extend({
+
+    $create: function(array) {
+        this.array = array || [];
+    },
+
+    length: {
+        get: function() {
+            return this.array.length;
+        }
+    },
+
+    indexOf: function() {
+        return this.array.indexOf.apply(this.array, arguments);
+    },
+
+    add: function(item) {
+        var result = this.array.push(item);
+        this.dispatch('changed', {added: [item], removed: []});
+        return result;
+    },
+    
+    remove: function(item) {
+        var index = this.array.indexOf(item);
+        if (index !== -1) {
+            this.array.splice(index, 1);
+            this.dispatch('changed', {added: [], removed: [item]});
+        }
+    },
+
+    forEach: function(handler, context) {
+        return this.array.forEach(handler, context);
+    },
+
+    filter: function(handler, context) {
+        return Collection.create(this.array.filter(handler, context));
+    },
+
+    toArray: function() {
+        return this.array;
+    },
+
+    toJSON: function() {
+        return this.toArray();
+    }
+
+});
+
+module.exports = Collection;
 },{"./model":8}],4:[function(require,module,exports){
 var Model = require('./model'),
     utils = require('./utils');
@@ -264,6 +266,7 @@ var Component = Model.extend({
         this.root.appendChild(child.root);
     },
 
+    // TODO: unused?
     item_renderer: null,
 
     // data: {
@@ -580,7 +583,7 @@ var define_properties = {
                 }
                 return this['_' + name];
             };
-
+// TODO test?
             desc.set = function() {
                 var old = this['_' + name];
                 this['_' + name] = undefined;
@@ -615,7 +618,7 @@ var Model = Protoplast.extend([Dispatcher], {
     $meta: {
         hooks: [define_properties]
     },
-
+// TODO: tests
     invalidated_injected_bindings: {
         inject_init: true,
         value: function() {
@@ -1016,6 +1019,7 @@ var bind = function(host, chain, handler) {
             });
         }
         host.on(props[0] + '_changed', function(_, previous) {
+            // TODO: clearing
             // if (previous && previous.on) {
             //     previous.off()
             // }
@@ -1041,7 +1045,7 @@ var bind_property = function(host, host_chain, dest, dest_chain) {
     });
 
 };
-
+// TODO test
 var render_list = function(host, source_chain, renderer, renderer_data_property) {
 
     var handler = function(host, list) {
@@ -1105,7 +1109,7 @@ module.exports = {
 (function (global){
 var Protoplast = require('./js/protoplast'),
     App = require('./js/app'),
-    ModelArray = require('./js/array'),
+    Collection = require('./js/collection'),
     CollectionView = require('./js/collection-view'),
     Dispatcher = require('./js/dispatcher'),
     Context = require('./js/di'),
@@ -1123,7 +1127,7 @@ var protoplast = {
     Context: Context,
     Component: Component,
     Model: Model,
-    Array: ModelArray,
+    Collection: Collection,
     CollectionView: CollectionView,
     TagComponent: TagComponent,
     constructors: constructors,
@@ -1133,5 +1137,5 @@ var protoplast = {
 global.Protoplast = protoplast;
 module.exports = protoplast;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./js/app":1,"./js/array":2,"./js/collection-view":3,"./js/component":4,"./js/constructors":5,"./js/di":6,"./js/dispatcher":7,"./js/model":8,"./js/protoplast":9,"./js/tag-component":10,"./js/utils":11}]},{},[12])(12)
+},{"./js/app":1,"./js/collection":3,"./js/collection-view":2,"./js/component":4,"./js/constructors":5,"./js/di":6,"./js/dispatcher":7,"./js/model":8,"./js/protoplast":9,"./js/tag-component":10,"./js/utils":11}]},{},[12])(12)
 });
