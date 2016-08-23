@@ -1,5 +1,6 @@
 var Model = require('./model');
 
+// TODO: tests, concat, each
 var CollectionView = Model.extend({
    
     _filters: null,

@@ -17,6 +17,12 @@
             '<todos-view></todos-view>' +
         '</section>',
 
+        all_checked: {
+            get: function() {
+                return this.toggle_all.property('checked');
+            }
+        },
+
         init: function () {
 
             this.toggle_all.on('change', this.toggle.bind(this));
@@ -24,13 +30,7 @@
             this.todos.todos.on('changed', this.update_toggle);
             this.update_toggle();
         },
-
-        all_checked: {
-            get: function() {
-                return this.toggle_all.property('checked');
-            }
-        },
-
+        
         toggle: function () {
             this.pub('todos/toggle_all', this.all_checked);
         },

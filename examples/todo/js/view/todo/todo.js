@@ -50,6 +50,7 @@
             });
         },
 
+        // TODO: animate on destroy
         fade_out: function(callback) {
             this.view.style({opacity: 1, height: '58px'})
                 .transition().duration(200)

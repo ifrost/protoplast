@@ -147,6 +147,7 @@ var bind = function(host, chain, handler) {
             });
         }
         host.on(props[0] + '_changed', function(_, previous) {
+            // TODO: clearing
             // if (previous && previous.on) {
             //     previous.off()
             // }
@@ -172,7 +173,7 @@ var bind_property = function(host, host_chain, dest, dest_chain) {
     });
 
 };
-
+// TODO test
 var render_list = function(host, source_chain, renderer, renderer_data_property) {
 
     var handler = function(host, list) {

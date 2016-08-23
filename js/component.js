@@ -106,6 +106,7 @@ var Component = Model.extend({
         this.root.appendChild(child.root);
     },
 
+    // TODO: unused?
     item_renderer: null,
 
     // data: {

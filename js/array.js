@@ -1,5 +1,6 @@
 var Model = require('./model');
 
+// TODO: rename: Collection, add tests
 var ModelArray = Model.extend({
 
     $create: function(array) {

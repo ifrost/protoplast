@@ -38,6 +38,7 @@
         clear_done: {
             sub: 'todos/clear_done',
             value: function() {
+                // TODO: this.todos.concat().each()
                 this.todos.done.toArray().concat().forEach(function(todo) {
                     this.remove_todo(todo);
                 }, this);

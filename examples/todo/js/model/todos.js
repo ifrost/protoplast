@@ -12,6 +12,7 @@
         done: null,
         
         $create: function() {
+            // TODO: clean up
             this.store_id('todos');
             var stored = this.store_read();
             var array = stored ? stored : [];

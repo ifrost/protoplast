@@ -17,6 +17,7 @@
             inject: 'appmodel'
         },
 
+        // TODO: unused?
         item_renderer: function() {
             return window.TodoView.create();
         },
