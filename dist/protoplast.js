@@ -39,7 +39,7 @@ module.exports = App;
 },{"./component":4,"./di":6,"./protoplast":9}],2:[function(require,module,exports){
 var Model = require('./model');
 
-// TODO: tests, concat, each
+// TODO: tests
 var CollectionView = Model.extend({
    
     _filters: null,
@@ -73,6 +73,14 @@ var CollectionView = Model.extend({
 
     toArray: function() {
         return this._current
+    },
+
+    concat: function() {
+        return this._current.concat.apply(this._current, arguments);
+    },
+
+    forEach: function() {
+        return this._current.forEach.apply(this._current, arguments);
     },
     
     _invalidate: function(event) {
@@ -140,6 +148,10 @@ var Collection = Model.extend({
 
     forEach: function(handler, context) {
         return this.array.forEach(handler, context);
+    },
+    
+    concat: function() {
+        return Collection.create(this.array.concat.apply(this, arguments));
     },
 
     filter: function(handler, context) {

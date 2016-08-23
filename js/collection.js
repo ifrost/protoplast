@@ -34,6 +34,10 @@ var Collection = Model.extend({
     forEach: function(handler, context) {
         return this.array.forEach(handler, context);
     },
+    
+    concat: function() {
+        return Collection.create(this.array.concat.apply(this, arguments));
+    },
 
     filter: function(handler, context) {
         return Collection.create(this.array.filter(handler, context));

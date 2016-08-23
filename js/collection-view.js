@@ -1,6 +1,6 @@
 var Model = require('./model');
 
-// TODO: tests, concat, each
+// TODO: tests
 var CollectionView = Model.extend({
    
     _filters: null,
@@ -34,6 +34,14 @@ var CollectionView = Model.extend({
 
     toArray: function() {
         return this._current
+    },
+
+    concat: function() {
+        return this._current.concat.apply(this._current, arguments);
+    },
+
+    forEach: function() {
+        return this._current.forEach.apply(this._current, arguments);
     },
     
     _invalidate: function(event) {
