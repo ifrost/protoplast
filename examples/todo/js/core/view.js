@@ -1,7 +1,7 @@
 (function(window) {
     'use strict';
 
-    window.View = window.Protoplast.TagComponent.extend([window.Protoplast.Dispatcher], {
+    window.View = window.Protoplast.TagComponent.extend({
 
         $meta: {
             constructors: [Protoplast.constructors.autobind],

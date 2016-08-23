@@ -1,74 +1,71 @@
 (function(window) {
     'use strict';
 
-    var auto_update = window.Model.auto_update;
+    window.TodosModel = window.Protoplast.Model.extend([window.Storage], {
 
-    window.TodosModel = window.Model.extend([window.Storage], {
+        todos: null,
 
+        all: null,
+
+        undone: null,
+
+        done: null,
+        
         $create: function() {
             this.store_id('todos');
-            this._todos = this.store_read() || [];
-            this.on('updated', this.store, this);
+            var stored = this.store_read();
+            var array = stored ? stored : [];
+            array = array.map(function(item) {
+                var todo = window.TodoModel.create();
+                todo.text = item.text;
+                todo.done = item.done;
+                return todo;
+            });
+            this.todos = window.Protoplast.Array.create(array);
+            window.Protoplast.utils.bind(this, 'todos', this.store.bind(this));
+            this.todos.on('changed', this.store.bind(this));
+
+            this.done = window.Protoplast.CollectionView.create(this.todos);
+            this.done.add_filter({
+                properties: ['done'],
+                fn: function(item) {
+                    return item.done
+                }
+            });
+            this.undone = window.Protoplast.CollectionView.create(this.todos);
+            this.undone.add_filter({
+                properties: ['done'],
+                fn: function(item) {
+                    return !item.done
+                }
+            });
+            this.all = window.Protoplast.CollectionView.create(this.todos);
         },
 
         store: function() {
-            this.store_save(this._todos);
+            this.store_save(this.todos);
         },
 
-        add: {
-            hooks: [auto_update],
-            value: function(todo) {
-                this._todos.push(todo);
-            }
+        add: function(todo) {
+            this.todos.add(todo);
         },
 
-        remove: {
-            hooks: [auto_update],
-            value: function(todo) {
-                this._todos = this._todos.filter(function(t) {
-                    return t !== todo;
-                });
-            }
+        remove: function(todo) {
+            this.todos.remove(todo);
         },
 
-        toggle: {
-            hooks: [auto_update],
-            value: function(todo) {
-                todo.done = !todo.done;
-            }
+        toggle: function(todo) {
+            todo.done = !todo.done;
+            this.store();
         },
 
-        toggle_all: {
-            hooks: [auto_update],
-            value: function(value) {
-                this._todos.forEach(function(todo) {
-                    todo.done = value;
-                });
-            }
-        },
-
-        refresh: {
-            hooks: [auto_update],
-            value: function() {
-            }
-        },
-
-        all: function() {
-            return this._todos;
-        },
-
-        undone: function() {
-            return this._todos.filter(function(todo) {
-                return !todo.done;
+        toggle_all: function(value) {
+            this.todos.forEach(function(todo) {
+                todo.done = value;
             });
-        },
-
-        done: function() {
-            return this._todos.filter(function(todo) {
-                return todo.done;
-            });
+            this.store();
         }
-
+        
     });
 
 })(window);

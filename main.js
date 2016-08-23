@@ -1,5 +1,7 @@
 var Protoplast = require('./js/protoplast'),
     App = require('./js/app'),
+    ModelArray = require('./js/array'),
+    CollectionView = require('./js/collection-view'),
     Dispatcher = require('./js/dispatcher'),
     Context = require('./js/di'),
     Component = require('./js/component'),
@@ -16,6 +18,8 @@ var protoplast = {
     Context: Context,
     Component: Component,
     Model: Model,
+    Array: ModelArray,
+    CollectionView: CollectionView,
     TagComponent: TagComponent,
     constructors: constructors,
     utils: utils

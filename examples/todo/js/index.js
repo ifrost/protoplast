@@ -7,7 +7,8 @@
             viewstatecontroller: window.ViewStateController.create(),
             router: window.Router.create(),
             todos: window.TodosModel.create(),
-            viewstate: window.ViewStateModel.create()
+            viewstate: window.ViewStateModel.create(),
+            appmodel: window.AppModel.create()
         },
         view: {
             root: document.body,

@@ -10,7 +10,7 @@
         add_todo: {
             sub: 'todos/add',
             value: function(text) {
-                this.todos.add({text: text, done: false});
+                this.todos.add(window.TodoModel.create(text));
             }
         },
 
@@ -38,7 +38,7 @@
         clear_done: {
             sub: 'todos/clear_done',
             value: function() {
-                this.todos.done().forEach(function(todo) {
+                this.todos.done.toArray().concat().forEach(function(todo) {
                     this.remove_todo(todo);
                 }, this);
             }
@@ -48,7 +48,6 @@
             sub: 'todos/edit',
             value: function(data) {
                 data.todo.text = data.text;
-                this.todos.refresh();
             }
         }
     });

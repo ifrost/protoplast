@@ -146,7 +146,10 @@ var bind = function(host, chain, handler) {
                 resolve_property(sub_host, sub_chain, handler);
             });
         }
-        host.on(props[0] + '_changed', function() {
+        host.on(props[0] + '_changed', function(_, previous) {
+            // if (previous && previous.on) {
+            //     previous.off()
+            // }
             bind(host[props[0]], sub_chain, handler);
         });
     }
@@ -170,6 +173,48 @@ var bind_property = function(host, host_chain, dest, dest_chain) {
 
 };
 
+var render_list = function(host, source_chain, renderer, renderer_data_property) {
+
+    var handler = function(host, list) {
+        var max = Math.max(host._children.length, list.length),
+            children = host._children.concat();
+
+        for (var i = 0; i < max; i++) {
+            if (children[i] && list.toArray()[i]) {
+                children[i][renderer_data_property] = list.toArray()[i];
+            }
+            else if (!children[i]) {
+                var child = renderer.create();
+                child[renderer_data_property] = list.toArray()[i];
+                host.add(child);
+            }
+            else if (!list.toArray()[i]) {
+                host.remove(children[i]);
+            }
+        }
+    };
+    
+    var previous_list = null;
+    var context = {};
+
+    bind(host, source_chain, function() {
+        resolve_property(host, source_chain, function(list) {
+            if (previous_list) {
+                previous_list.off('changed', null, context);
+                previous_list = null;
+            }
+            if (list) {
+                previous_list = list;
+                list.on('changed', handler.bind(context, host, list), context);
+                handler.bind(context, host, list)();
+            }
+        });
+    });
+
+    return handler;
+
+};
+
 var dom_processors = {
     inject_element: inject_element,
     create_component: create_component
@@ -183,5 +228,6 @@ module.exports = {
     dom_processors: dom_processors,
     resolve_property: resolve_property,
     bind: bind,
-    bind_property: bind_property
+    bind_property: bind_property,
+    render_list: render_list
 };

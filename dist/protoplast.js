@@ -36,15 +36,134 @@ var App = Protoplast.extend({
 });
 
 module.exports = App;
-},{"./component":2,"./di":4,"./protoplast":7}],2:[function(require,module,exports){
-var Protoplast = require('./protoplast'),
+},{"./component":4,"./di":6,"./protoplast":9}],2:[function(require,module,exports){
+var Model = require('./model');
+
+var ModelArray = Model.extend({
+
+    $create: function(array) {
+        this.array = array || [];
+    },
+
+    length: {
+        get: function() {
+            return this.array.length;
+        }
+    },
+
+    indexOf: function() {
+        return this.array.indexOf.apply(this.array, arguments);
+    },
+
+    add: function(item) {
+        var result = this.array.push(item);
+        this.dispatch('changed', {added: [item], removed: []});
+        return result;
+    },
+    
+    remove: function(item) {
+        var index = this.array.indexOf(item);
+        if (index !== -1) {
+            this.array.splice(index, 1);
+            this.dispatch('changed', {added: [], removed: [item]});
+        }
+    },
+
+    forEach: function(handler, context) {
+        return this.array.forEach(handler, context);
+    },
+
+    filter: function(handler, context) {
+        return ModelArray.create(this.array.filter(handler, context));
+    },
+
+    toArray: function() {
+        return this.array;
+    },
+
+    toJSON: function() {
+        return this.toArray();
+    }
+
+});
+
+module.exports = ModelArray;
+},{"./model":8}],3:[function(require,module,exports){
+var Model = require('./model');
+
+var CollectionView = Model.extend({
+   
+    _filters: null,
+
+    length: {
+        get: function() {
+            return this._current.length;
+        }
+    },
+
+    $create: function(collection) {
+        this._source = collection;
+        this._current = [];
+        this._filters = [];
+        
+        this._source.on('changed', this._invalidate, this);
+        
+        this._invalidate({
+            added: this._source.toArray()
+        });
+    },
+    
+    add_filter: function(fn) {
+        this._filters.push(fn);
+        this._invalidate();
+    },
+
+    get: function(index) {
+        return this._current[index];
+    },
+
+    toArray: function() {
+        return this._current
+    },
+    
+    _invalidate: function(event) {
+        
+        if (!event) {
+            event = {added: this._source.toArray()}
+        }
+        
+        this._current = this._source.toArray();
+        
+        this._filters.forEach(function(filter) {
+
+            event.added.forEach(function(item){
+                if (filter.properties) {
+                    filter.properties.forEach(function(property) {
+                        item.on(property + '_changed', this._invalidate.bind(this, undefined), this);
+                    }, this);
+                }
+            }, this);
+            
+            this._current = this._current.filter(function(item) {
+                return filter.fn(item);
+            });
+        }, this);
+
+        this.dispatch('changed');
+    }
+    
+});
+
+module.exports = CollectionView;
+},{"./model":8}],4:[function(require,module,exports){
+var Model = require('./model'),
     utils = require('./utils');
 
 /**
  * Creates a simple component tree-like architecture for the view layer. Used with DI
  * @alias Component
  */
-var Component = Protoplast.extend({
+var Component = Model.extend({
 
     __registry: {
         value: {}
@@ -145,6 +264,76 @@ var Component = Protoplast.extend({
         this.root.appendChild(child.root);
     },
 
+    item_renderer: null,
+
+    // data: {
+    //     get: function() {
+    //         return this._data;
+    //     },
+    //     set: function(data) {
+    //
+    //         this._data = data;
+    //         this.update_data();
+    //     }
+    // },
+    //
+    // create_from_item_renderer: function(item) {
+    //     var child = this.item_renderer(item);
+    //     child.data = item;
+    //     this.add(child);
+    // },
+    //
+    // update_data: function() {
+    //     if (this.item_renderer) {
+    //
+    //         var array = this._data;
+    //
+    //         this._children.forEach(this.remove, this);
+    //         array.forEach(this.create_from_item_renderer, this);
+    //
+    //         if (array.on) {
+    //             array.on('changed', function() {
+    //
+    //                 var max = Math.max(this._children.length, this.data.length),
+    //                     children = this._children.concat();
+    //
+    //                 for (var i = 0; i < max; i++) {
+    //                     if (children[i] && this.data.toArray()[i]) {
+    //                         children[i].data = this.data.toArray()[i];
+    //                     }
+    //                     else if (!children[i]) {
+    //                         this.create_from_item_renderer(this.data.toArray()[i]);
+    //                     }
+    //                     else if (!this.data.toArray()[i]) {
+    //                         this.remove(children[i]);
+    //                     }
+    //                 }
+    //
+    //                 /**
+    //
+    //                 this._children.concat().forEach(function(child) {
+    //                     if (this.data.indexOf(child.data) === -1) {
+    //                         this.remove(child);
+    //                     }
+    //                 }, this);
+    //
+    //                 var child_items = this._children.map(function(child) {
+    //                     return child.data;
+    //                 });
+    //
+    //                 this.data.forEach(function(item) {
+    //                     if (child_items.indexOf(item) === -1) {
+    //                         this.create_from_item_renderer(item)
+    //                     }
+    //                 }, this);
+    //
+    //                  **/
+    //
+    //             }, this);
+    //         }
+    //     }
+    // },
+
     /**
      * Remove child component
      * @param {Component} child
@@ -189,7 +378,7 @@ Component.Root = function(element, context) {
 module.exports = Component;
 
 
-},{"./protoplast":7,"./utils":9}],3:[function(require,module,exports){
+},{"./model":8,"./utils":11}],5:[function(require,module,exports){
 var utils = require('./utils');
 
 /**
@@ -218,7 +407,7 @@ var constructors = {
 };
 
 module.exports = constructors;
-},{"./utils":9}],4:[function(require,module,exports){
+},{"./utils":11}],6:[function(require,module,exports){
 
 var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher');
@@ -334,7 +523,7 @@ var Context = Protoplast.extend({
 module.exports = Context;
 
 
-},{"./dispatcher":5,"./protoplast":7}],5:[function(require,module,exports){
+},{"./dispatcher":7,"./protoplast":9}],7:[function(require,module,exports){
 
 var Protoplast = require('./protoplast');
 
@@ -371,7 +560,7 @@ var Dispatcher = Protoplast.extend({
 
 module.exports = Dispatcher;
 
-},{"./protoplast":7}],6:[function(require,module,exports){
+},{"./protoplast":9}],8:[function(require,module,exports){
 var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher'),
     utils = require('./utils');
@@ -393,11 +582,12 @@ var define_properties = {
             };
 
             desc.set = function() {
+                var old = this['_' + name];
                 this['_' + name] = undefined;
-                this.dispatch(name + '_changed', undefined);
+                this.dispatch(name + '_changed', undefined, old);
             }
         }
-        else if (!desc.value || ['number', 'boolean', 'string', 'function'].indexOf(typeof(desc.value)) !== -1) {
+        else if (!desc.get && (!desc.value || ['number', 'boolean', 'string'].indexOf(typeof(desc.value)) !== -1)) {
             var initial_value = desc.value;
 
             delete desc.value;
@@ -409,8 +599,9 @@ var define_properties = {
             };
             desc.set = function(value) {
                 if (value !== this['_' + name]) {
+                    var old = this['_' + name];
                     this['_' + name] = value;
-                    this.dispatch(name + '_changed', value);
+                    this.dispatch(name + '_changed', value, old);
                 }
             };
             proto['_' + name] = initial_value;
@@ -423,6 +614,15 @@ var Model = Protoplast.extend([Dispatcher], {
 
     $meta: {
         hooks: [define_properties]
+    },
+
+    invalidated_injected_bindings: {
+        inject_init: true,
+        value: function() {
+            for (var computed_property in this.$meta.properties.inject) {
+                this.dispatch(computed_property + '_changed');
+            }
+        }
     },
 
     $create: function() {
@@ -440,7 +640,7 @@ var Model = Protoplast.extend([Dispatcher], {
 });
 
 module.exports = Model;
-},{"./dispatcher":5,"./protoplast":7,"./utils":9}],7:[function(require,module,exports){
+},{"./dispatcher":7,"./protoplast":9,"./utils":11}],9:[function(require,module,exports){
 (function (global){
 var utils = require('./utils');
 
@@ -592,7 +792,7 @@ module.exports = Protoplast;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./utils":9}],8:[function(require,module,exports){
+},{"./utils":11}],10:[function(require,module,exports){
 var Component = require('./component'),
     utils = require('./utils');
 
@@ -666,7 +866,7 @@ var TagComponent = Component.extend({
 });
 
 module.exports = TagComponent;
-},{"./component":2,"./utils":9}],9:[function(require,module,exports){
+},{"./component":4,"./utils":11}],11:[function(require,module,exports){
 var idCounter = 0;
 
 /**
@@ -815,7 +1015,10 @@ var bind = function(host, chain, handler) {
                 resolve_property(sub_host, sub_chain, handler);
             });
         }
-        host.on(props[0] + '_changed', function() {
+        host.on(props[0] + '_changed', function(_, previous) {
+            // if (previous && previous.on) {
+            //     previous.off()
+            // }
             bind(host[props[0]], sub_chain, handler);
         });
     }
@@ -839,6 +1042,48 @@ var bind_property = function(host, host_chain, dest, dest_chain) {
 
 };
 
+var render_list = function(host, source_chain, renderer, renderer_data_property) {
+
+    var handler = function(host, list) {
+        var max = Math.max(host._children.length, list.length),
+            children = host._children.concat();
+
+        for (var i = 0; i < max; i++) {
+            if (children[i] && list.toArray()[i]) {
+                children[i][renderer_data_property] = list.toArray()[i];
+            }
+            else if (!children[i]) {
+                var child = renderer.create();
+                child[renderer_data_property] = list.toArray()[i];
+                host.add(child);
+            }
+            else if (!list.toArray()[i]) {
+                host.remove(children[i]);
+            }
+        }
+    };
+    
+    var previous_list = null;
+    var context = {};
+
+    bind(host, source_chain, function() {
+        resolve_property(host, source_chain, function(list) {
+            if (previous_list) {
+                previous_list.off('changed', null, context);
+                previous_list = null;
+            }
+            if (list) {
+                previous_list = list;
+                list.on('changed', handler.bind(context, host, list), context);
+                handler.bind(context, host, list)();
+            }
+        });
+    });
+
+    return handler;
+
+};
+
 var dom_processors = {
     inject_element: inject_element,
     create_component: create_component
@@ -852,13 +1097,16 @@ module.exports = {
     dom_processors: dom_processors,
     resolve_property: resolve_property,
     bind: bind,
-    bind_property: bind_property
+    bind_property: bind_property,
+    render_list: render_list
 };
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 (function (global){
 var Protoplast = require('./js/protoplast'),
     App = require('./js/app'),
+    ModelArray = require('./js/array'),
+    CollectionView = require('./js/collection-view'),
     Dispatcher = require('./js/dispatcher'),
     Context = require('./js/di'),
     Component = require('./js/component'),
@@ -875,6 +1123,8 @@ var protoplast = {
     Context: Context,
     Component: Component,
     Model: Model,
+    Array: ModelArray,
+    CollectionView: CollectionView,
     TagComponent: TagComponent,
     constructors: constructors,
     utils: utils
@@ -883,5 +1133,5 @@ var protoplast = {
 global.Protoplast = protoplast;
 module.exports = protoplast;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./js/app":1,"./js/component":2,"./js/constructors":3,"./js/di":4,"./js/dispatcher":5,"./js/model":6,"./js/protoplast":7,"./js/tag-component":8,"./js/utils":9}]},{},[10])(10)
+},{"./js/app":1,"./js/array":2,"./js/collection-view":3,"./js/component":4,"./js/constructors":5,"./js/di":6,"./js/dispatcher":7,"./js/model":8,"./js/protoplast":9,"./js/tag-component":10,"./js/utils":11}]},{},[12])(12)
 });

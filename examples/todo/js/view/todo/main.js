@@ -21,18 +21,24 @@
 
             this.toggle_all.on('change', this.toggle.bind(this));
 
-            this.todos.on('updated', this.update_toggle);
+            this.todos.todos.on('changed', this.update_toggle);
             this.update_toggle();
         },
 
+        all_checked: {
+            get: function() {
+                return this.toggle_all.property('checked');
+            }
+        },
+
         toggle: function () {
-            this.pub('todos/toggle_all', this.toggle_all.property('checked'));
+            this.pub('todos/toggle_all', this.all_checked);
         },
 
         update_toggle: function () {
-            var checked = this.todos.all().length === this.todos.done().length;
+            var checked = this.todos.all.length === this.todos.done.length;
             this.toggle_all.property('checked', checked);
-            this.toggle_all.style('display', this.todos.all().length ? 'block' : 'none');
+            this.toggle_all.style('display', this.todos.all.length ? 'block' : 'none');
         }
 
     });
