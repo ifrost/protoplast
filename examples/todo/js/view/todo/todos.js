@@ -21,7 +21,13 @@
 
             this.$root.classed('todo-list', true);
             
-            window.Protoplast.utils.render_list(this, 'app_model.visible_todos', window.TodoView, 'data');
+            window.Protoplast.utils.render_list(this, 'app_model.visible_todos', window.TodoView, 'data', {
+                remove: function(parent, child) {
+                    child.fade_out(function() {
+                        parent.remove(child);
+                    });
+                }
+            });
             
             d3.select(window)
                 .on('click', function () {

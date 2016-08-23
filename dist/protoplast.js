@@ -39,7 +39,6 @@ module.exports = App;
 },{"./component":4,"./di":6,"./protoplast":9}],2:[function(require,module,exports){
 var Model = require('./model');
 
-// TODO: tests
 var CollectionView = Model.extend({
    
     _filters: null,
@@ -115,7 +114,6 @@ module.exports = CollectionView;
 },{"./model":8}],3:[function(require,module,exports){
 var Model = require('./model');
 
-// TODO: rename: Collection, add tests
 var Collection = Model.extend({
 
     $create: function(array) {
@@ -151,7 +149,7 @@ var Collection = Model.extend({
     },
     
     concat: function() {
-        return Collection.create(this.array.concat.apply(this, arguments));
+        return Collection.create(this.array.concat.apply(this.array, arguments));
     },
 
     filter: function(handler, context) {
@@ -277,77 +275,6 @@ var Component = Model.extend({
         } // otherwise it will be injected when __fastinject__ is set
         this.root.appendChild(child.root);
     },
-
-    // TODO: unused?
-    item_renderer: null,
-
-    // data: {
-    //     get: function() {
-    //         return this._data;
-    //     },
-    //     set: function(data) {
-    //
-    //         this._data = data;
-    //         this.update_data();
-    //     }
-    // },
-    //
-    // create_from_item_renderer: function(item) {
-    //     var child = this.item_renderer(item);
-    //     child.data = item;
-    //     this.add(child);
-    // },
-    //
-    // update_data: function() {
-    //     if (this.item_renderer) {
-    //
-    //         var array = this._data;
-    //
-    //         this._children.forEach(this.remove, this);
-    //         array.forEach(this.create_from_item_renderer, this);
-    //
-    //         if (array.on) {
-    //             array.on('changed', function() {
-    //
-    //                 var max = Math.max(this._children.length, this.data.length),
-    //                     children = this._children.concat();
-    //
-    //                 for (var i = 0; i < max; i++) {
-    //                     if (children[i] && this.data.toArray()[i]) {
-    //                         children[i].data = this.data.toArray()[i];
-    //                     }
-    //                     else if (!children[i]) {
-    //                         this.create_from_item_renderer(this.data.toArray()[i]);
-    //                     }
-    //                     else if (!this.data.toArray()[i]) {
-    //                         this.remove(children[i]);
-    //                     }
-    //                 }
-    //
-    //                 /**
-    //
-    //                 this._children.concat().forEach(function(child) {
-    //                     if (this.data.indexOf(child.data) === -1) {
-    //                         this.remove(child);
-    //                     }
-    //                 }, this);
-    //
-    //                 var child_items = this._children.map(function(child) {
-    //                     return child.data;
-    //                 });
-    //
-    //                 this.data.forEach(function(item) {
-    //                     if (child_items.indexOf(item) === -1) {
-    //                         this.create_from_item_renderer(item)
-    //                     }
-    //                 }, this);
-    //
-    //                  **/
-    //
-    //             }, this);
-    //         }
-    //     }
-    // },
 
     /**
      * Remove child component
@@ -1058,7 +985,23 @@ var bind_property = function(host, host_chain, dest, dest_chain) {
 
 };
 // TODO test
-var render_list = function(host, source_chain, renderer, renderer_data_property) {
+var render_list = function(host, source_chain, renderer, renderer_data_property, opts) {
+
+    opts = opts || {};
+
+    opts.remove = opts.remove || function(parent, child) {
+            parent.remove(child);
+        };
+
+    opts.create = opts.create || function(host, data, renderer, property_name) {
+            var child = renderer.create();
+            child[property_name] = data;
+            host.add(child);
+        };
+
+    opts.update = opts.update || function(child, item, property_name) {
+            child[property_name] = item;
+        };
 
     var handler = function(host, list) {
         var max = Math.max(host._children.length, list.length),
@@ -1066,15 +1009,13 @@ var render_list = function(host, source_chain, renderer, renderer_data_property)
 
         for (var i = 0; i < max; i++) {
             if (children[i] && list.toArray()[i]) {
-                children[i][renderer_data_property] = list.toArray()[i];
+                opts.update(children[i], list.toArray()[i], renderer_data_property);
             }
             else if (!children[i]) {
-                var child = renderer.create();
-                child[renderer_data_property] = list.toArray()[i];
-                host.add(child);
+                opts.create(host, list.toArray()[i], renderer, renderer_data_property);
             }
             else if (!list.toArray()[i]) {
-                host.remove(children[i]);
+                opts.remove(host, children[i]);
             }
         }
     };

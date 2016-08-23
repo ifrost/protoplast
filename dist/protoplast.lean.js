@@ -327,7 +327,23 @@ var bind_property = function(host, host_chain, dest, dest_chain) {
 
 };
 // TODO test
-var render_list = function(host, source_chain, renderer, renderer_data_property) {
+var render_list = function(host, source_chain, renderer, renderer_data_property, opts) {
+
+    opts = opts || {};
+
+    opts.remove = opts.remove || function(parent, child) {
+            parent.remove(child);
+        };
+
+    opts.create = opts.create || function(host, data, renderer, property_name) {
+            var child = renderer.create();
+            child[property_name] = data;
+            host.add(child);
+        };
+
+    opts.update = opts.update || function(child, item, property_name) {
+            child[property_name] = item;
+        };
 
     var handler = function(host, list) {
         var max = Math.max(host._children.length, list.length),
@@ -335,15 +351,13 @@ var render_list = function(host, source_chain, renderer, renderer_data_property)
 
         for (var i = 0; i < max; i++) {
             if (children[i] && list.toArray()[i]) {
-                children[i][renderer_data_property] = list.toArray()[i];
+                opts.update(children[i], list.toArray()[i], renderer_data_property);
             }
             else if (!children[i]) {
-                var child = renderer.create();
-                child[renderer_data_property] = list.toArray()[i];
-                host.add(child);
+                opts.create(host, list.toArray()[i], renderer, renderer_data_property);
             }
             else if (!list.toArray()[i]) {
-                host.remove(children[i]);
+                opts.remove(host, children[i]);
             }
         }
     };
