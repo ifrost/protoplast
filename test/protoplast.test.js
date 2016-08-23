@@ -556,6 +556,7 @@ require('./di.test');
 require('./pubsub.test');
 require('./mixins.test');
 require('./model.test');
+require('./collection.test');
 require('./collection-view.test');
 require('./component.test');
 require('./app.test');

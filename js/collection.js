@@ -1,6 +1,5 @@
 var Model = require('./model');
 
-// TODO: rename: add tests
 var Collection = Model.extend({
 
     $create: function(array) {
@@ -36,7 +35,7 @@ var Collection = Model.extend({
     },
     
     concat: function() {
-        return Collection.create(this.array.concat.apply(this, arguments));
+        return Collection.create(this.array.concat.apply(this.array, arguments));
     },
 
     filter: function(handler, context) {
