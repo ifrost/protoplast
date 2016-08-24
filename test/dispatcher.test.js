@@ -11,18 +11,18 @@ describe('Dispatcher', function() {
 
         CustomDispatcher = Protoplast.extend([Dispatcher], {
             hello: function() {
-                this.dispatch('message', 'hello');
+                this.dispatch('message', 'hello', 'test');
             }
         });
 
         dispatcher = CustomDispatcher.create();
 
-        dispatcher.on('message', function(value) {
-            message = value;
+        dispatcher.on('message', function(value1, value2) {
+            message = value1 + value2;
         });
         dispatcher.hello();
 
-        chai.assert.equal(message, 'hello');
+        chai.assert.equal(message, 'hellotest');
     });
 
     it('throws and exception if handler is not provided', function() {

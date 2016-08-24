@@ -11,9 +11,10 @@ var Dispatcher = Protoplast.extend({
         this._topics = {};
     },
 
-    dispatch: function(topic, message) {
+    dispatch: function(topic) {
+        var args = Array.prototype.slice.call(arguments, 1);
         (this._topics[topic] || []).forEach(function(config) {
-            config.handler.call(config.context, message);
+            config.handler.apply(config.context, args);
         })
     },
 
