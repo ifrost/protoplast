@@ -12,7 +12,6 @@
         done: null,
         
         $create: function() {
-            // TODO: clean up
             this.init_data();
 
             window.Protoplast.utils.bind(this, 'todos', this.store.bind(this));

@@ -335,10 +335,10 @@ var render_list = function(host, source_chain, renderer, renderer_data_property,
             parent.remove(child);
         };
 
-    opts.create = opts.create || function(host, data, renderer, property_name) {
+    opts.create = opts.create || function(parent, data, renderer, property_name) {
             var child = renderer.create();
             child[property_name] = data;
-            host.add(child);
+            parent.add(child);
         };
 
     opts.update = opts.update || function(child, item, property_name) {

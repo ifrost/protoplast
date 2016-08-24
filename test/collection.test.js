@@ -4,7 +4,7 @@ var chai = require('chai'),
     Protoplast = require('./../main'),
     Collection = Protoplast.Collection;
 
-describe.only('Collection', function() {
+describe('Collection', function() {
 
     it('creates a collection', function() {
         var collection = Collection.create();

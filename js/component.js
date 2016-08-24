@@ -65,9 +65,11 @@ var Component = Model.extend({
     __fastinject__: {
         get: function() {return this.___fastinject___},
         set: function(value) {
-            this.___fastinject___ = value;
-            // fastinject all the children
-            (this._children.concat(this._inlines)).forEach(this.__fastinject__, this);
+            if (!this.___fastinject___) {
+                this.___fastinject___ = value;
+                // fastinject all the children
+                (this._children.concat(this._inlines)).forEach(this.__fastinject__, this);
+            }
         }
     },
 
