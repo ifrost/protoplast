@@ -38,9 +38,10 @@ describe('App', function() {
 
         app.start(config);
 
-        sinon.assert.calledTwice(app.context.register);
+        sinon.assert.calledThrice(app.context.register);
         sinon.assert.calledWith(app.context.register, 'foo', foo);
         sinon.assert.calledWith(app.context.register, 'bar', bar);
+        sinon.assert.calledWith(app.context.register, app);
         sinon.assert.called(app.context.build);
     });
 

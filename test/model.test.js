@@ -39,9 +39,9 @@ describe('Model', function() {
         model.bar = 2;
 
         sinon.assert.calledOnce(foo);
-        sinon.assert.calledWith(foo, 1);
+        sinon.assert.calledWith(foo, 1, null);
         sinon.assert.calledOnce(bar);
-        sinon.assert.calledWith(bar, 2);
+        sinon.assert.calledWith(bar, 2, 1);
 
         chai.assert.strictEqual(model.foo, 1);
         chai.assert.strictEqual(model.bar, 2);
@@ -84,6 +84,39 @@ describe('Model', function() {
         sinon.assert.calledOnce(valid_nested);
         sinon.assert.calledWith(valid_nested, object.foobar.foo);
         sinon.assert.notCalled(invalid)
+    });
+
+    it('dispatches changed event when computed property value is cleared (new value = undefined)', function() {
+
+
+        var TestModel = Model.extend({
+
+            bar: null,
+
+            foo: {
+                computed: ['bar'],
+                value: function() {
+                    return this.bar * 2;
+                }
+            }
+        });
+
+        var test = TestModel.create();
+
+        var change_handler = sinon.spy();
+
+        test.on('foo_changed', change_handler);
+
+        sinon.assert.notCalled(change_handler);
+        test.bar = 1;
+        sinon.assert.calledOnce(change_handler);
+        sinon.assert.calledWith(change_handler, undefined, undefined); // old value is undefined because property was not computed
+
+        test.foo; // calculate property, result -> 1*2=2
+        test.bar = 2; // new value is not calculated automatically
+
+        sinon.assert.calledTwice(change_handler);
+        sinon.assert.calledWith(change_handler, undefined, 2);
     });
 
     describe('complex binding', function() {
@@ -235,6 +268,23 @@ describe('Model', function() {
             sinon.assert.calledWith(handler, 'John address: Baker, London');
             chai.assert.strictEqual(destination.john_info, 'John address: Baker, London');
             chai.assert.strictEqual(calc_counter, 1);
+        });
+
+        it('invalidates bindings when context is built', function() {
+
+            var TestModel = Model.extend({
+                dep: {
+                    inject: 'dep'
+                }
+            });
+
+            var test = TestModel.create();
+
+            var changed_handler = sinon.spy();
+            test.on('dep_changed', changed_handler);
+
+            test.invalidated_injected_bindings();
+            sinon.assert.calledOnce(changed_handler);
         });
     });
 

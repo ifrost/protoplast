@@ -17,7 +17,7 @@ var define_properties = {
                 }
                 return this['_' + name];
             };
-// TODO test?
+
             desc.set = function() {
                 var old = this['_' + name];
                 this['_' + name] = undefined;
@@ -52,7 +52,7 @@ var Model = Protoplast.extend([Dispatcher], {
     $meta: {
         hooks: [define_properties]
     },
-// TODO: tests
+    
     invalidated_injected_bindings: {
         inject_init: true,
         value: function() {
