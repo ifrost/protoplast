@@ -40,28 +40,44 @@ describe('Dispatcher', function() {
 
     });
 
-    it('removes handlers', function() {
+    describe('removing handlers', function() {
+
         var CustomDispatcher, dispatcher, message = '';
 
-        CustomDispatcher = Protoplast.extend([Dispatcher], {
-            hello: function() {
-                this.dispatch('message', 'hello');
-            }
+        beforeEach(function() {
+            CustomDispatcher = Protoplast.extend([Dispatcher], {
+                hello: function() {
+                    this.dispatch('message', 'hello');
+                }
+            });
+
+            dispatcher = CustomDispatcher.create();
         });
 
-        dispatcher = CustomDispatcher.create();
+        it('removes handlers', function() {
 
-        var removed_handler = sinon.spy();
-        var active_handler = sinon.spy();
+            var removed_handler = sinon.spy();
+            var active_handler = sinon.spy();
 
-        dispatcher.on('message', removed_handler);
-        dispatcher.on('message', active_handler);
-        dispatcher.off('message', removed_handler);
+            dispatcher.on('message', removed_handler);
+            dispatcher.on('message', active_handler);
+            dispatcher.off('message', removed_handler);
 
-        dispatcher.hello();
+            dispatcher.hello();
 
-        sinon.assert.called(active_handler);
-        sinon.assert.notCalled(removed_handler);
+            sinon.assert.called(active_handler);
+            sinon.assert.notCalled(removed_handler);
+        });
+
+        it('noops removing non-exisitng handlers', function() {
+
+            var handler = sinon.spy();
+
+            chai.assert.doesNotThrow(function() {
+                dispatcher.off('message', handler);
+            });
+        });
 
     });
+
 });

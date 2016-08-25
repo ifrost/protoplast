@@ -27,7 +27,7 @@ var Dispatcher = Protoplast.extend({
     },
 
     off: function(topic, handler, context) {
-        this._topics[topic] = this._topics[topic].filter(function(config) {
+        this._topics[topic] = (this._topics[topic] || []).filter(function(config) {
             return handler ? config.handler !== handler : config.context !== context
         })
     }
