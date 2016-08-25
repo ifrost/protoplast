@@ -2,10 +2,6 @@
     'use strict';
 
     window.MainView = window.View.extend({
-
-        $meta: {
-            tag: 'main-view'
-        },
         
         todos: {
             inject: 'todos'
@@ -14,8 +10,12 @@
         html: '<section class="main">' +
             '<input class="toggle-all" data-prop="toggle_all" type="checkbox"></input>' +
             '<label for="toggle-all">Mark all as complete</label>' +
-            '<todos-view></todos-view>' +
+            '<div data-comp="todos_view"></div>' +
         '</section>',
+        
+        todos_view: {
+            component: window.TodosView
+        },
 
         all_checked: {
             get: function() {

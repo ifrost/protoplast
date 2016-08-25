@@ -3,10 +3,6 @@
 
     window.TodosView = window.View.extend({
 
-        $meta: {
-            tag: 'todos-view'
-        },
-
         tag: 'ul',
 
         todos: {

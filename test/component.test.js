@@ -320,21 +320,6 @@ describe('Components Dependency Injection', function() {
             chai.assert.strictEqual(presenter.foo, 'foo');
         });
 
-        it('injects elements by query selector', function() {
-
-            var Root = TagComponent.extend({
-                html: '<div><span class="foo">test</span></div>',
-                foo: {
-                    $: '.foo'
-                }
-            });
-
-            var root = Root.create();
-
-            chai.assert.isNotNull(root.foo);
-            chai.assert.equal(root.foo.innerHTML, 'test');
-        });
-
         it('injects elements marked with data-prop', function() {
 
             var Root = TagComponent.extend({
@@ -356,26 +341,6 @@ describe('Components Dependency Injection', function() {
             var Root = TagComponent.extend({
                 foo: {component: Child},
                 html: '<div><span data-comp="foo"></span></div>'
-            });
-
-            var root = Root.create();
-
-            chai.assert.isNotNull(root.foo);
-            chai.assert.equal(root.foo.foo, 'foo');
-
-        });
-
-        it('creates components and replaces elements marked with custom tags', function() {
-
-            var Child = TagComponent.extend({
-                $meta: {
-                    tag: 'test-child'
-                },
-                foo: 'foo'
-            });
-
-            var Root = TagComponent.extend({
-                html: '<div><test-child data-id="foo"/></span></div>'
             });
 
             var root = Root.create();

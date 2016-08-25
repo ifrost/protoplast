@@ -3,10 +3,6 @@
 
     window.TodoView = window.View.extend({
 
-        $meta: {
-            tag: 'todo-view'
-        },
-
         data: null,
 
         html: '<li><div class="view" data-prop="view"><input class="toggle" type="checkbox" data-prop="toggle" /><label data-prop="label"></label><button class="destroy" data-prop="remove_button"></button></div><input class="edit" data-prop="edit_input"></li>',

@@ -4,7 +4,6 @@
     window.HeaderView = window.View.extend({
         
         $meta: {
-            tag: 'header-view',
             presenter: window.HeaderPresenter
         },
 

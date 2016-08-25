@@ -2,10 +2,6 @@
     'use strict';
 
     window.InfoView = window.View.extend({
-        
-        $meta: {
-            tag: 'info-view'
-        },
 
         html: '<footer class="info">' +
             '<p>Double-click to edit a todo</p>' +
