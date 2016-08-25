@@ -2,7 +2,8 @@ var chai = require('chai'),
     sinon = require('sinon'),
     jsdom = require('jsdom'),
     Protoplast = require('./../main'),
-    Model = Protoplast.Model;
+    Model = Protoplast.Model,
+    Collection = Protoplast.Collection;
 
 describe('Model', function() {
 
@@ -268,6 +269,55 @@ describe('Model', function() {
             sinon.assert.calledWith(handler, 'John address: Baker, London');
             chai.assert.strictEqual(destination.john_info, 'John address: Baker, London');
             chai.assert.strictEqual(calc_counter, 1);
+        });
+
+        describe('collection binding', function() {
+
+            var test, handler;
+
+            beforeEach(function() {
+                var TestModel = Model.extend({
+                    list: null,
+                    create_list: function() {
+                        this.list = Collection.create([1,2]);
+                    },
+                    modify_list: function() {
+                        this.list.add(3);
+                    }
+                });
+
+                test = TestModel.create();
+                handler = sinon.stub();
+
+                Protoplast.utils.bind_collection(test, 'list', handler);
+            });
+
+            it('binding a collection changes', function() {
+
+                sinon.assert.notCalled(handler);
+
+                test.create_list();
+                sinon.assert.calledOnce(handler);
+                chai.assert.deepEqual(handler.lastCall.args[0].toArray(), [1,2]);
+
+                handler.reset();
+                test.modify_list();
+                sinon.assert.calledOnce(handler);
+                chai.assert.deepEqual(handler.lastCall.args[0].toArray(), [1,2, 3]);
+
+            });
+
+            it('clear collection bindings', function() {
+
+                test.create_list();
+                var old_list = test.list;
+
+                test.create_list();
+
+                chai.assert.lengthOf(old_list._topics['changed'], 0);
+                chai.assert.lengthOf(test.list._topics['changed'], 1);
+            });
+
         });
 
         it('invalidates bindings when context is built', function() {

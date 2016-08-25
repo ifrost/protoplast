@@ -503,9 +503,10 @@ var Dispatcher = Protoplast.extend({
         this._topics = {};
     },
 
-    dispatch: function(topic, message) {
+    dispatch: function(topic) {
+        var args = Array.prototype.slice.call(arguments, 1);
         (this._topics[topic] || []).forEach(function(config) {
-            config.handler.call(config.context, message);
+            config.handler.apply(config.context, args);
         })
     },
 
@@ -546,7 +547,7 @@ var define_properties = {
                 }
                 return this['_' + name];
             };
-//  TODO test?
+
             desc.set = function() {
                 var old = this['_' + name];
                 this['_' + name] = undefined;
@@ -581,7 +582,7 @@ var Model = Protoplast.extend([Dispatcher], {
     $meta: {
         hooks: [define_properties]
     },
-// TODO: tests
+    
     invalidated_injected_bindings: {
         inject_init: true,
         value: function() {
@@ -1008,61 +1009,75 @@ var bind_property = function(host, host_chain, dest, dest_chain) {
     });
 
 };
-// TODO test
-var render_list = function(host, source_chain, renderer, renderer_data_property, opts) {
 
-    opts = opts || {};
+var bind_collection = function(host, source_chain, handler) {
 
-    opts.remove = opts.remove || function(parent, child) {
-            parent.remove(child);
-        };
-
-    opts.create = opts.create || function(parent, data, renderer, property_name) {
-            var child = renderer.create();
-            child[property_name] = data;
-            parent.add(child);
-        };
-
-    opts.update = opts.update || function(child, item, property_name) {
-            child[property_name] = item;
-        };
-
-    var handler = function(host, list) {
-        var max = Math.max(host._children.length, list.length),
-            children = host._children.concat();
-
-        for (var i = 0; i < max; i++) {
-            if (children[i] && list.toArray()[i]) {
-                opts.update(children[i], list.toArray()[i], renderer_data_property);
-            }
-            else if (!children[i]) {
-                opts.create(host, list.toArray()[i], renderer, renderer_data_property);
-            }
-            else if (!list.toArray()[i]) {
-                opts.remove(host, children[i]);
-            }
-        }
-    };
-    
-    var previous_list = null;
-    var context = {};
+    var previous_list = null, previous_handler;
 
     bind(host, source_chain, function() {
         resolve_property(host, source_chain, function(list) {
             if (previous_list) {
-                previous_list.off('changed', null, context);
+                previous_list.off('changed', previous_handler);
                 previous_list = null;
+                previous_handler = null
             }
             if (list) {
                 previous_list = list;
-                list.on('changed', handler.bind(context, host, list), context);
-                handler.bind(context, host, list)();
+                previous_handler = handler.bind(host, list);
+                list.on('changed', previous_handler);
+                handler(list);
             }
         });
     });
 
-    return handler;
+};
 
+var render_list_default_options = {
+    remove: function(parent, child) {
+        parent.remove(child);
+    },
+    create: function(parent, data, renderer, property_name) {
+        var child = renderer.create();
+        child[property_name] = data;
+        parent.add(child);
+    },
+    update: function(child, item, property_name) {
+        child[property_name] = item;
+    }
+};
+
+var create_renderer_function = function(host, opts) {
+
+    opts = opts || {};
+    opts.create = opts.create || render_list_default_options.create;
+    opts.remove = opts.remove || render_list_default_options.remove;
+    opts.update = opts.update || render_list_default_options.update;
+    opts.renderer_data_property = opts.renderer_data_property || 'data';
+    if (!opts.renderer) {
+        throw new Error('Renderer is required')
+    }
+
+    return function(list) {
+        var max = Math.max(this._children.length, list.length),
+            children = this._children.concat();
+
+        for (var i = 0; i < max; i++) {
+            if (children[i] && list.toArray()[i]) {
+                opts.update(children[i], list.toArray()[i], opts.renderer_data_property);
+            }
+            else if (!children[i]) {
+                opts.create(this, list.toArray()[i], opts.renderer, opts.renderer_data_property);
+            }
+            else if (!list.toArray()[i]) {
+                opts.remove(this, children[i]);
+            }
+        }
+    }.bind(host);
+};
+
+var render_list = function(host, source_chain, opts) {
+    var renderer_function = create_renderer_function(host, opts);
+    bind_collection(host, source_chain, renderer_function);
 };
 
 var dom_processors = {
@@ -1079,7 +1094,9 @@ module.exports = {
     resolve_property: resolve_property,
     bind: bind,
     bind_property: bind_property,
-    render_list: render_list
+    bind_collection: bind_collection,
+    render_list: render_list,
+    create_renderer_function: create_renderer_function
 };
 
 },{}],12:[function(require,module,exports){

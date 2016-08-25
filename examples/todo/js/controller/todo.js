@@ -47,7 +47,7 @@
         edit_todo: {
             sub: 'todos/edit',
             value: function(data) {
-                data.todo.text = data.text;
+                this.todos.edit_todo_text(data.todo, data.text);
             }
         }
     });

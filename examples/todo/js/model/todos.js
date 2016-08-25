@@ -70,6 +70,11 @@
             this.store();
         },
 
+        edit_todo_text: function(todo, text) {
+            todo.text = text;
+            this.store();
+        },
+
         toggle_all: function(value) {
             this.todos.forEach(function(todo) {
                 todo.done = value;
