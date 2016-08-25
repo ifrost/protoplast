@@ -147,10 +147,9 @@ var bind = function(host, chain, handler) {
             });
         }
         host.on(props[0] + '_changed', function(_, previous) {
-            // TODO: clearing
-            // if (previous && previous.on) {
-            //     previous.off()
-            // }
+            if (previous && previous.on) {
+                previous.off(props[0] + '_changed', handler);
+            }
             bind(host[props[0]], sub_chain, handler);
         });
     }

@@ -120,6 +120,33 @@ describe('Model', function() {
         sinon.assert.calledWith(change_handler, undefined, 2);
     });
 
+    it('clears binding handlers', function() {
+
+        var Node = Model.extend({
+            child: null
+        });
+
+        var level1 = Node.create(),
+            level2 = Node.create(),
+            level3 = Node.create(),
+            level2_replace = Node.create(),
+            handler = sinon.stub();
+
+        Protoplast.utils.bind(level1, 'child.child', handler);
+        chai.assert.lengthOf(level1._topics['child_changed'], 1);
+
+        level1.child = level2;
+        level2.child = level3;
+
+        chai.assert.lengthOf(level2._topics['child_changed'], 1);
+
+        level2_replace.child = level3;
+        level1.child = level2_replace;
+
+        chai.assert.lengthOf(level2_replace._topics['child_changed'], 1);
+        chai.assert.lengthOf(level2._topics['child_changed'], 0);
+    });
+
     describe('complex binding', function() {
 
         var Address, Person;
