@@ -221,8 +221,8 @@ var create_renderer_function = function(host, opts) {
     }
 
     return function(list) {
-        var max = Math.max(this._children.length, list.length),
-            children = this._children.concat();
+        var max = Math.max(this.children.length, list.length),
+            children = this.children.concat();
 
         for (var i = 0; i < max; i++) {
             if (children[i] && list.toArray()[i]) {

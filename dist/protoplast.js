@@ -217,6 +217,12 @@ var Component = Model.extend({
         }
     },
 
+    children: {
+        get: function() {
+            return this._children
+        }
+    },
+
     /**
      * Process DOM using defined DOM processors
      */
@@ -519,7 +525,7 @@ var Dispatcher = Protoplast.extend({
     },
 
     off: function(topic, handler, context) {
-        this._topics[topic] = this._topics[topic].filter(function(config) {
+        this._topics[topic] = (this._topics[topic] || []).filter(function(config) {
             return handler ? config.handler !== handler : config.context !== context
         })
     }
@@ -983,10 +989,9 @@ var bind = function(host, chain, handler) {
             });
         }
         host.on(props[0] + '_changed', function(_, previous) {
-            // TODO: clearing
-            // if (previous && previous.on) {
-            //     previous.off()
-            // }
+            if (previous && previous.on) {
+                previous.off(props[0] + '_changed', handler);
+            }
             bind(host[props[0]], sub_chain, handler);
         });
     }
@@ -1058,8 +1063,8 @@ var create_renderer_function = function(host, opts) {
     }
 
     return function(list) {
-        var max = Math.max(this._children.length, list.length),
-            children = this._children.concat();
+        var max = Math.max(this.children.length, list.length),
+            children = this.children.concat();
 
         for (var i = 0; i < max; i++) {
             if (children[i] && list.toArray()[i]) {

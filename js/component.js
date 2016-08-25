@@ -25,6 +25,12 @@ var Component = Model.extend({
         }
     },
 
+    children: {
+        get: function() {
+            return this._children
+        }
+    },
+
     /**
      * Process DOM using defined DOM processors
      */

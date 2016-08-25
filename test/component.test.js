@@ -412,7 +412,7 @@ describe('utils', function() {
         });
 
         it('creates new renderers', function() {
-            host._children = [];
+            host.children = [];
             render_list(Collection.create([1,2,3]));
             sinon.assert.calledThrice(create);
             sinon.assert.notCalled(update);
@@ -424,7 +424,7 @@ describe('utils', function() {
         });
 
         it('updates existing renderers', function() {
-            host._children = ['A','B','C'];
+            host.children = ['A','B','C'];
             render_list(Collection.create([3,2,1]));
             sinon.assert.notCalled(create);
             sinon.assert.calledThrice(update);
@@ -436,7 +436,7 @@ describe('utils', function() {
         });
 
         it('removes obsolete renderers', function() {
-            host._children = ['A','B','C'];
+            host.children = ['A','B','C'];
             render_list(Collection.create([3,2]));
             sinon.assert.notCalled(create);
             sinon.assert.calledTwice(update);
