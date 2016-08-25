@@ -77,10 +77,16 @@ var CollectionView = Model.extend({
         this._filters = [];
         
         this._source.on('changed', this._invalidate, this);
-        
+
+        this.refresh = this.refresh.bind(this);
+
         this._invalidate({
             added: this._source.toArray()
         });
+    },
+
+    refresh: function() {
+        this._invalidate();
     },
     
     add_filter: function(fn) {
@@ -107,21 +113,29 @@ var CollectionView = Model.extend({
     _invalidate: function(event) {
         
         if (!event) {
-            event = {added: this._source.toArray()}
+            event = {added: this._source.toArray(), removed: this._source.toArray()}
         }
         
         this._current = this._source.toArray();
         
         this._filters.forEach(function(filter) {
 
-            event.added.forEach(function(item){
+            event.removed.forEach(function(item){
                 if (filter.properties) {
                     filter.properties.forEach(function(property) {
-                        item.on(property + '_changed', this._invalidate.bind(this, undefined), this);
+                        item.off(property + '_changed', this.refresh, this);
                     }, this);
                 }
             }, this);
-            
+
+            event.added.forEach(function(item){
+                if (filter.properties) {
+                    filter.properties.forEach(function(property) {
+                        item.on(property + '_changed', this.refresh, this);
+                    }, this);
+                }
+            }, this);
+
             this._current = this._current.filter(function(item) {
                 return filter.fn(item);
             });
