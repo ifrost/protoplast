@@ -1,6 +1,7 @@
 var chai = require('chai'),
     sinon = require('sinon'),
     jsdom = require('jsdom'),
+    helper = require('./helper'),
     Protoplast = require('./../main'),
     Model = Protoplast.Model,
     Collection = Protoplast.Collection;
@@ -133,18 +134,18 @@ describe('Model', function() {
             handler = sinon.stub();
 
         Protoplast.utils.bind(level1, 'child.child', handler);
-        chai.assert.lengthOf(level1._topics['child_changed'], 1);
+        chai.assert.lengthOf(helper.handlers(level1, 'child_changed'), 1);
 
         level1.child = level2;
         level2.child = level3;
 
-        chai.assert.lengthOf(level2._topics['child_changed'], 1);
+        chai.assert.lengthOf(helper.handlers(level2, 'child_changed'), 1);
 
         level2_replace.child = level3;
         level1.child = level2_replace;
 
-        chai.assert.lengthOf(level2_replace._topics['child_changed'], 1);
-        chai.assert.lengthOf(level2._topics['child_changed'], 0);
+        chai.assert.lengthOf(helper.handlers(level2_replace, 'child_changed'), 1);
+        chai.assert.lengthOf(helper.handlers(level2, 'child_changed'), 0);
     });
 
     describe('complex binding', function() {
@@ -341,8 +342,8 @@ describe('Model', function() {
 
                 test.create_list();
 
-                chai.assert.lengthOf(old_list._topics['changed'], 0);
-                chai.assert.lengthOf(test.list._topics['changed'], 1);
+                chai.assert.lengthOf(helper.handlers(old_list, 'changed'), 0);
+                chai.assert.lengthOf(helper.handlers(test.list, 'changed'), 1);
             });
 
         });
