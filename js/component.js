@@ -53,7 +53,6 @@ var Component = Model.extend({
      */
     $create: function() {
         this._children = [];
-        this._inlines = [];
 
         if (!this.tag && !this.html) {
             this.tag = 'div';
@@ -74,7 +73,7 @@ var Component = Model.extend({
             if (!this.___fastinject___) {
                 this.___fastinject___ = value;
                 // fastinject all the children
-                (this._children.concat(this._inlines)).forEach(this.__fastinject__, this);
+                this._children.forEach(this.__fastinject__, this);
             }
         }
     },
@@ -91,7 +90,7 @@ var Component = Model.extend({
      * Destroy the component and all child components
      */
     destroy: function() {
-        (this._children.concat(this._inlines)).forEach(function(child) {
+        this._children.concat().forEach(function(child) {
             this.remove(child);
         }, this);
     },
@@ -133,7 +132,7 @@ var Component = Model.extend({
      * @param {Element} element
      */
     attach: function(child, element) {
-        this._inlines.push(child);
+        this._children.push(child);
         this.root.insertBefore(child.root, element);
         this.root.removeChild(element);
     }

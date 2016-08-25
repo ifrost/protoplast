@@ -243,21 +243,19 @@ var render_list = function(host, source_chain, opts) {
     bind_collection(host, source_chain, renderer_function);
 };
 
-var dom_processors = {
-    inject_element: inject_element,
-    create_component: create_component
-};
-
 module.exports = {
     createObject: createObject,
     merge: merge,
     mixin: mixin,
     uniqueId: uniqueId,
-    dom_processors: dom_processors,
     resolve_property: resolve_property,
     bind: bind,
     bind_property: bind_property,
     bind_collection: bind_collection,
     render_list: render_list,
-    create_renderer_function: create_renderer_function
+    create_renderer_function: create_renderer_function,
+    dom_processors: {
+        inject_element: inject_element,
+        create_component: create_component
+    }
 };
