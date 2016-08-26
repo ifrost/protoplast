@@ -52,21 +52,6 @@ var Component = Model.extend({
      * Init the object, construct and process DOM
      */
     $create: function() {
-
-        var _init = this.init.bind(this);
-        this.init = function() {
-            this.dispatch('initialising');
-            _init();
-            this.dispatch('initialised');
-        }.bind(this);
-
-        var _destroy = this.destroy.bind(this);
-        this.destroy = function() {
-            this.dispatch('destroying');
-            _destroy();
-            this.dispatch('destroyed');
-        }.bind(this);
-        
         this._children = [];
 
         if (!this.tag && !this.html) {
