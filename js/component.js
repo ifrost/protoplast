@@ -7,10 +7,10 @@ var Model = require('./model'),
  */
 var Component = Model.extend({
 
-    __registry: {
-        value: {}
+    $meta: {
+        dom_processors: [utils.dom_processors.create_component, utils.dom_processors.inject_element]
     },
-
+    
     tag: '',
 
     html: '',
@@ -52,6 +52,21 @@ var Component = Model.extend({
      * Init the object, construct and process DOM
      */
     $create: function() {
+
+        var _init = this.init.bind(this);
+        this.init = function() {
+            this.dispatch('initialising');
+            _init();
+            this.dispatch('initialised');
+        }.bind(this);
+
+        var _destroy = this.destroy.bind(this);
+        this.destroy = function() {
+            this.dispatch('destroying');
+            _destroy();
+            this.dispatch('destroyed');
+        }.bind(this);
+        
         this._children = [];
 
         if (!this.tag && !this.html) {
@@ -74,7 +89,23 @@ var Component = Model.extend({
                 this.___fastinject___ = value;
                 // fastinject all the children
                 this._children.forEach(this.__fastinject__, this);
+
+                if (this.$meta.presenter) {
+                    this.__presenter__ = this.$meta.presenter.create();
+                }
+
             }
+        }
+    },
+
+    __presenter__: {
+        get: function() {
+            return this.___presenter___;
+        },
+        set: function(presenter) {
+            this.___presenter___ = presenter;
+            presenter.view = this;
+            this.___fastinject___(presenter);
         }
     },
 
@@ -90,6 +121,9 @@ var Component = Model.extend({
      * Destroy the component and all child components
      */
     destroy: function() {
+        if (this.__presenter__ && this.__presenter__.destroy) {
+            this.__presenter__.destroy();
+        }
         this._children.concat().forEach(function(child) {
             this.remove(child);
         }, this);

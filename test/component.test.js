@@ -4,7 +4,6 @@ var chai = require('chai'),
     Protoplast = require('./../main'),
     Component = Protoplast.Component,
     Collection = Protoplast.Collection,
-    TagComponent = Protoplast.TagComponent,
     Context = Protoplast.Context;
 
 
@@ -278,7 +277,7 @@ describe('Components Dependency Injection', function() {
 
     });
 
-    describe('TagComponent', function() {
+    describe('Component features', function() {
 
         it('creates presenter', function() {
 
@@ -298,7 +297,7 @@ describe('Components Dependency Injection', function() {
 
             context.register('foo', 'foo');
 
-            var Root = TagComponent.extend({
+            var Root = Component.extend({
                 $meta: {
                     presenter: Presenter
                 },
@@ -322,7 +321,7 @@ describe('Components Dependency Injection', function() {
 
         it('injects elements marked with data-prop', function() {
 
-            var Root = TagComponent.extend({
+            var Root = Component.extend({
                 html: '<div><span data-prop="foo">test</span></div>'
             });
 
@@ -334,11 +333,11 @@ describe('Components Dependency Injection', function() {
 
         it('creates components and replaces elements marked with data-comp', function() {
 
-            var Child = TagComponent.extend({
+            var Child = Component.extend({
                 foo: 'foo'
             });
 
-            var Root = TagComponent.extend({
+            var Root = Component.extend({
                 foo: {component: Child},
                 html: '<div><span data-comp="foo"></span></div>'
             });

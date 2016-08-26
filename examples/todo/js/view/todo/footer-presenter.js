@@ -21,6 +21,8 @@
             this.update_counter();
 
             window.Protoplast.utils.bind(this.view_state, 'state', this.view.update_selection);
+
+            this.view.on('clear_all', this.clear_all, this);
         },
 
         clear_all: function() {

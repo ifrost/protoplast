@@ -20,7 +20,7 @@
 
         init: function () {
             this.clear_all.on('click', function() {
-                this.presenter.clear_all();
+                this.dispatch('clear_all');
             }.bind(this));
         },
 

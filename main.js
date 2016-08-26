@@ -6,7 +6,6 @@ var Protoplast = require('./js/protoplast'),
     Context = require('./js/di'),
     Component = require('./js/component'),
     Model = require('./js/model'),
-    TagComponent = require('./js/tag-component'),
     utils = require('./js/utils'),
     constructors = require('./js/constructors');
 
@@ -20,7 +19,6 @@ var protoplast = {
     Model: Model,
     Collection: Collection,
     CollectionView: CollectionView,
-    TagComponent: TagComponent,
     constructors: constructors,
     utils: utils
 };

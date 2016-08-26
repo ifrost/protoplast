@@ -27,8 +27,7 @@
         submit_todo: function () {
             var text = this.input.property('value').trim();
             if (text.length) {
-//                this.dispatch('submit', text);
-                this.presenter.submit_todo(text);
+                this.dispatch('submit', text);
                 this.input.property('value', '');
             }
         }

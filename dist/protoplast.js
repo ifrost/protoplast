@@ -213,10 +213,10 @@ var Model = require('./model'),
  */
 var Component = Model.extend({
 
-    __registry: {
-        value: {}
+    $meta: {
+        dom_processors: [utils.dom_processors.create_component, utils.dom_processors.inject_element]
     },
-
+    
     tag: '',
 
     html: '',
@@ -258,6 +258,21 @@ var Component = Model.extend({
      * Init the object, construct and process DOM
      */
     $create: function() {
+
+        var _init = this.init.bind(this);
+        this.init = function() {
+            this.dispatch('initialising');
+            _init();
+            this.dispatch('initialised');
+        }.bind(this);
+
+        var _destroy = this.destroy.bind(this);
+        this.destroy = function() {
+            this.dispatch('destroying');
+            _destroy();
+            this.dispatch('destroyed');
+        }.bind(this);
+        
         this._children = [];
 
         if (!this.tag && !this.html) {
@@ -280,7 +295,23 @@ var Component = Model.extend({
                 this.___fastinject___ = value;
                 // fastinject all the children
                 this._children.forEach(this.__fastinject__, this);
+
+                if (this.$meta.presenter) {
+                    this.__presenter__ = this.$meta.presenter.create();
+                }
+
             }
+        }
+    },
+
+    __presenter__: {
+        get: function() {
+            return this.___presenter___;
+        },
+        set: function(presenter) {
+            this.___presenter___ = presenter;
+            presenter.view = this;
+            this.___fastinject___(presenter);
         }
     },
 
@@ -296,6 +327,9 @@ var Component = Model.extend({
      * Destroy the component and all child components
      */
     destroy: function() {
+        if (this.__presenter__ && this.__presenter__.destroy) {
+            this.__presenter__.destroy();
+        }
         this._children.concat().forEach(function(child) {
             this.remove(child);
         }, this);
@@ -363,7 +397,7 @@ Component.Root = function(element, context) {
 module.exports = Component;
 
 
-},{"./model":8,"./utils":11}],5:[function(require,module,exports){
+},{"./model":8,"./utils":10}],5:[function(require,module,exports){
 var utils = require('./utils');
 
 /**
@@ -392,7 +426,7 @@ var constructors = {
 };
 
 module.exports = constructors;
-},{"./utils":11}],6:[function(require,module,exports){
+},{"./utils":10}],6:[function(require,module,exports){
 
 var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher');
@@ -626,7 +660,7 @@ var Model = Protoplast.extend([Dispatcher], {
 });
 
 module.exports = Model;
-},{"./dispatcher":7,"./protoplast":9,"./utils":11}],9:[function(require,module,exports){
+},{"./dispatcher":7,"./protoplast":9,"./utils":10}],9:[function(require,module,exports){
 (function (global){
 var utils = require('./utils');
 
@@ -778,48 +812,7 @@ module.exports = Protoplast;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./utils":11}],10:[function(require,module,exports){
-var Component = require('./component'),
-    utils = require('./utils');
-
-/**
- * Component with additional DOM processing
- */
-var TagComponent = Component.extend({
-
-    $meta: {
-        dom_processors: [utils.dom_processors.create_component, utils.dom_processors.inject_element]
-    },
-
-    $create: function() {
-        var init_func = this.init.bind(this);
-        this.init = function() {
-            init_func();
-            if (this.$meta.presenter) {
-                var presenter = this.$meta.presenter.create();
-                var presenter_type = this.$meta.presenter_type || 'both';
-                var presenter_property = this.$meta.presenter_property || 'presenter';
-                var view_property = this.$meta.view_property || 'view';
-
-                if (presenter_type === 'active' || presenter_type === 'both') {
-                    presenter[view_property] = this;
-                }
-                if (presenter_type === 'passive' || presenter_type === 'both') {
-                    this[presenter_property] = this;
-                }
-                this.presenter = presenter;
-                this.___fastinject___(presenter);
-                this.presenter_ready();
-            }
-        }
-    },
-
-    presenter_ready: function() {},
-    
-});
-
-module.exports = TagComponent;
-},{"./component":4,"./utils":11}],11:[function(require,module,exports){
+},{"./utils":10}],10:[function(require,module,exports){
 var idCounter = 0;
 
 /**
@@ -1082,7 +1075,7 @@ module.exports = {
     }
 };
 
-},{}],12:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 (function (global){
 var Protoplast = require('./js/protoplast'),
     App = require('./js/app'),
@@ -1092,7 +1085,6 @@ var Protoplast = require('./js/protoplast'),
     Context = require('./js/di'),
     Component = require('./js/component'),
     Model = require('./js/model'),
-    TagComponent = require('./js/tag-component'),
     utils = require('./js/utils'),
     constructors = require('./js/constructors');
 
@@ -1106,7 +1098,6 @@ var protoplast = {
     Model: Model,
     Collection: Collection,
     CollectionView: CollectionView,
-    TagComponent: TagComponent,
     constructors: constructors,
     utils: utils
 };
@@ -1114,5 +1105,5 @@ var protoplast = {
 global.Protoplast = protoplast;
 module.exports = protoplast;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./js/app":1,"./js/collection":3,"./js/collection-view":2,"./js/component":4,"./js/constructors":5,"./js/di":6,"./js/dispatcher":7,"./js/model":8,"./js/protoplast":9,"./js/tag-component":10,"./js/utils":11}]},{},[12])(12)
+},{"./js/app":1,"./js/collection":3,"./js/collection-view":2,"./js/component":4,"./js/constructors":5,"./js/di":6,"./js/dispatcher":7,"./js/model":8,"./js/protoplast":9,"./js/utils":10}]},{},[11])(11)
 });
