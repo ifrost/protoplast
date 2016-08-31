@@ -1,9 +1,9 @@
 var Model = require('./model');
 
 var CollectionView = Model.extend({
-   
+
     _filters: null,
-    
+
     _sort: null,
 
     length: {
@@ -17,7 +17,7 @@ var CollectionView = Model.extend({
         this._current = [];
         this._filters = [];
         this._sort = [];
-        
+
         this._source.on('changed', this._invalidate, this);
 
         this.refresh = this.refresh.bind(this);
@@ -30,12 +30,12 @@ var CollectionView = Model.extend({
     refresh: function() {
         this._invalidate();
     },
-    
+
     add_filter: function(fn) {
         this._filters.push(fn);
         this._invalidate();
     },
-    
+
     add_sort: function(fn) {
         this._sort.push(fn);
         this._invalidate();
@@ -56,63 +56,62 @@ var CollectionView = Model.extend({
     forEach: function() {
         return this._current.forEach.apply(this._current, arguments);
     },
-    
+
+    _resubscribe: function(filter_or_sort, event) {
+        event.removed.forEach(function(item) {
+            if (filter_or_sort.properties) {
+                filter_or_sort.properties.forEach(function(property) {
+                    item.off(property + '_changed', this.refresh, this);
+                }, this);
+            }
+        }, this);
+
+        event.added.forEach(function(item) {
+            if (filter_or_sort.properties) {
+                filter_or_sort.properties.forEach(function(property) {
+                    item.on(property + '_changed', this.refresh, this);
+                }, this);
+            }
+        }, this);
+    },
+
     _invalidate: function(event) {
-        
+
         if (!event) {
             event = {added: this._source.toArray(), removed: this._source.toArray()}
         }
-        
+
         this._current = this._source.toArray();
-        
+
         this._filters.forEach(function(filter) {
-
-            event.removed.forEach(function(item){
-                if (filter.properties) {
-                    filter.properties.forEach(function(property) {
-                        item.off(property + '_changed', this.refresh, this);
-                    }, this);
-                }
-            }, this);
-
-            event.added.forEach(function(item){
-                if (filter.properties) {
-                    filter.properties.forEach(function(property) {
-                        item.on(property + '_changed', this.refresh, this);
-                    }, this);
-                }
-            }, this);
-
+            this._resubscribe(filter, event);
             this._current = this._current.filter(function(item) {
                 return filter.fn(item);
             });
 
         }, this);
 
-        this._sort.forEach(function(sort) {
-
-            event.removed.forEach(function(item){
-                if (sort.properties) {
-                    sort.properties.forEach(function(property) {
-                        item.off(property + '_changed', this.refresh, this);
-                    }, this);
-                }
+        if (this._sort.length) {
+            this._sort.forEach(function(sort) {
+                this._resubscribe(sort, event);
             }, this);
 
-            event.added.forEach(function(item){
-                if (sort.properties) {
-                    sort.properties.forEach(function(property) {
-                        item.on(property + '_changed', this.refresh, this);
-                    }, this);
+            this._current.sort(function(a, b) {
+                var sorts = this._sort.concat();
+                var result = 0, sort = sorts.shift();
+                
+                while (result === 0 && sort) {
+                    result = sort.fn(a, b);
+                    sort = sorts.shift();
                 }
-            }, this);
-            
-            this._current.sort(sort.fn);
-        }, this);
+
+                return result;
+            }.bind(this));
+        }
 
         this.dispatch('changed');
     }
-    
+
 });
 
 module.exports = CollectionView;

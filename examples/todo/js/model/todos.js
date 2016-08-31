@@ -77,6 +77,12 @@
         create_all_view: function() {
             var all = window.Protoplast.CollectionView.create(this.todos);
             all.add_sort({
+                properties: ['done'],
+                fn: function(a,b) {
+                    return a.done == b.done ? 0  : (a.done ? 1 : -1);
+                }
+            });
+            all.add_sort({
                 properties: ['text'],
                 fn: function(a,b) {
                     return a.text > b.text ? 1 : -1;

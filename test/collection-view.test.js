@@ -96,7 +96,55 @@ describe('CollectionView', function() {
 
     });
 
+    it('sorts items using multiple sorts', function() {
 
+        // undone first, then done, each sorted by name
+        var Todo = Model.extend({
+            text:null,
+            done:false,
+            $create: function(text, done) {
+                this.text = text;
+                this.done = done;
+            }
+        });
+
+        var todos = Collection.create([
+            Todo.create('DDD', true),   // 4
+            Todo.create('CCC', false),  // 2
+            Todo.create('AAA', true),   // 3
+            Todo.create('BBB', false)   // 1
+        ]);
+
+        var view = CollectionView.create(todos);
+
+        view.add_sort({
+            fn: function(a, b) {
+                if (a.done === b.done) {
+                    return 0;
+                }
+                else {
+                    return a.done ? 1 : -1;
+                }
+            }
+        });
+        view.add_sort({
+            fn: function(a, b) {
+                return a.text > b.text ? 1 : -1;
+            }
+        });
+
+        chai.assert.strictEqual(view.get(0).text, 'BBB');
+        chai.assert.strictEqual(view.get(0).done, false);
+
+        chai.assert.strictEqual(view.get(1).text, 'CCC');
+        chai.assert.strictEqual(view.get(1).done, false);
+
+        chai.assert.strictEqual(view.get(2).text, 'AAA');
+        chai.assert.strictEqual(view.get(2).done, true);
+
+        chai.assert.strictEqual(view.get(3).text, 'DDD');
+        chai.assert.strictEqual(view.get(3).done, true);
+    });
 
 });
 
