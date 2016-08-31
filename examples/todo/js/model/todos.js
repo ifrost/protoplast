@@ -14,8 +14,7 @@
         $create: function() {
             this.init_data();
 
-            window.Protoplast.utils.bind(this, 'todos', this.store.bind(this));
-            this.todos.on('changed', this.store.bind(this));
+            window.Protoplast.utils.bind_collection(this, 'todos', this.store.bind(this));
 
             this.create_views();
         },
@@ -36,21 +35,54 @@
         },
 
         create_views: function() {
-            this.done = window.Protoplast.CollectionView.create(this.todos);
-            this.done.add_filter({
+            this.done = this.create_done_view();
+            this.undone = this.create_undone_view();
+            this.all = this.create_all_view();
+        },
+
+        create_done_view: function() {
+            var done = window.Protoplast.CollectionView.create(this.todos);
+            done.add_filter({
                 properties: ['done'],
                 fn: function(item) {
                     return item.done
                 }
             });
-            this.undone = window.Protoplast.CollectionView.create(this.todos);
-            this.undone.add_filter({
+            done.add_sort({
+                properties: ['text'],
+                fn: function(a,b) {
+                    return a.text > b.text ? 1 : -1;
+                }
+            });
+            return done;
+        },
+
+        create_undone_view: function() {
+            var undone = window.Protoplast.CollectionView.create(this.todos);
+            undone.add_filter({
                 properties: ['done'],
                 fn: function(item) {
                     return !item.done
                 }
             });
-            this.all = window.Protoplast.CollectionView.create(this.todos);
+            undone.add_sort({
+                properties: ['text'],
+                fn: function(a,b) {
+                    return a.text > b.text ? 1 : -1;
+                }
+            });
+            return undone;
+        },
+
+        create_all_view: function() {
+            var all = window.Protoplast.CollectionView.create(this.todos);
+            all.add_sort({
+                properties: ['text'],
+                fn: function(a,b) {
+                    return a.text > b.text ? 1 : -1;
+                }
+            });
+            return all;
         },
 
         store: function() {

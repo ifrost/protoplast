@@ -559,5 +559,4 @@ require('./model.test');
 require('./collection.test');
 require('./collection-view.test');
 require('./component.test');
-require('./app.test');
 require('./examples.test');

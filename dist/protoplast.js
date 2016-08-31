@@ -4,6 +4,8 @@ var Model = require('./model');
 var CollectionView = Model.extend({
    
     _filters: null,
+    
+    _sort: null,
 
     length: {
         get: function() {
@@ -15,6 +17,7 @@ var CollectionView = Model.extend({
         this._source = collection;
         this._current = [];
         this._filters = [];
+        this._sort = [];
         
         this._source.on('changed', this._invalidate, this);
 
@@ -31,6 +34,11 @@ var CollectionView = Model.extend({
     
     add_filter: function(fn) {
         this._filters.push(fn);
+        this._invalidate();
+    },
+    
+    add_sort: function(fn) {
+        this._sort.push(fn);
         this._invalidate();
     },
 
@@ -79,6 +87,28 @@ var CollectionView = Model.extend({
             this._current = this._current.filter(function(item) {
                 return filter.fn(item);
             });
+
+        }, this);
+
+        this._sort.forEach(function(sort) {
+
+            event.removed.forEach(function(item){
+                if (sort.properties) {
+                    sort.properties.forEach(function(property) {
+                        item.off(property + '_changed', this.refresh, this);
+                    }, this);
+                }
+            }, this);
+
+            event.added.forEach(function(item){
+                if (sort.properties) {
+                    sort.properties.forEach(function(property) {
+                        item.on(property + '_changed', this.refresh, this);
+                    }, this);
+                }
+            }, this);
+            
+            this._current.sort(sort.fn);
         }, this);
 
         this.dispatch('changed');

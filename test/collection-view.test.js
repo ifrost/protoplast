@@ -32,19 +32,6 @@ describe('CollectionView', function() {
         chai.assert.strictEqual(view.get(1), 3);
     });
 
-    it('filters item when the filter is set', function() {
-
-        view.add_filter({
-            fn: function(item) {
-                return item % 2 == 0;
-            }
-        });
-
-        chai.assert.strictEqual(view.length, 1);
-        chai.assert.strictEqual(view.get(0), 2);
-
-    });
-
     it('updates the view when property of the item change', function() {
 
         var Todo = Model.extend({
@@ -81,6 +68,35 @@ describe('CollectionView', function() {
         chai.assert.strictEqual(done.length, 2);
 
     });
+
+    it('filters item when the filter is set', function() {
+
+        view.add_filter({
+            fn: function(item) {
+                return item % 2 == 0;
+            }
+        });
+
+        chai.assert.lengthOf(view, 1);
+        chai.assert.strictEqual(view.get(0), 2);
+
+    });
+
+    it('sorts items when the sort function is set', function() {
+
+        view.add_sort({
+            fn: function(a, b) {
+                return b - a;
+            }
+        });
+
+        chai.assert.lengthOf(view, 2);
+        chai.assert.strictEqual(view.get(0), 2);
+        chai.assert.strictEqual(view.get(1), 1);
+
+    });
+
+
 
 });
 
