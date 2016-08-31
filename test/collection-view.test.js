@@ -146,5 +146,32 @@ describe('CollectionView', function() {
         chai.assert.strictEqual(view.get(3).done, true);
     });
 
+    it('clears the selected property if the selected item is removed', function() {
+
+        view.selected = 2;
+        collection.remove(2);
+
+        chai.assert.isNull(view.selected);
+    });
+
+    it('restores the selected property if the selected item is switched by filtering', function() {
+
+        var filter = {
+            fn: function(item) {
+                return item !== 2;
+            }
+        };
+
+        view.selected = 2;
+        chai.assert.strictEqual(view.selected, 2);
+
+        view.add_filter(filter);
+        chai.assert.isNull(view.selected);
+
+        view.remove_filter(filter);
+        chai.assert.strictEqual(view.selected, 2);
+
+    });
+
 });
 
