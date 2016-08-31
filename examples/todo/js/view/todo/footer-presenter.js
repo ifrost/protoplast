@@ -11,15 +11,9 @@
             inject: 'viewstate'
         },
 
-        pub: {
-            inject: 'pub'
-        },
-
         init: function () {
-
-            this.todos.undone.on('changed', this.update_counter);
-            this.update_counter();
-
+            
+            window.Protoplast.utils.bind_collection(this.todos, 'undone', this.update_counter);
             window.Protoplast.utils.bind(this.view_state, 'state', this.view.update_selection);
 
             this.view.on('clear_all', this.clear_all, this);

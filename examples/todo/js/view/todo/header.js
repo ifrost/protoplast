@@ -8,13 +8,11 @@
         },
 
         html: '<header class="header">' +
-            '<h1 data-prop="header">todos</h1>' +
+            '<h1>todos</h1>' +
             '<input data-prop="input" class="new-todo" placeholder="What needs to be done?" autofocus></input>' +
         '</header>',
 
         init: function () {
-
-            this.$root.classed('header', true);
 
             this.input = d3.select(this.input.node());
             this.input.on('keypress', function () {
