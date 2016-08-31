@@ -80,6 +80,12 @@
                 todo.done = value;
             });
             this.store();
+        },
+
+        all_done: {
+            get: function() {
+                return this.all.length === this.done.length;
+            }
         }
         
     });

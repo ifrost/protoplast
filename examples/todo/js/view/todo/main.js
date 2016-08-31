@@ -27,8 +27,7 @@
 
             this.toggle_all.on('change', this.toggle.bind(this));
 
-            this.todos.todos.on('changed', this.update_toggle);
-            this.update_toggle();
+            window.Protoplast.utils.bind_collection(this.todos, 'done', this.update_toggle);
         },
         
         toggle: function () {
@@ -36,8 +35,7 @@
         },
 
         update_toggle: function () {
-            var checked = this.todos.all.length === this.todos.done.length;
-            this.toggle_all.property('checked', checked);
+            this.toggle_all.property('checked', this.todos.all_done);
             this.toggle_all.style('display', this.todos.all.length ? 'block' : 'none');
         }
 
