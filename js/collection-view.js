@@ -100,7 +100,7 @@ var CollectionView = Model.extend({
             event = {added: this._source.toArray(), removed: this._source.toArray()}
         }
 
-        this._current = this._source.toArray();
+        this._current = this._source.toArray().concat();
 
         this._filters.forEach(function(filter) {
             this._resubscribe(filter, event);
