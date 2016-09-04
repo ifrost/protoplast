@@ -17,27 +17,50 @@
             '<button class="clear-completed" data-prop="clear_all">Clear completed</button>' +
             '</footer>',
 
+        state: null,
+
+        done: null,
+
+        undone: null,
+
+        all: {
+            computed: ['done', 'undone'],
+            value: function() {
+                return this.done + this.undone;
+            }
+        },
+
         init: function () {
             this.clear_all.on('click', function() {
                 this.dispatch('clear_all');
             }.bind(this));
+
+            window.Protoplast.utils.bind(this, 'state', this.update_state);
+            window.Protoplast.utils.bind(this, 'all', this.update_visibility);
+            window.Protoplast.utils.bind(this, 'done', this.update_counter);
+            window.Protoplast.utils.bind(this, 'undone', this.update_counter);
+            window.Protoplast.utils.bind(this, 'done', this.update_clear_button);
+            window.Protoplast.utils.bind(this, 'undone', this.update_clear_button);
         },
 
-        update_selection: function (state) {
-            this.filter_all.classed('selected', state === window.ViewStateModel.ALL);
-            this.filter_undone.classed('selected', state === window.ViewStateModel.UNDONE);
-            this.filter_done.classed('selected', state === window.ViewStateModel.DONE);
+        update_state: function() {
+            this.filter_all.classed('selected', this.state === window.ViewStateModel.ALL);
+            this.filter_undone.classed('selected', this.state === window.ViewStateModel.UNDONE);
+            this.filter_done.classed('selected', this.state === window.ViewStateModel.DONE);
         },
 
-        update_items: function (count_done, count_undone) {
-            var count_all = count_done + count_undone,
-                items = count_undone === 1 ? 'item' : 'items';
+        update_visibility: function() {
+            this.$root.style('display', this.all ? 'block' : 'none');
+        },
 
-            this.counter.html('<strong>' + count_undone + '</strong> ' + items + ' left');
-            this.$root.style('display', count_all ? 'block' : 'none');
-            this.clear_all.style('display', count_done ? 'block' : 'none');
+        update_counter: function() {
+            var items = this.undone === 1 ? 'item' : 'items';
+            this.counter.html('<strong>' + this.undone + '</strong> ' + items + ' left');
+        },
+
+        update_clear_button: function() {
+            this.clear_all.style('display', this.done ? 'block' : 'none');
         }
-
     });
 
 })(window);

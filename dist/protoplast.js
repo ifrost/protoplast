@@ -7,6 +7,10 @@ var CollectionView = Model.extend({
 
     _sort: null,
 
+    _hidden_selected: null,
+    
+    selected: null,
+
     length: {
         get: function() {
             return this._current.length;
@@ -32,14 +36,29 @@ var CollectionView = Model.extend({
         this._invalidate();
     },
 
-    add_filter: function(fn) {
-        this._filters.push(fn);
+    add_filter: function(filter) {
+        this._filters.push(filter);
         this._invalidate();
     },
 
-    add_sort: function(fn) {
-        this._sort.push(fn);
+    remove_filter: function(filter) {
+        var index = this._filters.indexOf(filter);
+        if (index !== -1) {
+            this._filters.splice(index, 1);
+            this._invalidate();
+        }
+    },
+
+    add_sort: function(sort) {
+        this._sort.push(sort);
         this._invalidate();
+    },
+
+    remove_sort: function(sort) {
+        var index = this._sort.indexOf(sort);
+        if (index !== -1) {
+            this._sort.splice(index, 1);
+        }
     },
 
     get: function(index) {
@@ -82,7 +101,7 @@ var CollectionView = Model.extend({
             event = {added: this._source.toArray(), removed: this._source.toArray()}
         }
 
-        this._current = this._source.toArray();
+        this._current = this._source.toArray().concat();
 
         this._filters.forEach(function(filter) {
             this._resubscribe(filter, event);
@@ -109,7 +128,16 @@ var CollectionView = Model.extend({
                 return result;
             }.bind(this));
         }
-
+        
+        if (this.selected && this._current.indexOf(this.selected) === -1) {
+            this._hidden_selected = this.selected;
+            this.selected = null;
+        }
+        else if (!this.selected && this._hidden_selected && this._current.indexOf(this._hidden_selected) !== -1) {
+            this.selected = this._hidden_selected;
+            this._hidden_selected = null;
+        }
+        
         this.dispatch('changed');
     }
 

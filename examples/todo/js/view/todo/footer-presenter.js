@@ -14,7 +14,8 @@
         init: function () {
             
             window.Protoplast.utils.bind_collection(this.todos, 'undone', this.update_counter);
-            window.Protoplast.utils.bind(this.view_state, 'state', this.view.update_selection);
+            window.Protoplast.utils.bind_collection(this.todos, 'done', this.update_counter);
+            window.Protoplast.utils.bind_property(this.view_state, 'state', this.view, 'state');
 
             this.view.on('clear_all', this.clear_all, this);
         },
@@ -24,11 +25,8 @@
         },
 
         update_counter: function () {
-            var count_undone = this.todos.undone.length,
-                count_done = this.todos.done.length,
-                items = count_undone === 1 ? 'item' : 'items';
-
-            this.view.update_items(count_done, count_undone);
+            this.view.done = this.todos.done.length;
+            this.view.undone = this.todos.undone.length;
         }
 
     });
