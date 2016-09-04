@@ -32,23 +32,6 @@ var Component = Model.extend({
     },
 
     /**
-     * Process DOM using defined DOM processors
-     */
-    process_root: function() {
-        var i, elements, element, value;
-        if (this._root) {
-            (this.$meta.dom_processors || []).forEach(function(processor) {
-                elements =  this._root.querySelectorAll('[' + processor.attribute + ']');
-                for (i = 0; i < elements.length; i++) {
-                    element = elements[i];
-                    value = element.getAttribute(processor.attribute);
-                    processor.process(this, element, value);
-                }
-            }, this);
-        }
-    },
-
-    /**
      * Init the object, construct and process DOM
      */
     $create: function() {
@@ -65,6 +48,23 @@ var Component = Model.extend({
         var container = document.createElement('div');
         container.innerHTML = this.html;
         this.root = container.firstChild;
+    },
+
+    /**
+     * Process DOM using defined DOM processors
+     */
+    process_root: function() {
+        var i, elements, element, value;
+        if (this._root) {
+            (this.$meta.dom_processors || []).forEach(function(processor) {
+                elements =  this._root.querySelectorAll('[' + processor.attribute + ']');
+                for (i = 0; i < elements.length; i++) {
+                    element = elements[i];
+                    value = element.getAttribute(processor.attribute);
+                    processor.process(this, element, value);
+                }
+            }, this);
+        }
     },
 
     __fastinject__: {

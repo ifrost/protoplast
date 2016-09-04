@@ -235,23 +235,6 @@ var Component = Model.extend({
     },
 
     /**
-     * Process DOM using defined DOM processors
-     */
-    process_root: function() {
-        var i, elements, element, value;
-        if (this._root) {
-            (this.$meta.dom_processors || []).forEach(function(processor) {
-                elements =  this._root.querySelectorAll('[' + processor.attribute + ']');
-                for (i = 0; i < elements.length; i++) {
-                    element = elements[i];
-                    value = element.getAttribute(processor.attribute);
-                    processor.process(this, element, value);
-                }
-            }, this);
-        }
-    },
-
-    /**
      * Init the object, construct and process DOM
      */
     $create: function() {
@@ -268,6 +251,23 @@ var Component = Model.extend({
         var container = document.createElement('div');
         container.innerHTML = this.html;
         this.root = container.firstChild;
+    },
+
+    /**
+     * Process DOM using defined DOM processors
+     */
+    process_root: function() {
+        var i, elements, element, value;
+        if (this._root) {
+            (this.$meta.dom_processors || []).forEach(function(processor) {
+                elements =  this._root.querySelectorAll('[' + processor.attribute + ']');
+                for (i = 0; i < elements.length; i++) {
+                    element = elements[i];
+                    value = element.getAttribute(processor.attribute);
+                    processor.process(this, element, value);
+                }
+            }, this);
+        }
     },
 
     __fastinject__: {
@@ -450,6 +450,11 @@ var Context = Protoplast.extend({
     _objects: null,
 
     /**
+     * List of objects added to the registry but having no id
+     */
+    _unknows: null,
+
+    /**
      * Registers object in the DI context
      * @param {String} [id]
      * @param {Object} instance
@@ -463,13 +468,15 @@ var Context = Protoplast.extend({
             this._objects[id] = instance;
         }
 
+        // fast inject is used to register and process new objects after the config has been built
+        // any object registered in the config has this method.
         instance.__fastinject__ = function(obj) {
             this.register(obj);
             this.process(obj);
         }.bind(this);
 
         if (instance.$meta && instance.$meta.properties && instance.$meta.properties.inject) {
-            this.inject(instance, instance.$meta.properties.inject);
+            this.define_injected_properties(instance, instance.$meta.properties.inject);
         }
 
     },
@@ -488,11 +495,11 @@ var Context = Protoplast.extend({
     },
 
     /**
-     * Performs dependency injection based on the config
+     * Defines getters for injected properties. The getter returns instance from the config
      * @param {Object} instance
      * @param {Object} config - {property:dependencyId,...}
      */
-    inject: function(instance, config) {
+    define_injected_properties: function(instance, config) {
         var self = this, id;
         for (var property in config) {
             if (config.hasOwnProperty(property)) {
@@ -509,6 +516,9 @@ var Context = Protoplast.extend({
         }
     },
 
+    /**
+     * Process all objects
+     */
     build: function() {
         Object.keys(this._objects).forEach(function(id) {
             var instance = this._objects[id];
@@ -567,48 +577,55 @@ var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher'),
     utils = require('./utils');
 
+function define_computed_property(name, desc) {
+    var calc = desc.value;
+
+    delete desc.value;
+    delete desc.writable;
+    delete desc.enumerable;
+
+    desc.get = function() {
+        if (this['_' + name] === undefined) {
+            this['_' + name] = calc.call(this);
+        }
+        return this['_' + name];
+    };
+
+    desc.set = function() {
+        var old = this['_' + name];
+        this['_' + name] = undefined;
+        this.dispatch(name + '_changed', undefined, old);
+    }
+}
+
+function define_bindable_property(name, desc, proto) {
+    var initial_value = desc.value;
+
+    delete desc.value;
+    delete desc.writable;
+    delete desc.enumerable;
+
+    desc.get = function() {
+        return this['_' + name];
+    };
+    desc.set = function(value) {
+        if (value !== this['_' + name]) {
+            var old = this['_' + name];
+            this['_' + name] = value;
+            this.dispatch(name + '_changed', value, old);
+        }
+    };
+    proto['_' + name] = initial_value;
+}
+
 var define_properties = {
     def: function(name, desc, proto) {
         if (proto.$meta.properties.computed && proto.$meta.properties.computed[name]) {
-            var calc = desc.value;
-
-            delete desc.value;
-            delete desc.writable;
-            delete desc.enumerable;
-
-            desc.get = function() {
-                if (this['_' + name] === undefined) {
-                    this['_' + name] = calc.call(this);
-                }
-                return this['_' + name];
-            };
-
-            desc.set = function() {
-                var old = this['_' + name];
-                this['_' + name] = undefined;
-                this.dispatch(name + '_changed', undefined, old);
-            }
+            define_computed_property(name, desc);
         }
         else if (!desc.get && (!desc.value || ['number', 'boolean', 'string'].indexOf(typeof(desc.value)) !== -1)) {
-            var initial_value = desc.value;
-
-            delete desc.value;
-            delete desc.writable;
-            delete desc.enumerable;
-
-            desc.get = function() {
-                return this['_' + name];
-            };
-            desc.set = function(value) {
-                if (value !== this['_' + name]) {
-                    var old = this['_' + name];
-                    this['_' + name] = value;
-                    this.dispatch(name + '_changed', value, old);
-                }
-            };
-            proto['_' + name] = initial_value;
+            define_bindable_property(name, desc, proto);
         }
-
     }
 };
 
@@ -618,7 +635,7 @@ var Model = Protoplast.extend([Dispatcher], {
         hooks: [define_properties]
     },
     
-    invalidated_injected_bindings: {
+    invalidate_injected_bindings: {
         inject_init: true,
         value: function() {
             for (var computed_property in this.$meta.properties.inject) {
@@ -795,6 +812,120 @@ module.exports = Protoplast;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./utils":9}],9:[function(require,module,exports){
+var common = require('./utils/common'),
+    binding = require('./utils/binding'),
+    component = require('./utils/component');
+
+module.exports = {
+    createObject: common.createObject,
+    merge: common.merge,
+    mixin: common.mixin,
+    uniqueId: common.uniqueId,
+
+    resolve_property: binding.resolve_property,
+    bind: binding.bind,
+    bind_property: binding.bind_property,
+    bind_collection: binding.bind_collection,
+
+    render_list: component.render_list,
+    create_renderer_function: component.create_renderer_function,
+    dom_processors: {
+        inject_element: component.dom_processors.inject_element,
+        create_component: component.dom_processors.create_component
+    }
+};
+
+},{"./utils/binding":10,"./utils/common":11,"./utils/component":12}],10:[function(require,module,exports){
+var resolve_property = function(host, chain, handler) {
+    var props = chain.split('.');
+
+    if (!chain) {
+        handler(host);
+    }
+    else if (props.length === 1) {
+        handler(host[chain]);
+    }
+    else {
+        var sub_host = host[props[0]];
+        var sub_chain = props.slice(1).join('.');
+        if (sub_host) {
+            resolve_property(sub_host, sub_chain, handler);
+        }
+    }
+
+};
+
+var bind = function(host, chain, handler) {
+    var props = chain.split('.');
+
+    if (props.length === 1) {
+        host.on(chain + '_changed', handler);
+        handler(host[chain]);
+    }
+    else {
+        var sub_host = host[props[0]];
+        var sub_chain = props.slice(1).join('.');
+        if (sub_host) {
+            bind(sub_host, sub_chain, function() {
+                resolve_property(sub_host, sub_chain, handler);
+            });
+        }
+        host.on(props[0] + '_changed', function(_, previous) {
+            if (previous && previous.on) {
+                previous.off(props[0] + '_changed', handler);
+            }
+            bind(host[props[0]], sub_chain, handler);
+        });
+    }
+
+};
+
+var bind_property = function(host, host_chain, dest, dest_chain) {
+
+    var props = dest_chain.split('.');
+    var prop = props.pop();
+
+    bind(host, host_chain, function() {
+        resolve_property(host, host_chain, function(value) {
+            resolve_property(dest, props.join('.'), function(final_object) {
+                if (final_object) {
+                    final_object[prop] = value;
+                }
+            })
+        })
+    });
+
+};
+
+var bind_collection = function(host, source_chain, handler) {
+
+    var previous_list = null, previous_handler;
+
+    bind(host, source_chain, function() {
+        resolve_property(host, source_chain, function(list) {
+            if (previous_list) {
+                previous_list.off('changed', previous_handler);
+                previous_list = null;
+                previous_handler = null
+            }
+            if (list) {
+                previous_list = list;
+                previous_handler = handler.bind(host, list);
+                list.on('changed', previous_handler);
+                handler(list);
+            }
+        });
+    });
+
+};
+
+module.exports = {
+    resolve_property: resolve_property,
+    bind: bind,
+    bind_property: bind_property,
+    bind_collection: bind_collection
+};
+},{}],11:[function(require,module,exports){
 var idCounter = 0;
 
 /**
@@ -878,6 +1009,14 @@ function mixin(instance, mixins) {
     return instance;
 }
 
+module.exports = {
+    createObject: createObject,
+    merge: merge,
+    mixin: mixin,
+    uniqueId: uniqueId
+};
+},{}],12:[function(require,module,exports){
+var binding = require('./binding');
 
 /**
  * Inject Element processor. Parses the template for elements with [data-prop] and injects the element to the
@@ -907,89 +1046,6 @@ var create_component = {
         var child = component[value] = component.$meta.properties.component[value].create();
         component.attach(child, element);
     }
-};
-
-var resolve_property = function(host, chain, handler) {
-    var props = chain.split('.');
-
-    if (!chain) {
-        handler(host);
-    }
-    else if (props.length === 1) {
-        handler(host[chain]);
-    }
-    else {
-        var sub_host = host[props[0]];
-        var sub_chain = props.slice(1).join('.');
-        if (sub_host) {
-            resolve_property(sub_host, sub_chain, handler);
-        }
-    }
-    
-};
-
-var bind = function(host, chain, handler) {
-    var props = chain.split('.');
-
-    if (props.length === 1) {
-        host.on(chain + '_changed', handler);
-        handler(host[chain]);
-    }
-    else {
-        var sub_host = host[props[0]];
-        var sub_chain = props.slice(1).join('.');
-        if (sub_host) {
-            bind(sub_host, sub_chain, function() {
-                resolve_property(sub_host, sub_chain, handler);
-            });
-        }
-        host.on(props[0] + '_changed', function(_, previous) {
-            if (previous && previous.on) {
-                previous.off(props[0] + '_changed', handler);
-            }
-            bind(host[props[0]], sub_chain, handler);
-        });
-    }
-
-};
-
-var bind_property = function(host, host_chain, dest, dest_chain) {
-
-    var props = dest_chain.split('.');
-    var prop = props.pop();
-
-    bind(host, host_chain, function() {
-        resolve_property(host, host_chain, function(value) {
-            resolve_property(dest, props.join('.'), function(final_object) {
-                if (final_object) {
-                    final_object[prop] = value;
-                }
-            })
-        })
-    });
-
-};
-
-var bind_collection = function(host, source_chain, handler) {
-
-    var previous_list = null, previous_handler;
-
-    bind(host, source_chain, function() {
-        resolve_property(host, source_chain, function(list) {
-            if (previous_list) {
-                previous_list.off('changed', previous_handler);
-                previous_list = null;
-                previous_handler = null
-            }
-            if (list) {
-                previous_list = list;
-                previous_handler = handler.bind(host, list);
-                list.on('changed', previous_handler);
-                handler(list);
-            }
-        });
-    });
-
 };
 
 var render_list_default_options = {
@@ -1037,27 +1093,18 @@ var create_renderer_function = function(host, opts) {
 
 var render_list = function(host, source_chain, opts) {
     var renderer_function = create_renderer_function(host, opts);
-    bind_collection(host, source_chain, renderer_function);
+    binding.bind_collection(host, source_chain, renderer_function);
 };
 
 module.exports = {
-    createObject: createObject,
-    merge: merge,
-    mixin: mixin,
-    uniqueId: uniqueId,
-    resolve_property: resolve_property,
-    bind: bind,
-    bind_property: bind_property,
-    bind_collection: bind_collection,
-    render_list: render_list,
     create_renderer_function: create_renderer_function,
+    render_list: render_list,
     dom_processors: {
         inject_element: inject_element,
         create_component: create_component
     }
 };
-
-},{}],10:[function(require,module,exports){
+},{"./binding":10}],13:[function(require,module,exports){
 (function (global){
 var Protoplast = require('./js/protoplast'),
     Collection = require('./js/collection'),
@@ -1085,5 +1132,5 @@ var protoplast = {
 global.Protoplast = protoplast;
 module.exports = protoplast;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./js/collection":2,"./js/collection-view":1,"./js/component":3,"./js/constructors":4,"./js/di":5,"./js/dispatcher":6,"./js/model":7,"./js/protoplast":8,"./js/utils":9}]},{},[10])(10)
+},{"./js/collection":2,"./js/collection-view":1,"./js/component":3,"./js/constructors":4,"./js/di":5,"./js/dispatcher":6,"./js/model":7,"./js/protoplast":8,"./js/utils":9}]},{},[13])(13)
 });

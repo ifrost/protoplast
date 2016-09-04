@@ -151,6 +151,120 @@ module.exports = Protoplast;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./utils":2}],2:[function(require,module,exports){
+var common = require('./utils/common'),
+    binding = require('./utils/binding'),
+    component = require('./utils/component');
+
+module.exports = {
+    createObject: common.createObject,
+    merge: common.merge,
+    mixin: common.mixin,
+    uniqueId: common.uniqueId,
+
+    resolve_property: binding.resolve_property,
+    bind: binding.bind,
+    bind_property: binding.bind_property,
+    bind_collection: binding.bind_collection,
+
+    render_list: component.render_list,
+    create_renderer_function: component.create_renderer_function,
+    dom_processors: {
+        inject_element: component.dom_processors.inject_element,
+        create_component: component.dom_processors.create_component
+    }
+};
+
+},{"./utils/binding":3,"./utils/common":4,"./utils/component":5}],3:[function(require,module,exports){
+var resolve_property = function(host, chain, handler) {
+    var props = chain.split('.');
+
+    if (!chain) {
+        handler(host);
+    }
+    else if (props.length === 1) {
+        handler(host[chain]);
+    }
+    else {
+        var sub_host = host[props[0]];
+        var sub_chain = props.slice(1).join('.');
+        if (sub_host) {
+            resolve_property(sub_host, sub_chain, handler);
+        }
+    }
+
+};
+
+var bind = function(host, chain, handler) {
+    var props = chain.split('.');
+
+    if (props.length === 1) {
+        host.on(chain + '_changed', handler);
+        handler(host[chain]);
+    }
+    else {
+        var sub_host = host[props[0]];
+        var sub_chain = props.slice(1).join('.');
+        if (sub_host) {
+            bind(sub_host, sub_chain, function() {
+                resolve_property(sub_host, sub_chain, handler);
+            });
+        }
+        host.on(props[0] + '_changed', function(_, previous) {
+            if (previous && previous.on) {
+                previous.off(props[0] + '_changed', handler);
+            }
+            bind(host[props[0]], sub_chain, handler);
+        });
+    }
+
+};
+
+var bind_property = function(host, host_chain, dest, dest_chain) {
+
+    var props = dest_chain.split('.');
+    var prop = props.pop();
+
+    bind(host, host_chain, function() {
+        resolve_property(host, host_chain, function(value) {
+            resolve_property(dest, props.join('.'), function(final_object) {
+                if (final_object) {
+                    final_object[prop] = value;
+                }
+            })
+        })
+    });
+
+};
+
+var bind_collection = function(host, source_chain, handler) {
+
+    var previous_list = null, previous_handler;
+
+    bind(host, source_chain, function() {
+        resolve_property(host, source_chain, function(list) {
+            if (previous_list) {
+                previous_list.off('changed', previous_handler);
+                previous_list = null;
+                previous_handler = null
+            }
+            if (list) {
+                previous_list = list;
+                previous_handler = handler.bind(host, list);
+                list.on('changed', previous_handler);
+                handler(list);
+            }
+        });
+    });
+
+};
+
+module.exports = {
+    resolve_property: resolve_property,
+    bind: bind,
+    bind_property: bind_property,
+    bind_collection: bind_collection
+};
+},{}],4:[function(require,module,exports){
 var idCounter = 0;
 
 /**
@@ -234,6 +348,14 @@ function mixin(instance, mixins) {
     return instance;
 }
 
+module.exports = {
+    createObject: createObject,
+    merge: merge,
+    mixin: mixin,
+    uniqueId: uniqueId
+};
+},{}],5:[function(require,module,exports){
+var binding = require('./binding');
 
 /**
  * Inject Element processor. Parses the template for elements with [data-prop] and injects the element to the
@@ -263,89 +385,6 @@ var create_component = {
         var child = component[value] = component.$meta.properties.component[value].create();
         component.attach(child, element);
     }
-};
-
-var resolve_property = function(host, chain, handler) {
-    var props = chain.split('.');
-
-    if (!chain) {
-        handler(host);
-    }
-    else if (props.length === 1) {
-        handler(host[chain]);
-    }
-    else {
-        var sub_host = host[props[0]];
-        var sub_chain = props.slice(1).join('.');
-        if (sub_host) {
-            resolve_property(sub_host, sub_chain, handler);
-        }
-    }
-    
-};
-
-var bind = function(host, chain, handler) {
-    var props = chain.split('.');
-
-    if (props.length === 1) {
-        host.on(chain + '_changed', handler);
-        handler(host[chain]);
-    }
-    else {
-        var sub_host = host[props[0]];
-        var sub_chain = props.slice(1).join('.');
-        if (sub_host) {
-            bind(sub_host, sub_chain, function() {
-                resolve_property(sub_host, sub_chain, handler);
-            });
-        }
-        host.on(props[0] + '_changed', function(_, previous) {
-            if (previous && previous.on) {
-                previous.off(props[0] + '_changed', handler);
-            }
-            bind(host[props[0]], sub_chain, handler);
-        });
-    }
-
-};
-
-var bind_property = function(host, host_chain, dest, dest_chain) {
-
-    var props = dest_chain.split('.');
-    var prop = props.pop();
-
-    bind(host, host_chain, function() {
-        resolve_property(host, host_chain, function(value) {
-            resolve_property(dest, props.join('.'), function(final_object) {
-                if (final_object) {
-                    final_object[prop] = value;
-                }
-            })
-        })
-    });
-
-};
-
-var bind_collection = function(host, source_chain, handler) {
-
-    var previous_list = null, previous_handler;
-
-    bind(host, source_chain, function() {
-        resolve_property(host, source_chain, function(list) {
-            if (previous_list) {
-                previous_list.off('changed', previous_handler);
-                previous_list = null;
-                previous_handler = null
-            }
-            if (list) {
-                previous_list = list;
-                previous_handler = handler.bind(host, list);
-                list.on('changed', previous_handler);
-                handler(list);
-            }
-        });
-    });
-
 };
 
 var render_list_default_options = {
@@ -393,25 +432,16 @@ var create_renderer_function = function(host, opts) {
 
 var render_list = function(host, source_chain, opts) {
     var renderer_function = create_renderer_function(host, opts);
-    bind_collection(host, source_chain, renderer_function);
+    binding.bind_collection(host, source_chain, renderer_function);
 };
 
 module.exports = {
-    createObject: createObject,
-    merge: merge,
-    mixin: mixin,
-    uniqueId: uniqueId,
-    resolve_property: resolve_property,
-    bind: bind,
-    bind_property: bind_property,
-    bind_collection: bind_collection,
-    render_list: render_list,
     create_renderer_function: create_renderer_function,
+    render_list: render_list,
     dom_processors: {
         inject_element: inject_element,
         create_component: create_component
     }
 };
-
-},{}]},{},[1])(1)
+},{"./binding":3}]},{},[1])(1)
 });

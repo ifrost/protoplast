@@ -361,7 +361,7 @@ describe('Model', function() {
             var changed_handler = sinon.spy();
             test.on('dep_changed', changed_handler);
 
-            test.invalidated_injected_bindings();
+            test.invalidate_injected_bindings();
             sinon.assert.calledOnce(changed_handler);
         });
     });

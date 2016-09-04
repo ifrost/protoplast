@@ -39,6 +39,11 @@ var Context = Protoplast.extend({
     _objects: null,
 
     /**
+     * List of objects added to the registry but having no id
+     */
+    _unknows: null,
+
+    /**
      * Registers object in the DI context
      * @param {String} [id]
      * @param {Object} instance
@@ -52,13 +57,15 @@ var Context = Protoplast.extend({
             this._objects[id] = instance;
         }
 
+        // fast inject is used to register and process new objects after the config has been built
+        // any object registered in the config has this method.
         instance.__fastinject__ = function(obj) {
             this.register(obj);
             this.process(obj);
         }.bind(this);
 
         if (instance.$meta && instance.$meta.properties && instance.$meta.properties.inject) {
-            this.inject(instance, instance.$meta.properties.inject);
+            this.define_injected_properties(instance, instance.$meta.properties.inject);
         }
 
     },
@@ -77,11 +84,11 @@ var Context = Protoplast.extend({
     },
 
     /**
-     * Performs dependency injection based on the config
+     * Defines getters for injected properties. The getter returns instance from the config
      * @param {Object} instance
      * @param {Object} config - {property:dependencyId,...}
      */
-    inject: function(instance, config) {
+    define_injected_properties: function(instance, config) {
         var self = this, id;
         for (var property in config) {
             if (config.hasOwnProperty(property)) {
@@ -98,6 +105,9 @@ var Context = Protoplast.extend({
         }
     },
 
+    /**
+     * Process all objects
+     */
     build: function() {
         Object.keys(this._objects).forEach(function(id) {
             var instance = this._objects[id];
