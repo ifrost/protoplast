@@ -13,8 +13,10 @@
 
         init: function () {
             
-            window.Protoplast.utils.bind(this.todos, 'undone', this.update_counter);
-            window.Protoplast.utils.bind(this.todos, 'done', this.update_counter);
+            window.Protoplast.utils.bind(this.todos, {
+                'undone': this.update_counter,
+                'done': this.update_counter
+            });
             window.Protoplast.utils.bind_property(this.view_state, 'state', this.view, 'state');
 
             this.view.on('clear_all', this.clear_all, this);

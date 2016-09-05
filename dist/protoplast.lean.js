@@ -248,7 +248,23 @@ var bind_collection = function(host, source_chain, handler) {
 
 };
 
-var bind = bind_collection;
+var bind = function(host, bindings_or_chain, handler) {
+    var handlers_list;
+    if (arguments.length === 3) {
+        bind_collection(host, bindings_or_chain, handler);
+    }
+    else {
+        for (var binding in bindings_or_chain) {
+            handlers_list = bindings_or_chain[binding];
+            if (!(handlers_list instanceof Array)) {
+                handlers_list = [handlers_list];
+            }
+            handlers_list.forEach(function(handler) {
+                bind(host, binding, handler.bind(host));
+            });
+        }
+    }
+};
 
 var bind_property = function(host, host_chain, dest, dest_chain) {
 

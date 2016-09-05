@@ -9,8 +9,10 @@
         
         init: function () {
 
-            window.Protoplast.utils.bind(this, 'data.done', this.render);
-            window.Protoplast.utils.bind(this, 'data.text', this.render);
+            window.Protoplast.utils.bind(this, {
+                'data.text': this.render,
+                'data.done': this.render
+            });
 
             this.view.style({opacity: 0, height: '0px'})
                 .transition().duration(200)

@@ -346,6 +346,44 @@ describe('Model', function() {
                 chai.assert.lengthOf(helper.handlers(test.list, 'changed'), 1);
             });
 
+            it('binding shortcut', function() {
+
+                var handler = sinon.stub();
+
+                var Test = Model.extend({
+                    person: null,
+                    
+                    $create: function() {
+                        Protoplast.utils.bind(this, {
+                            'person.address.city': this.city_changed
+                        });
+                    },
+
+                    city_changed: handler
+                });
+
+                var boston_john = Person.create('John', 'Wall Street', 'Boston');
+                var moving_jane = Person.create('Jane', 'Baker Street', 'London');
+
+                var test = Test.create();
+
+                sinon.assert.notCalled(handler);
+                test.person = moving_jane;
+                sinon.assert.calledOnce(handler);
+
+                moving_jane.address.city = 'Liverpool';
+                sinon.assert.calledTwice(handler);
+
+                moving_jane.address.street = 'High Street';
+                sinon.assert.calledTwice(handler);
+
+                test.person = boston_john;
+                sinon.assert.calledThrice(handler);
+
+                boston_john.address.street = 'Newman Street';
+                sinon.assert.calledThrice(handler);
+            });
+
         });
 
     });

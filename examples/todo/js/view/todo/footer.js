@@ -35,12 +35,13 @@
                 this.dispatch('clear_all');
             }.bind(this));
 
-            window.Protoplast.utils.bind(this, 'state', this.update_state);
-            window.Protoplast.utils.bind(this, 'all', this.update_visibility);
-            window.Protoplast.utils.bind(this, 'done', this.update_counter);
-            window.Protoplast.utils.bind(this, 'undone', this.update_counter);
-            window.Protoplast.utils.bind(this, 'done', this.update_clear_button);
-            window.Protoplast.utils.bind(this, 'undone', this.update_clear_button);
+            window.Protoplast.utils.bind(this, {
+                'state': this.update_state,
+                'all': this.update_visibility,
+                'done': [this.update_counter, this.update_clear_button],
+                'undone': [this.update_counter, this.update_clear_button]
+            });
+
         },
 
         update_state: function() {
