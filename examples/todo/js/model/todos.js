@@ -14,7 +14,7 @@
         $create: function() {
             this.init_data();
 
-            window.Protoplast.utils.bind_collection(this, 'todos', this.store.bind(this));
+            window.Protoplast.utils.bind(this, 'todos', this.store.bind(this));
 
             this.create_views();
         },

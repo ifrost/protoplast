@@ -322,10 +322,10 @@ describe('Model', function() {
 
             it('binding a collection changes', function() {
 
-                sinon.assert.notCalled(handler);
+                sinon.assert.calledOnce(handler);
 
                 test.create_list();
-                sinon.assert.calledOnce(handler);
+                sinon.assert.calledTwice(handler);
                 chai.assert.deepEqual(handler.lastCall.args[0].toArray(), [1,2]);
 
                 handler.reset();

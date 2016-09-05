@@ -27,7 +27,7 @@
 
             this.toggle_all.on('change', this.toggle.bind(this));
 
-            window.Protoplast.utils.bind_collection(this.todos, 'done', this.update_toggle);
+            window.Protoplast.utils.bind(this.todos, 'done', this.update_toggle);
         },
         
         toggle: function () {
