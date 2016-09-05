@@ -29,6 +29,7 @@ describe('Dependency Injection', function() {
 
         context.register('foo', foo = Foo.create());
         context.register('bar', bar = Bar.create());
+        context.build();
 
         chai.assert.equal(foo.bar, bar);
         chai.assert.equal(bar.foo, foo);
@@ -55,6 +56,7 @@ describe('Dependency Injection', function() {
 
         context.register('foo', foo = Foo2.create());
         context.register('bar', bar = Bar.create());
+        context.build();
 
         chai.assert.equal(foo.bar, bar);
     });

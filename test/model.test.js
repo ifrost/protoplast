@@ -348,22 +348,6 @@ describe('Model', function() {
 
         });
 
-        it('invalidates bindings when context is built', function() {
-
-            var TestModel = Model.extend({
-                dep: {
-                    inject: 'dep'
-                }
-            });
-
-            var test = TestModel.create();
-
-            var changed_handler = sinon.spy();
-            test.on('dep_changed', changed_handler);
-
-            test.invalidate_injected_bindings();
-            sinon.assert.calledOnce(changed_handler);
-        });
     });
 
 });

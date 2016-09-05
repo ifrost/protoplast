@@ -200,6 +200,7 @@ describe('Components Dependency Injection', function() {
         child.add(grand);
 
         context.register(root);
+        context.build();
 
         chai.assert.strictEqual(root.foo, 'foo');
         chai.assert.strictEqual(child.foo, 'foo');
@@ -224,13 +225,13 @@ describe('Components Dependency Injection', function() {
         });
 
         var root = Root.create();
-        var child = Child.create();
-
-        root.add(child);
-
-        chai.assert.strictEqual(child.bar, undefined);
 
         context.register(root);
+        context.build();
+
+        var child = Child.create();
+        root.add(child);
+
         chai.assert.strictEqual(root.foo, 'foo');
         chai.assert.strictEqual(child.foo, 'foo');
         chai.assert.strictEqual(child.bar, 'foo');

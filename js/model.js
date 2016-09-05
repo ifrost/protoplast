@@ -60,15 +60,6 @@ var Model = Protoplast.extend([Dispatcher], {
         hooks: [define_properties]
     },
     
-    invalidate_injected_bindings: {
-        inject_init: true,
-        value: function() {
-            for (var computed_property in this.$meta.properties.inject) {
-                this.dispatch(computed_property + '_changed');
-            }
-        }
-    },
-
     $create: function() {
         for (var computed_property in this.$meta.properties.computed) {
             this.$meta.properties.computed[computed_property].forEach(function(chain) {

@@ -63,14 +63,15 @@ var Context = Protoplast.extend({
             this.register(obj);
             this.process(obj);
         }.bind(this);
-
-        if (instance.$meta && instance.$meta.properties && instance.$meta.properties.inject) {
-            this.define_injected_properties(instance, instance.$meta.properties.inject);
-        }
-
+        
     },
 
     process: function(obj) {
+        if (obj.$meta && obj.$meta.properties && obj.$meta.properties.inject) {
+            Object.keys(obj.$meta.properties.inject).forEach(function(property){
+                obj[property] = this._objects[obj.$meta.properties.inject[property]];
+            }, this);
+        }
         if (obj.$meta && obj.$meta.properties && obj.$meta.properties.inject_init) {
             Object.keys(obj.$meta.properties.inject_init).forEach(function(handler){
                 obj[handler]();
@@ -88,22 +89,6 @@ var Context = Protoplast.extend({
      * @param {Object} instance
      * @param {Object} config - {property:dependencyId,...}
      */
-    define_injected_properties: function(instance, config) {
-        var self = this, id;
-        for (var property in config) {
-            if (config.hasOwnProperty(property)) {
-                id = config[property];
-
-                (function(id) {
-                    Object.defineProperty(instance, property, {
-                        get: function() {
-                            return self._objects[id];
-                        }
-                    });
-                })(id);
-            }
-        }
-    },
 
     /**
      * Process all objects
