@@ -150,6 +150,37 @@ describe('Protoplast', function() {
             });
         });
 
+        it('defines properties', function() {
+
+            var Base = Protoplast.extend({
+                foo: {
+                    test: 1
+                }
+            });
+            var Sub = Base.extend({
+                foo: {
+                    foobar: 2
+                }
+            });
+            var base = Base.create();
+            var sub = Sub.create();
+
+            chai.assert.ok('foo' in Base);
+            chai.assert.ok('foo' in base);
+            chai.assert.ok('foo' in Sub);
+            chai.assert.ok('foo' in sub);
+
+            Base.foo = 1;
+            base.foo = 2;
+            Sub.foo = 3;
+            sub.foo = 4;
+
+            chai.assert.strictEqual(Base.foo, 1);
+            chai.assert.strictEqual(base.foo, 2);
+            chai.assert.strictEqual(Sub.foo, 3);
+            chai.assert.strictEqual(sub.foo, 4);
+        });
+
     });
 
     describe('Hooks', function() {

@@ -75,12 +75,15 @@ Protoplast.extend = function(mixins, description) {
                 });
             }(property, description[property]));
         }
-        
+
         if (Object.prototype.toString.call(description[property]) !== "[object Object]") {
             defined = true;
             desc = {value: description[property], writable: true, enumerable: true, configurable: true};
         } else {
             desc = description[property];
+            if (!(property in this) && !desc.set && !desc.get && !desc.value) {
+                desc.value = null;
+            }
             for (var d in desc) {
                 if (['value', 'get', 'set', 'writable', 'enumerable', 'configurable'].indexOf(d) === -1) {
                     meta.properties[d] = meta.properties[d] || {};
@@ -132,7 +135,7 @@ Protoplast.extend = function(mixins, description) {
     property_hooks.forEach(function(property_processor) {
         property_processor(proto);
     });
-    
+
     (proto.$meta.hooks || []).forEach(function(hook) {
         if (hook.proto) {
             hook.proto(proto);

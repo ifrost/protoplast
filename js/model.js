@@ -48,7 +48,7 @@ var define_properties = {
         if (proto.$meta.properties.computed && proto.$meta.properties.computed[name]) {
             define_computed_property(name, desc);
         }
-        else if (!desc.get && (!desc.value || ['number', 'boolean', 'string'].indexOf(typeof(desc.value)) !== -1)) {
+        else if (!desc.get || ['number', 'boolean', 'string'].indexOf(typeof(desc.value)) !== -1) {
             define_bindable_property(name, desc, proto);
         }
     }
