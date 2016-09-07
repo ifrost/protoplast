@@ -210,23 +210,7 @@ describe('Protoplast', function() {
             var subSub = SubSub.create();
             chai.assert.strictEqual(subSub.value, '1234');
         });
-
-        describe('UniqueId', function() {
-
-            it('adds unique id to created instances', function() {
-                var Base = Protoplast.extend({
-                    $meta: {
-                        constructors: [Protoplast.constructors.uniqueId]
-                    }
-                });
-                chai.assert.isUndefined(Base.$id);
-
-                var instance = Base.create();
-                chai.assert.isDefined(instance.$id);
-            });
-
-        });
-
+        
         describe('Autobinding', function() {
 
             it('autobinds methods', function() {

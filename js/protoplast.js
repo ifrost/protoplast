@@ -20,7 +20,7 @@ var Protoplast = {
  * @returns {Object}
  */
 Protoplast.extend = function(mixins, description) {
-    var proto = Object.create(this), meta, mixins_meta, desc, defined;
+    var proto = Object.create(this), meta, mixins_meta, desc;
 
     // normalise parameters
     if (!(mixins instanceof Array)) {
@@ -62,10 +62,14 @@ Protoplast.extend = function(mixins, description) {
             desc = {value: description[property], writable: true, enumerable: true, configurable: true};
         } else {
             desc = description[property];
+
+            // default value to null
             if (!(property in this) && !desc.set && !desc.get && !desc.value) {
                 desc.value = null;
             }
+
             for (var d in desc) {
+                // move all non standard descriptors to meta
                 if (desc.hasOwnProperty(d) && ['value', 'get', 'set', 'writable', 'enumerable', 'configurable'].indexOf(d) === -1) {
                     meta.properties[d] = meta.properties[d] || {};
                     meta.properties[d][property] = desc[d];

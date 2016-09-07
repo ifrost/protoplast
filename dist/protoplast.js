@@ -665,27 +665,36 @@ Protoplast.extend = function(mixins, description) {
     }
     description = description || {};
     mixins = mixins || [];
-    
+
     meta = description.$meta || {};
     meta.properties = meta.properties || {};
 
+    // $meta section of the description has to be deleted
+    // so it's not processed as a property definition later or.
+    // All entries but $meta and $create are treated as
+    // property definitions
     delete description.$meta;
 
+    // $create is a shortcut for adding a constructor to constructors list
     if (description.$create !== undefined) {
         meta.constructors = meta.constructors || [];
         meta.constructors.push(description.$create);
         delete description.$create;
     }
 
+    // mix-in all the mixins to the current prototype
     proto = utils.mixin(proto, mixins);
 
+    // create description for all properties (properties are defined at the end)
     var property_definitions = [];
 
     for (var property in description) {
-        defined = false;
-        
+
+        if (!description.hasOwnProperty(property)) {
+            continue;
+        }
+
         if (Object.prototype.toString.call(description[property]) !== "[object Object]") {
-            defined = true;
             desc = {value: description[property], writable: true, enumerable: true, configurable: true};
         } else {
             desc = description[property];
@@ -693,13 +702,10 @@ Protoplast.extend = function(mixins, description) {
                 desc.value = null;
             }
             for (var d in desc) {
-                if (['value', 'get', 'set', 'writable', 'enumerable', 'configurable'].indexOf(d) === -1) {
+                if (desc.hasOwnProperty(d) && ['value', 'get', 'set', 'writable', 'enumerable', 'configurable'].indexOf(d) === -1) {
                     meta.properties[d] = meta.properties[d] || {};
                     meta.properties[d][property] = desc[d];
                     delete desc[d];
-                }
-                else {
-                    defined = true;
                 }
             }
             if (!desc.hasOwnProperty('writable') && !desc.hasOwnProperty('set') && !desc.hasOwnProperty('get')) {
@@ -712,33 +718,33 @@ Protoplast.extend = function(mixins, description) {
                 desc.configurable = true;
             }
         }
-        if (defined) {
-            property_definitions.push({
-                property : property,
-                desc: desc
-            });
-        }
+        property_definitions.push({
+            property : property,
+            desc: desc
+        });
     }
 
+    // mix meta data from the mixins into one object
     mixins_meta = (mixins || []).reduce(function(current, next) {
         return utils.merge(current, next.$meta);
     }, {});
+    // mix all mixins meta data
     meta = utils.merge(meta, mixins_meta);
+    // mix base prototype meta to the current meta
     proto.$meta = utils.merge(meta, this.$meta);
 
+    // define properties
     property_definitions.forEach(function(definition) {
         var property = definition.property,
             desc = definition.desc;
         proto.$define_property(property, desc);
     });
-    
+
     return proto;
 };
 
 global.Protoplast = Protoplast;
 module.exports = Protoplast;
-
-
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./utils":9}],9:[function(require,module,exports){
