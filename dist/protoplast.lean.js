@@ -7,6 +7,9 @@ var utils = require('./utils');
  */
 var Protoplast = {
     $meta: {},
+    $define_property: function(property, desc) {
+        Object.defineProperty(this, property, desc);
+    },
     create: function() {
         return utils.createObject(this, arguments);
     }
@@ -92,15 +95,7 @@ Protoplast.extend = function(mixins, description) {
     property_definitions.forEach(function(definition) {
         var property = definition.property,
             desc = definition.desc;
-
-        if (proto.$meta && proto.$meta.hooks) {
-            proto.$meta.hooks.forEach(function(hook) {
-                if (hook.def) {
-                    hook.def(property, desc, proto);
-                }
-            });
-        }
-        Object.defineProperty(proto, property, desc);
+        proto.$define_property(property, desc);
     });
     
     return proto;

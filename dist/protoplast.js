@@ -603,23 +603,8 @@ function define_bindable_property(name, desc, proto) {
     proto['_' + name] = initial_value;
 }
 
-var define_properties = {
-    def: function(name, desc, proto) {
-        if (proto.$meta.properties.computed && proto.$meta.properties.computed[name]) {
-            define_computed_property(name, desc);
-        }
-        else if (!desc.get || ['number', 'boolean', 'string'].indexOf(typeof(desc.value)) !== -1) {
-            define_bindable_property(name, desc, proto);
-        }
-    }
-};
-
 var Model = Protoplast.extend([Dispatcher], {
 
-    $meta: {
-        hooks: [define_properties]
-    },
-    
     $create: function() {
         for (var computed_property in this.$meta.properties.computed) {
             this.$meta.properties.computed[computed_property].forEach(function(chain) {
@@ -630,6 +615,18 @@ var Model = Protoplast.extend([Dispatcher], {
                 }.bind(this))(computed_property);
             }, this);
         }
+    },
+
+    $define_property: function(property, desc) {
+
+        if (this.$meta.properties.computed && this.$meta.properties.computed[property]) {
+            define_computed_property(property, desc);
+        }
+        else if (!desc.get || ['number', 'boolean', 'string'].indexOf(typeof(desc.value)) !== -1) {
+            define_bindable_property(property, desc, this);
+        }
+
+        Protoplast.$define_property.call(this, property, desc);
     }
 
 });
@@ -644,6 +641,9 @@ var utils = require('./utils');
  */
 var Protoplast = {
     $meta: {},
+    $define_property: function(property, desc) {
+        Object.defineProperty(this, property, desc);
+    },
     create: function() {
         return utils.createObject(this, arguments);
     }
@@ -729,15 +729,7 @@ Protoplast.extend = function(mixins, description) {
     property_definitions.forEach(function(definition) {
         var property = definition.property,
             desc = definition.desc;
-
-        if (proto.$meta && proto.$meta.hooks) {
-            proto.$meta.hooks.forEach(function(hook) {
-                if (hook.def) {
-                    hook.def(property, desc, proto);
-                }
-            });
-        }
-        Object.defineProperty(proto, property, desc);
+        proto.$define_property(property, desc);
     });
     
     return proto;
