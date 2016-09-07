@@ -72,6 +72,10 @@ describe('Collection', function() {
             chai.assert.lengthOf(filterResult, 0);
         });
 
+        it('JSON.stringify returns stringified array', function() {
+            chai.assert.strictEqual(JSON.stringify(collection), '[1,2,3]');
+        });
+
     });
 
 });

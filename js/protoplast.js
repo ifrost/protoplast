@@ -53,11 +53,7 @@ Protoplast.extend = function(mixins, description) {
     var property_definitions = [];
 
     for (var property in description) {
-
-        if (!description.hasOwnProperty(property)) {
-            continue;
-        }
-
+        
         if (Object.prototype.toString.call(description[property]) !== "[object Object]") {
             desc = {value: description[property], writable: true, enumerable: true, configurable: true};
         } else {

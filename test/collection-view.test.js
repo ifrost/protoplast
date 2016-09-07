@@ -146,6 +146,30 @@ describe('CollectionView', function() {
         chai.assert.strictEqual(view.get(3).done, true);
     });
 
+    it('removes sorts and restores the view', function() {
+
+        var sort = {
+            fn: function(a, b) {
+                return b - a;
+            }
+        };
+
+        view.add_sort(sort);
+        collection.add(3);
+
+        chai.assert.lengthOf(view, 3);
+        chai.assert.strictEqual(view.get(0), 3); // 3 added at the beginning because the collection is sorted
+        chai.assert.strictEqual(view.get(1), 2);
+        chai.assert.strictEqual(view.get(2), 1);
+
+        view.remove_sort(sort);
+
+        chai.assert.strictEqual(view.get(0), 1);
+        chai.assert.strictEqual(view.get(1), 2);
+        chai.assert.strictEqual(view.get(2), 3);
+
+    });
+
     it('clears the selected property if the selected item is removed', function() {
 
         view.selected = 2;
@@ -171,6 +195,29 @@ describe('CollectionView', function() {
         view.remove_filter(filter);
         chai.assert.strictEqual(view.selected, 2);
 
+    });
+
+    it('toArray returns array from the current view', function() {
+        chai.assert.deepEqual(view.toArray(), [1,2]);
+    });
+
+    it('forEach is run only on the current items', function() {
+
+        var filter = {
+            fn: function(item) {
+                return item !== 2;
+            }
+        };
+
+        view.add_filter(filter);
+        collection.add(3);
+
+        var handler = sinon.stub();
+        view.forEach(handler);
+
+        sinon.assert.calledTwice(handler);
+        sinon.assert.calledWith(handler, 1);
+        sinon.assert.calledWith(handler, 3);
     });
 
 });

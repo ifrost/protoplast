@@ -35,6 +35,17 @@ describe('Component', function() {
         chai.assert.lengthOf(root.root.children, 1);
     });
 
+    it('returns list of children', function() {
+        var root = Component.create(),
+            childA = Component.create(),
+            childB = Component.create();
+
+        root.add(childA);
+        root.add(childB);
+
+        chai.assert.deepEqual(root.children, [childA, childB]);
+    });
+
     it('removes children', function() {
         var root = Component.create(),
             childA = Component.create(),
@@ -280,44 +291,62 @@ describe('Components Dependency Injection', function() {
 
     describe('Component features', function() {
 
-        it('creates presenter', function() {
+        describe('Presenter', function() {
 
-            var init = sinon.stub();
+            var Presenter, init, destroy, root;
 
-            var Presenter = Protoplast.extend({
-                init: {
-                    inject_init: true,
-                    value: init
-                },
-                foo: {
-                    inject: 'foo'
-                }
+            beforeEach(function() {
+                init = sinon.stub();
+                destroy = sinon.stub();
+
+                Presenter = Protoplast.extend({
+                    init: {
+                        inject_init: true,
+                        value: init
+                    },
+                    foo: {
+                        inject: 'foo'
+                    },
+                    destroy: destroy
+                });
+
+                var context = Context.create();
+
+                context.register('foo', 'foo');
+
+                var Root = Component.extend({
+                    $meta: {
+                        presenter: Presenter
+                    },
+                    tag: 'div',
+                    foo: {inject: 'foo'}
+                });
+
+                sinon.spy(Presenter, 'create');
+
+                root = Root.create();
+                context.register(root);
+                context.build();
+
             });
 
-            var context = Context.create();
+            it('creates presenter', function() {
+                sinon.assert.calledOnce(Presenter.create);
 
-            context.register('foo', 'foo');
+                var presenter = Presenter.create.returnValues[0];
 
-            var Root = Component.extend({
-                $meta: {
-                    presenter: Presenter
-                },
-                tag: 'div',
-                foo: {inject: 'foo'}
+                chai.assert.strictEqual(presenter.view, root);
+                chai.assert.strictEqual(presenter.foo, 'foo');
             });
 
-            sinon.spy(Presenter, 'create');
+            it('destroys the presenter when the component is destroyed', function() {
+                var presenter = Presenter.create.returnValues[0];
 
-            var root = Root.create();
-            context.register(root);
-            context.build();
+                sinon.assert.notCalled(presenter.destroy);
+                root.destroy();
+                sinon.assert.calledOnce(presenter.destroy);
+            });
 
-            sinon.assert.calledOnce(Presenter.create);
-
-            var presenter = Presenter.create.returnValues[0];
-
-            chai.assert.strictEqual(presenter.view, root);
-            chai.assert.strictEqual(presenter.foo, 'foo');
         });
 
         it('injects elements marked with data-prop', function() {

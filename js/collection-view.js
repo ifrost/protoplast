@@ -57,6 +57,7 @@ var CollectionView = Model.extend({
         var index = this._sort.indexOf(sort);
         if (index !== -1) {
             this._sort.splice(index, 1);
+            this._invalidate();
         }
     },
 
@@ -65,11 +66,7 @@ var CollectionView = Model.extend({
     },
 
     toArray: function() {
-        return this._current
-    },
-
-    concat: function() {
-        return this._current.concat.apply(this._current, arguments);
+        return this._current;
     },
 
     forEach: function() {
