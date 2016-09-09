@@ -40,6 +40,8 @@ describe('Examples', function() {
 
         // create a clickable component that displays number of clicks
         View = Protoplast.extend({
+            
+            value: null,
 
             show: function(value) {
                 this.value = value;

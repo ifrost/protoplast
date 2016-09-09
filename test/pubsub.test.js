@@ -32,6 +32,7 @@ describe('Pub/Sub', function() {
                     this.sub('message').add(this.saveMessage);
                 }
             },
+            message: null,
             saveMessage: function(msg) {
                 this.message = msg;
             },

@@ -7,7 +7,7 @@ var CollectionView = Model.extend({
 
     _sort: null,
 
-    _hidden_selected: null,
+    _hiddenSelected: null,
     
     selected: null,
 
@@ -36,12 +36,12 @@ var CollectionView = Model.extend({
         this._invalidate();
     },
 
-    add_filter: function(filter) {
+    addFilter: function(filter) {
         this._filters.push(filter);
         this._invalidate();
     },
 
-    remove_filter: function(filter) {
+    removeFilter: function(filter) {
         var index = this._filters.indexOf(filter);
         if (index !== -1) {
             this._filters.splice(index, 1);
@@ -49,15 +49,16 @@ var CollectionView = Model.extend({
         }
     },
 
-    add_sort: function(sort) {
+    addSort: function(sort) {
         this._sort.push(sort);
         this._invalidate();
     },
 
-    remove_sort: function(sort) {
+    removeSort: function(sort) {
         var index = this._sort.indexOf(sort);
         if (index !== -1) {
             this._sort.splice(index, 1);
+            this._invalidate();
         }
     },
 
@@ -66,29 +67,25 @@ var CollectionView = Model.extend({
     },
 
     toArray: function() {
-        return this._current
-    },
-
-    concat: function() {
-        return this._current.concat.apply(this._current, arguments);
+        return this._current;
     },
 
     forEach: function() {
         return this._current.forEach.apply(this._current, arguments);
     },
 
-    _resubscribe: function(filter_or_sort, event) {
+    _resubscribe: function(filterOrSort, event) {
         event.removed.forEach(function(item) {
-            if (filter_or_sort.properties) {
-                filter_or_sort.properties.forEach(function(property) {
+            if (filterOrSort.properties) {
+                filterOrSort.properties.forEach(function(property) {
                     item.off(property + '_changed', this.refresh, this);
                 }, this);
             }
         }, this);
 
         event.added.forEach(function(item) {
-            if (filter_or_sort.properties) {
-                filter_or_sort.properties.forEach(function(property) {
+            if (filterOrSort.properties) {
+                filterOrSort.properties.forEach(function(property) {
                     item.on(property + '_changed', this.refresh, this);
                 }, this);
             }
@@ -130,12 +127,12 @@ var CollectionView = Model.extend({
         }
         
         if (this.selected && this._current.indexOf(this.selected) === -1) {
-            this._hidden_selected = this.selected;
+            this._hiddenSelected = this.selected;
             this.selected = null;
         }
-        else if (!this.selected && this._hidden_selected && this._current.indexOf(this._hidden_selected) !== -1) {
-            this.selected = this._hidden_selected;
-            this._hidden_selected = null;
+        else if (!this.selected && this._hiddenSelected && this._current.indexOf(this._hiddenSelected) !== -1) {
+            this.selected = this._hiddenSelected;
+            this._hiddenSelected = null;
         }
         
         this.dispatch('changed');
@@ -211,7 +208,7 @@ var Model = require('./model'),
 var Component = Model.extend({
 
     $meta: {
-        dom_processors: [utils.dom_processors.create_component, utils.dom_processors.inject_element]
+        domProcessors: [utils.domProcessors.createComponents, utils.domProcessors.injectElement]
     },
     
     tag: '',
@@ -224,7 +221,7 @@ var Component = Model.extend({
         },
         set: function(value) {
             this._root = value;
-            this.process_root();
+            this.processRoot();
         }
     },
 
@@ -256,10 +253,10 @@ var Component = Model.extend({
     /**
      * Process DOM using defined DOM processors
      */
-    process_root: function() {
+    processRoot: function() {
         var i, elements, element, value;
         if (this._root) {
-            (this.$meta.dom_processors || []).forEach(function(processor) {
+            (this.$meta.domProcessors || []).forEach(function(processor) {
                 elements =  this._root.querySelectorAll('[' + processor.attribute + ']');
                 for (i = 0; i < elements.length; i++) {
                     element = elements[i];
@@ -270,6 +267,9 @@ var Component = Model.extend({
         }
     },
 
+    /**
+     * @type {Function}
+     */
     __fastinject__: {
         get: function() {return this.___fastinject___},
         set: function(value) {
@@ -301,7 +301,7 @@ var Component = Model.extend({
      * Template method, used to create DOM of the component
      */
     init: {
-        inject_init: true,
+        injectInit: true,
         value: function() {}
     },
 
@@ -380,20 +380,11 @@ module.exports = Component;
 
 
 },{"./model":7,"./utils":9}],4:[function(require,module,exports){
-var utils = require('./utils');
-
 /**
  * Collection of constructors
  */
 var constructors = {
-
-    /**
-     * Add unique id to the object
-     */
-    uniqueId: function() {
-        this.$id = utils.uniqueId(this.$meta.$prefix);
-    },
-
+    
     /**
      * Bind all the function to the instance
      */
@@ -408,8 +399,7 @@ var constructors = {
 };
 
 module.exports = constructors;
-},{"./utils":9}],5:[function(require,module,exports){
-
+},{}],5:[function(require,module,exports){
 var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher');
 
@@ -426,13 +416,13 @@ var Context = Protoplast.extend({
                 self._dispatcher.dispatch(topic, message);
             },
             sub: function(topic) {
-                var instance_self = this;
+                var instanceSelf = this;
                 return {
                     add: function(handler) {
-                        self._dispatcher.on(topic, handler, instance_self);
+                        self._dispatcher.on(topic, handler, instanceSelf);
                     },
                     remove: function(handler) {
-                        self._dispatcher.off(topic, handler, instance_self);
+                        self._dispatcher.off(topic, handler, instanceSelf);
                     }
                 };
             }
@@ -483,8 +473,8 @@ var Context = Protoplast.extend({
                 obj[property] = this._objects[obj.$meta.properties.inject[property]];
             }, this);
         }
-        if (obj.$meta && obj.$meta.properties && obj.$meta.properties.inject_init) {
-            Object.keys(obj.$meta.properties.inject_init).forEach(function(handler){
+        if (obj.$meta && obj.$meta.properties && obj.$meta.properties.injectInit) {
+            Object.keys(obj.$meta.properties.injectInit).forEach(function(handler){
                 obj[handler]();
             }, this);
         }
@@ -525,7 +515,6 @@ var Protoplast = require('./protoplast');
 
 /**
  * EventDispatcher implementation, can be used as mixin or base protoype
- * @type {Function}
  */
 var Dispatcher = Protoplast.extend({
 
@@ -562,7 +551,7 @@ var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher'),
     utils = require('./utils');
 
-function define_computed_property(name, desc) {
+function defineComputedProperty(name, desc) {
     var calc = desc.value;
 
     delete desc.value;
@@ -583,8 +572,8 @@ function define_computed_property(name, desc) {
     }
 }
 
-function define_bindable_property(name, desc, proto) {
-    var initial_value = desc.value;
+function defineBindableProperty(name, desc, proto) {
+    var initialValue = desc.value;
 
     delete desc.value;
     delete desc.writable;
@@ -600,33 +589,36 @@ function define_bindable_property(name, desc, proto) {
             this.dispatch(name + '_changed', value, old);
         }
     };
-    proto['_' + name] = initial_value;
+    proto['_' + name] = initialValue;
 }
 
 var Model = Protoplast.extend([Dispatcher], {
 
     $create: function() {
-        for (var computed_property in this.$meta.properties.computed) {
-            this.$meta.properties.computed[computed_property].forEach(function(chain) {
-                (function(){
-                    utils.bind(this, chain, function() {
-                        this[computed_property] = undefined;
-                    }.bind(this));
-                }.bind(this))(computed_property);
-            }, this);
+        var computed = this.$meta.properties.computed;
+        for (var computedProperty in computed) {
+            if (computed.hasOwnProperty(computedProperty)) {
+                computed[computedProperty].forEach(function(chain) {
+                    (function(name){
+                        utils.bind(this, chain, function() {
+                            this[name] = undefined;
+                        }.bind(this));
+                    }.bind(this))(computedProperty);
+                }, this);
+            }
         }
     },
 
-    $define_property: function(property, desc) {
+    $defineProperty: function(property, desc) {
 
         if (this.$meta.properties.computed && this.$meta.properties.computed[property]) {
-            define_computed_property(property, desc);
+            defineComputedProperty(property, desc);
         }
         else if (!desc.get || ['number', 'boolean', 'string'].indexOf(typeof(desc.value)) !== -1) {
-            define_bindable_property(property, desc, this);
+            defineBindableProperty(property, desc, this);
         }
 
-        Protoplast.$define_property.call(this, property, desc);
+        Protoplast.$defineProperty.call(this, property, desc);
     }
 
 });
@@ -641,7 +633,7 @@ var utils = require('./utils');
  */
 var Protoplast = {
     $meta: {},
-    $define_property: function(property, desc) {
+    $defineProperty: function(property, desc) {
         Object.defineProperty(this, property, desc);
     },
     create: function() {
@@ -656,7 +648,7 @@ var Protoplast = {
  * @returns {Object}
  */
 Protoplast.extend = function(mixins, description) {
-    var proto = Object.create(this), meta, mixins_meta, desc, defined;
+    var proto = Object.create(this), meta, mixinsMeta, desc;
 
     // normalise parameters
     if (!(mixins instanceof Array)) {
@@ -686,22 +678,22 @@ Protoplast.extend = function(mixins, description) {
     proto = utils.mixin(proto, mixins);
 
     // create description for all properties (properties are defined at the end)
-    var property_definitions = [];
+    var propertyDefinitions = [];
 
     for (var property in description) {
-
-        if (!description.hasOwnProperty(property)) {
-            continue;
-        }
-
+        
         if (Object.prototype.toString.call(description[property]) !== "[object Object]") {
             desc = {value: description[property], writable: true, enumerable: true, configurable: true};
         } else {
             desc = description[property];
+
+            // default value to null
             if (!(property in this) && !desc.set && !desc.get && !desc.value) {
                 desc.value = null;
             }
+
             for (var d in desc) {
+                // move all non standard descriptors to meta
                 if (desc.hasOwnProperty(d) && ['value', 'get', 'set', 'writable', 'enumerable', 'configurable'].indexOf(d) === -1) {
                     meta.properties[d] = meta.properties[d] || {};
                     meta.properties[d][property] = desc[d];
@@ -718,26 +710,26 @@ Protoplast.extend = function(mixins, description) {
                 desc.configurable = true;
             }
         }
-        property_definitions.push({
+        propertyDefinitions.push({
             property : property,
             desc: desc
         });
     }
 
     // mix meta data from the mixins into one object
-    mixins_meta = (mixins || []).reduce(function(current, next) {
+    mixinsMeta = (mixins || []).reduce(function(current, next) {
         return utils.merge(current, next.$meta);
     }, {});
     // mix all mixins meta data
-    meta = utils.merge(meta, mixins_meta);
+    meta = utils.merge(meta, mixinsMeta);
     // mix base prototype meta to the current meta
     proto.$meta = utils.merge(meta, this.$meta);
 
     // define properties
-    property_definitions.forEach(function(definition) {
+    propertyDefinitions.forEach(function(definition) {
         var property = definition.property,
             desc = definition.desc;
-        proto.$define_property(property, desc);
+        proto.$defineProperty(property, desc);
     });
 
     return proto;
@@ -758,21 +750,21 @@ module.exports = {
     mixin: common.mixin,
     uniqueId: common.uniqueId,
 
-    resolve_property: binding.resolve_property,
+    resolveProperty: binding.resolveProperty,
     bind: binding.bind,
-    bind_property: binding.bind_property,
-    bind_collection: binding.bind_collection,
+    bindProperty: binding.bindProperty,
+    bindCollection: binding.bindCollection,
 
-    render_list: component.render_list,
-    create_renderer_function: component.create_renderer_function,
-    dom_processors: {
-        inject_element: component.dom_processors.inject_element,
-        create_component: component.dom_processors.create_component
+    renderList: component.renderList,
+    createRendererFunction: component.createRendererFunction,
+    domProcessors: {
+        injectElement: component.domProcessors.injectElement,
+        createComponents: component.domProcessors.createComponents
     }
 };
 
 },{"./utils/binding":10,"./utils/common":11,"./utils/component":12}],10:[function(require,module,exports){
-var resolve_property = function(host, chain, handler) {
+var resolveProperty = function(host, chain, handler) {
     var props = chain.split('.');
 
     if (!chain) {
@@ -782,16 +774,16 @@ var resolve_property = function(host, chain, handler) {
         handler(host[chain]);
     }
     else {
-        var sub_host = host[props[0]];
-        var sub_chain = props.slice(1).join('.');
-        if (sub_host) {
-            resolve_property(sub_host, sub_chain, handler);
+        var subHost = host[props[0]];
+        var subChain = props.slice(1).join('.');
+        if (subHost) {
+            resolveProperty(subHost, subChain, handler);
         }
     }
 
 };
 
-var bind_setter = function(host, chain, handler) {
+var bindSetter = function(host, chain, handler) {
     var props = chain.split('.');
 
     if (props.length === 1) {
@@ -799,41 +791,41 @@ var bind_setter = function(host, chain, handler) {
         handler(host[chain]);
     }
     else {
-        var sub_host = host[props[0]];
-        var sub_chain = props.slice(1).join('.');
-        if (sub_host) {
-            bind_setter(sub_host, sub_chain, function() {
-                resolve_property(sub_host, sub_chain, handler);
+        var subHost = host[props[0]];
+        var subChain = props.slice(1).join('.');
+        if (subHost) {
+            bindSetter(subHost, subChain, function() {
+                resolveProperty(subHost, subChain, handler);
             });
         }
         host.on(props[0] + '_changed', function(_, previous) {
             if (previous && previous.on) {
                 previous.off(props[0] + '_changed', handler);
             }
-            bind_setter(host[props[0]], sub_chain, handler);
+            bindSetter(host[props[0]], subChain, handler);
         });
     }
 
 };
 
-var bind_collection = function(host, source_chain, handler) {
+var bindCollection = function(host, sourceChain, handler) {
 
-    var previous_list = null, previous_handler;
+    var previousList = null, previousHandler;
 
-    bind_setter(host, source_chain, function() {
-        resolve_property(host, source_chain, function(list) {
-            if (previous_list) {
-                if (previous_list.off) {
-                    previous_list.off('changed', previous_handler);
+    bindSetter(host, sourceChain, function() {
+        resolveProperty(host, sourceChain, function(list) {
+            if (previousList) {
+                if (previousList.off) {
+                    previousList.off('changed', previousHandler);
                 }
-                previous_list = null;
-                previous_handler = null
+                previousList = null;
+                previousHandler = null
             }
             if (list) {
-                previous_list = list;
-                previous_handler = handler.bind(host, list);
+                previousList = list;
+                previousHandler = handler.bind(host, list);
                 if (list.on) {
-                    list.on('changed', previous_handler);
+                    list.on('changed', previousHandler);
                 }
             }
             handler(list);
@@ -842,34 +834,34 @@ var bind_collection = function(host, source_chain, handler) {
 
 };
 
-var bind = function(host, bindings_or_chain, handler) {
-    var handlers_list;
+var bind = function(host, bindingsOrChain, handler) {
+    var handlersList;
     if (arguments.length === 3) {
-        bind_collection(host, bindings_or_chain, handler);
+        bindCollection(host, bindingsOrChain, handler);
     }
     else {
-        for (var binding in bindings_or_chain) {
-            handlers_list = bindings_or_chain[binding];
-            if (!(handlers_list instanceof Array)) {
-                handlers_list = [handlers_list];
+        for (var binding in bindingsOrChain) {
+            handlersList = bindingsOrChain[binding];
+            if (!(handlersList instanceof Array)) {
+                handlersList = [handlersList];
             }
-            handlers_list.forEach(function(handler) {
+            handlersList.forEach(function(handler) {
                 bind(host, binding, handler.bind(host));
             });
         }
     }
 };
 
-var bind_property = function(host, host_chain, dest, dest_chain) {
+var bindProperty = function(host, hostChain, dest, destChain) {
 
-    var props = dest_chain.split('.');
+    var props = destChain.split('.');
     var prop = props.pop();
 
-    bind(host, host_chain, function() {
-        resolve_property(host, host_chain, function(value) {
-            resolve_property(dest, props.join('.'), function(final_object) {
-                if (final_object) {
-                    final_object[prop] = value;
+    bind(host, hostChain, function() {
+        resolveProperty(host, hostChain, function(value) {
+            resolveProperty(dest, props.join('.'), function(finalObject) {
+                if (finalObject) {
+                    finalObject[prop] = value;
                 }
             })
         })
@@ -878,11 +870,11 @@ var bind_property = function(host, host_chain, dest, dest_chain) {
 };
 
 module.exports = {
-    resolve_property: resolve_property,
+    resolveProperty: resolveProperty,
     bind: bind,
-    bind_setter: bind_setter,
-    bind_property: bind_property,
-    bind_collection: bind_collection
+    bindSetter: bindSetter,
+    bindProperty: bindProperty,
+    bindCollection: bindCollection
 };
 },{}],11:[function(require,module,exports){
 var idCounter = 0;
@@ -982,13 +974,13 @@ var binding = require('./binding');
  * property passed as the value of the data-prop attribute. If a wrapper is defined the element is wrapped before
  * setting on the component
  */
-var inject_element = {
+var injectElement = {
     attribute: 'data-prop',
     process: function(component, element, value) {
         (function(element){
             component[value] = element;
-            if (component.$meta.element_wrapper) {
-                component[value] = component.$meta.element_wrapper(component[value]);
+            if (component.$meta.elementWrapper) {
+                component[value] = component.$meta.elementWrapper(component[value]);
             }
         })(element);
     }
@@ -999,7 +991,7 @@ var inject_element = {
  * of name passes as the value of the attribute, example
  * <div data-comp="foo"></div>
  */
-var create_component = {
+var createComponents = {
     attribute: 'data-comp',
     process: function(component, element, value) {
         var child = component[value] = component.$meta.properties.component[value].create();
@@ -1007,27 +999,27 @@ var create_component = {
     }
 };
 
-var render_list_default_options = {
+var renderListDefaultOptions = {
     remove: function(parent, child) {
         parent.remove(child);
     },
-    create: function(parent, data, renderer, property_name) {
+    create: function(parent, data, renderer, propertyName) {
         var child = renderer.create();
-        child[property_name] = data;
+        child[propertyName] = data;
         parent.add(child);
     },
-    update: function(child, item, property_name) {
-        child[property_name] = item;
+    update: function(child, item, propertyName) {
+        child[propertyName] = item;
     }
 };
 
-var create_renderer_function = function(host, opts) {
+var createRendererFunction = function(host, opts) {
 
     opts = opts || {};
-    opts.create = opts.create || render_list_default_options.create;
-    opts.remove = opts.remove || render_list_default_options.remove;
-    opts.update = opts.update || render_list_default_options.update;
-    opts.renderer_data_property = opts.renderer_data_property || 'data';
+    opts.create = opts.create || renderListDefaultOptions.create;
+    opts.remove = opts.remove || renderListDefaultOptions.remove;
+    opts.update = opts.update || renderListDefaultOptions.update;
+    opts.rendererDataProperty = opts.rendererDataProperty || 'data';
     if (!opts.renderer) {
         throw new Error('Renderer is required')
     }
@@ -1038,10 +1030,10 @@ var create_renderer_function = function(host, opts) {
 
         for (var i = 0; i < max; i++) {
             if (children[i] && list.toArray()[i]) {
-                opts.update(children[i], list.toArray()[i], opts.renderer_data_property);
+                opts.update(children[i], list.toArray()[i], opts.rendererDataProperty);
             }
             else if (!children[i]) {
-                opts.create(this, list.toArray()[i], opts.renderer, opts.renderer_data_property);
+                opts.create(this, list.toArray()[i], opts.renderer, opts.rendererDataProperty);
             }
             else if (!list.toArray()[i]) {
                 opts.remove(this, children[i]);
@@ -1050,17 +1042,17 @@ var create_renderer_function = function(host, opts) {
     }.bind(host);
 };
 
-var render_list = function(host, source_chain, opts) {
-    var renderer_function = create_renderer_function(host, opts);
-    binding.bind_collection(host, source_chain, renderer_function);
+var renderList = function(host, sourceChain, opts) {
+    var rendererFunction = createRendererFunction(host, opts);
+    binding.bindCollection(host, sourceChain, rendererFunction);
 };
 
 module.exports = {
-    create_renderer_function: create_renderer_function,
-    render_list: render_list,
-    dom_processors: {
-        inject_element: inject_element,
-        create_component: create_component
+    createRendererFunction: createRendererFunction,
+    renderList: renderList,
+    domProcessors: {
+        injectElement: injectElement,
+        createComponents: createComponents
     }
 };
 },{"./binding":10}],13:[function(require,module,exports){

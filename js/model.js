@@ -46,14 +46,17 @@ function defineBindableProperty(name, desc, proto) {
 var Model = Protoplast.extend([Dispatcher], {
 
     $create: function() {
-        for (var computedProperty in this.$meta.properties.computed) {
-            this.$meta.properties.computed[computedProperty].forEach(function(chain) {
-                (function(){
-                    utils.bind(this, chain, function() {
-                        this[computedProperty] = undefined;
-                    }.bind(this));
-                }.bind(this))(computedProperty);
-            }, this);
+        var computed = this.$meta.properties.computed;
+        for (var computedProperty in computed) {
+            if (computed.hasOwnProperty(computedProperty)) {
+                computed[computedProperty].forEach(function(chain) {
+                    (function(name){
+                        utils.bind(this, chain, function() {
+                            this[name] = undefined;
+                        }.bind(this));
+                    }.bind(this))(computedProperty);
+                }, this);
+            }
         }
     },
 

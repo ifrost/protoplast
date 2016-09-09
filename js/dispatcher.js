@@ -3,7 +3,6 @@ var Protoplast = require('./protoplast');
 
 /**
  * EventDispatcher implementation, can be used as mixin or base protoype
- * @type {Function}
  */
 var Dispatcher = Protoplast.extend({
 

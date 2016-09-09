@@ -67,6 +67,9 @@ var Component = Model.extend({
         }
     },
 
+    /**
+     * @type {Function}
+     */
     __fastinject__: {
         get: function() {return this.___fastinject___},
         set: function(value) {
