@@ -1,7 +1,7 @@
 (function(window) {
     'use strict';
 
-    window.Controller = window.Protoplast.extend({
+    window.Controller = window.Protoplast.Model.extend({
         sub: {
             inject: 'sub'
         }

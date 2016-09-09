@@ -6,7 +6,8 @@
         router: window.Router.create(),
         todos: window.TodosModel.create(),
         viewstate: window.ViewStateModel.create(),
-        appmodel: window.AppModel.create()
+        appmodel: window.AppModel.create(),
+        appcontroller: window.AppController.create()
     };
 
     var context = window.Protoplast.Context.create();
