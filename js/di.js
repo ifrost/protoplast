@@ -1,4 +1,3 @@
-
 var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher');
 
@@ -15,13 +14,13 @@ var Context = Protoplast.extend({
                 self._dispatcher.dispatch(topic, message);
             },
             sub: function(topic) {
-                var instance_self = this;
+                var instanceSelf = this;
                 return {
                     add: function(handler) {
-                        self._dispatcher.on(topic, handler, instance_self);
+                        self._dispatcher.on(topic, handler, instanceSelf);
                     },
                     remove: function(handler) {
-                        self._dispatcher.off(topic, handler, instance_self);
+                        self._dispatcher.off(topic, handler, instanceSelf);
                     }
                 };
             }
@@ -72,8 +71,8 @@ var Context = Protoplast.extend({
                 obj[property] = this._objects[obj.$meta.properties.inject[property]];
             }, this);
         }
-        if (obj.$meta && obj.$meta.properties && obj.$meta.properties.inject_init) {
-            Object.keys(obj.$meta.properties.inject_init).forEach(function(handler){
+        if (obj.$meta && obj.$meta.properties && obj.$meta.properties.injectInit) {
+            Object.keys(obj.$meta.properties.injectInit).forEach(function(handler){
                 obj[handler]();
             }, this);
         }

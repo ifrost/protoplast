@@ -7,30 +7,30 @@
             inject: 'todos'
         },
 
-        add_todo: function(text) {
+        addTodo: function(text) {
             this.todos.add(window.TodoModel.create(text));
         },
 
-        toggle_todo: function(todo) {
+        toggleTodo: function(todo) {
             this.todos.toggle(todo);
         },
 
-        toggle_all: function(value) {
-            this.todos.toggle_all(value);
+        toggleAll: function(value) {
+            this.todos.toggleAll(value);
         },
 
-        remove_todo: function(todo) {
+        removeTodo: function(todo) {
             this.todos.remove(todo);
         },
 
-        clear_done: function() {
+        clearDone: function() {
             this.todos.done.concat().forEach(function(todo) {
-                this.remove_todo(todo);
+                this.removeTodo(todo);
             }, this);
         },
 
-        edit_todo: function(data) {
-            this.todos.edit_todo_text(data.todo, data.text);
+        editTodo: function(data) {
+            this.todos.editTodoText(data.todo, data.text);
         }
     });
 

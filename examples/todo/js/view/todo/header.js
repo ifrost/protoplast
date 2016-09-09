@@ -17,12 +17,12 @@
             this.input = d3.select(this.input.node());
             this.input.on('keypress', function () {
                 if (d3.event.keyCode === 13) {
-                    this.submit_todo();
+                    this.submitTodo();
                 }
             }.bind(this));
         },
 
-        submit_todo: function () {
+        submitTodo: function () {
             var text = this.input.property('value').trim();
             if (text.length) {
                 this.dispatch('submit', text);

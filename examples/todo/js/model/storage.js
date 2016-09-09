@@ -2,16 +2,16 @@
 
     window.Storage = window.Protoplast.extend({
 
-        store_id: function(id) {
+        storeId: function(id) {
             this.id = id;
         },
 
-        store_save: function(value) {
+        storeSave: function(value) {
             var json = JSON.stringify(value);
             window.localStorage.setItem(this.id, json);
         },
 
-        store_read: function() {
+        storeRead: function() {
             var json = window.localStorage.getItem(this.id);
             return JSON.parse(json);
         }

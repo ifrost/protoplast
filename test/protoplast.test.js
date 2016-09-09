@@ -225,7 +225,7 @@ describe('Protoplast', function() {
                         this._value = value;
                     },
 
-                    get_value: function() {
+                    getValue: function() {
                         return this._value;
                     }
 
@@ -240,14 +240,14 @@ describe('Protoplast', function() {
                 var base = Base.create(2);
                 var sub = Sub.create(3);
 
-                var base_get = base.get_value;
-                var sub_get = sub.get_value;
+                var baseGet = base.getValue;
+                var subGet = sub.getValue;
 
-                chai.assert.strictEqual(base.get_value(), 2);
-                chai.assert.strictEqual(sub.get_value(), 3);
+                chai.assert.strictEqual(base.getValue(), 2);
+                chai.assert.strictEqual(sub.getValue(), 3);
 
-                chai.assert.isUndefined(base_get());
-                chai.assert.strictEqual(sub_get(), 3);
+                chai.assert.isUndefined(baseGet());
+                chai.assert.strictEqual(subGet(), 3);
 
             });
 
@@ -279,21 +279,21 @@ describe('Protoplast', function() {
 
             Base = Protoplast.extend({
                 $create: function(value) {
-                    this.set_value(value);
+                    this.setValue(value);
                 },
-                set_value: function(value) {
+                setValue: function(value) {
                     this.value = value;
                 }
             });
 
             Sub = Base.extend({
-                get_value: function() {
+                getValue: function() {
                     return this.value;
                 }
             });
 
             sub = Sub.create(10);
-            chai.assert.equal(sub.get_value(), 10);
+            chai.assert.equal(sub.getValue(), 10);
         });
 
         it('allows to create getters and setters', function() {
@@ -306,7 +306,7 @@ describe('Protoplast', function() {
                 },
                 setter: {
                     set: function(value) {
-                        this.setter_value = value;
+                        this.setterValue = value;
                     }
                 }
             });
@@ -315,7 +315,7 @@ describe('Protoplast', function() {
             chai.assert.equal(b.value, 10);
 
             b.setter = 11;
-            chai.assert.equal(b.setter_value, 11);
+            chai.assert.equal(b.setterValue, 11);
         });
 
     });

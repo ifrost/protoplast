@@ -8,15 +8,15 @@ module.exports = {
     mixin: common.mixin,
     uniqueId: common.uniqueId,
 
-    resolve_property: binding.resolve_property,
+    resolveProperty: binding.resolveProperty,
     bind: binding.bind,
-    bind_property: binding.bind_property,
-    bind_collection: binding.bind_collection,
+    bindProperty: binding.bindProperty,
+    bindCollection: binding.bindCollection,
 
-    render_list: component.render_list,
-    create_renderer_function: component.create_renderer_function,
-    dom_processors: {
-        inject_element: component.dom_processors.inject_element,
-        create_component: component.dom_processors.create_component
+    renderList: component.renderList,
+    createRendererFunction: component.createRendererFunction,
+    domProcessors: {
+        injectElement: component.domProcessors.injectElement,
+        createComponents: component.domProcessors.createComponents
     }
 };

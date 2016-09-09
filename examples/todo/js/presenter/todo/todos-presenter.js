@@ -3,12 +3,12 @@
 
     window.TodosPresenter = window.Presenter.extend({
 
-        app_model: {
+        appModel: {
             inject: 'appmodel'
         },
 
         init: function() {
-            Protoplast.utils.bind_property(this.app_model, 'visible_todos', this.view, 'visible_todos');
+            Protoplast.utils.bindProperty(this.appModel, 'visibleTodos', this.view, 'visibleTodos');
         }
 
     });

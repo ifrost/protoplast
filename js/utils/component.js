@@ -5,13 +5,13 @@ var binding = require('./binding');
  * property passed as the value of the data-prop attribute. If a wrapper is defined the element is wrapped before
  * setting on the component
  */
-var inject_element = {
+var injectElement = {
     attribute: 'data-prop',
     process: function(component, element, value) {
         (function(element){
             component[value] = element;
-            if (component.$meta.element_wrapper) {
-                component[value] = component.$meta.element_wrapper(component[value]);
+            if (component.$meta.elementWrapper) {
+                component[value] = component.$meta.elementWrapper(component[value]);
             }
         })(element);
     }
@@ -22,7 +22,7 @@ var inject_element = {
  * of name passes as the value of the attribute, example
  * <div data-comp="foo"></div>
  */
-var create_component = {
+var createComponents = {
     attribute: 'data-comp',
     process: function(component, element, value) {
         var child = component[value] = component.$meta.properties.component[value].create();
@@ -30,27 +30,27 @@ var create_component = {
     }
 };
 
-var render_list_default_options = {
+var renderListDefaultOptions = {
     remove: function(parent, child) {
         parent.remove(child);
     },
-    create: function(parent, data, renderer, property_name) {
+    create: function(parent, data, renderer, propertyName) {
         var child = renderer.create();
-        child[property_name] = data;
+        child[propertyName] = data;
         parent.add(child);
     },
-    update: function(child, item, property_name) {
-        child[property_name] = item;
+    update: function(child, item, propertyName) {
+        child[propertyName] = item;
     }
 };
 
-var create_renderer_function = function(host, opts) {
+var createRendererFunction = function(host, opts) {
 
     opts = opts || {};
-    opts.create = opts.create || render_list_default_options.create;
-    opts.remove = opts.remove || render_list_default_options.remove;
-    opts.update = opts.update || render_list_default_options.update;
-    opts.renderer_data_property = opts.renderer_data_property || 'data';
+    opts.create = opts.create || renderListDefaultOptions.create;
+    opts.remove = opts.remove || renderListDefaultOptions.remove;
+    opts.update = opts.update || renderListDefaultOptions.update;
+    opts.rendererDataProperty = opts.rendererDataProperty || 'data';
     if (!opts.renderer) {
         throw new Error('Renderer is required')
     }
@@ -61,10 +61,10 @@ var create_renderer_function = function(host, opts) {
 
         for (var i = 0; i < max; i++) {
             if (children[i] && list.toArray()[i]) {
-                opts.update(children[i], list.toArray()[i], opts.renderer_data_property);
+                opts.update(children[i], list.toArray()[i], opts.rendererDataProperty);
             }
             else if (!children[i]) {
-                opts.create(this, list.toArray()[i], opts.renderer, opts.renderer_data_property);
+                opts.create(this, list.toArray()[i], opts.renderer, opts.rendererDataProperty);
             }
             else if (!list.toArray()[i]) {
                 opts.remove(this, children[i]);
@@ -73,16 +73,16 @@ var create_renderer_function = function(host, opts) {
     }.bind(host);
 };
 
-var render_list = function(host, source_chain, opts) {
-    var renderer_function = create_renderer_function(host, opts);
-    binding.bind_collection(host, source_chain, renderer_function);
+var renderList = function(host, sourceChain, opts) {
+    var rendererFunction = createRendererFunction(host, opts);
+    binding.bindCollection(host, sourceChain, rendererFunction);
 };
 
 module.exports = {
-    create_renderer_function: create_renderer_function,
-    render_list: render_list,
-    dom_processors: {
-        inject_element: inject_element,
-        create_component: create_component
+    createRendererFunction: createRendererFunction,
+    renderList: renderList,
+    domProcessors: {
+        injectElement: injectElement,
+        createComponents: createComponents
     }
 };

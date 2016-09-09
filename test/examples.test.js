@@ -27,7 +27,7 @@ describe('Examples', function() {
             },
 
             initialize: {
-                inject_init: true,
+                injectInit: true,
                 value: function() {
                     this.view.pub = this.pub;
                 }
@@ -58,7 +58,7 @@ describe('Examples', function() {
                 inject: 'pub'
             },
 
-            count_click: {
+            countClick: {
                 sub: 'myview/clicked',
                 value: function() {
                     this.pub('click/increment', 1);
@@ -86,7 +86,7 @@ describe('Examples', function() {
             },
 
             refresh: {
-                inject_init: true,
+                injectInit: true,
                 value: function() {
                     this.view.data({clicks: this.clicks});
                 }

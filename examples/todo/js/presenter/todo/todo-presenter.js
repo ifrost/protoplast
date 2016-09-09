@@ -8,9 +8,9 @@
         },
 
         init: function () {
-            this.view.on('toggle', this.controller.toggle_todo.bind(this.controller));
-            this.view.on('remove', this.controller.remove_todo.bind(this.controller));
-            this.view.on('edit', this.controller.edit_todo.bind(this.controller));
+            this.view.on('toggle', this.controller.toggleTodo.bind(this.controller));
+            this.view.on('remove', this.controller.removeTodo.bind(this.controller));
+            this.view.on('edit', this.controller.editTodo.bind(this.controller));
         }
 
     });

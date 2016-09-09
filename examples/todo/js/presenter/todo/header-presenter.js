@@ -8,11 +8,11 @@
         },
 
         init: function () {
-            this.view.on('submit', this.submit_todo);
+            this.view.on('submit', this.submitTodo);
         },
 
-        submit_todo: function(text) {
-            this.controller.add_todo(text);
+        submitTodo: function(text) {
+            this.controller.addTodo(text);
         }
 
     });

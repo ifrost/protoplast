@@ -257,7 +257,7 @@ describe('Components Dependency Injection', function() {
 
         var Root = Component.extend({
             $meta: {
-                dom_processors: [processor]
+                domProcessors: [processor]
             },
             html: '<div><span data-test="foo"></span></div>'
         });
@@ -278,7 +278,7 @@ describe('Components Dependency Injection', function() {
 
         var Root = Component.extend({
             $meta: {
-                dom_processors: [processor]
+                domProcessors: [processor]
             },
             html: '<span data-test="foo"></span>'
         });
@@ -301,7 +301,7 @@ describe('Components Dependency Injection', function() {
 
                 Presenter = Protoplast.extend({
                     init: {
-                        inject_init: true,
+                        injectInit: true,
                         value: init
                     },
                     foo: {
@@ -387,7 +387,7 @@ describe('utils', function() {
 
     describe('render list', function() {
 
-        var create, update, remove, host, TestRenderer, render_list;
+        var create, update, remove, host, TestRenderer, renderList;
 
         beforeEach(function() {
             create = sinon.stub();
@@ -396,42 +396,42 @@ describe('utils', function() {
             TestRenderer = Protoplast.extend();
             host = {};
 
-            render_list = Protoplast.utils.create_renderer_function(host, {
+            renderList = Protoplast.utils.createRendererFunction(host, {
                 create: create,
                 update: update,
                 remove: remove,
                 renderer: TestRenderer,
-                renderer_data_property: 'test_property'
+                rendererDataProperty: 'testProperty'
             });
         });
 
         it('creates new renderers', function() {
             host.children = [];
-            render_list(Collection.create([1,2,3]));
+            renderList(Collection.create([1,2,3]));
             sinon.assert.calledThrice(create);
             sinon.assert.notCalled(update);
             sinon.assert.notCalled(remove);
 
-            sinon.assert.calledWith(create, host, 1, TestRenderer, 'test_property');
-            sinon.assert.calledWith(create, host, 2, TestRenderer, 'test_property');
-            sinon.assert.calledWith(create, host, 3, TestRenderer, 'test_property');
+            sinon.assert.calledWith(create, host, 1, TestRenderer, 'testProperty');
+            sinon.assert.calledWith(create, host, 2, TestRenderer, 'testProperty');
+            sinon.assert.calledWith(create, host, 3, TestRenderer, 'testProperty');
         });
 
         it('updates existing renderers', function() {
             host.children = ['A','B','C'];
-            render_list(Collection.create([3,2,1]));
+            renderList(Collection.create([3,2,1]));
             sinon.assert.notCalled(create);
             sinon.assert.calledThrice(update);
             sinon.assert.notCalled(remove);
 
-            sinon.assert.calledWith(update, 'A', 3, 'test_property');
-            sinon.assert.calledWith(update, 'B', 2, 'test_property');
-            sinon.assert.calledWith(update, 'C', 1, 'test_property');
+            sinon.assert.calledWith(update, 'A', 3, 'testProperty');
+            sinon.assert.calledWith(update, 'B', 2, 'testProperty');
+            sinon.assert.calledWith(update, 'C', 1, 'testProperty');
         });
 
         it('removes obsolete renderers', function() {
             host.children = ['A','B','C'];
-            render_list(Collection.create([3,2]));
+            renderList(Collection.create([3,2]));
             sinon.assert.notCalled(create);
             sinon.assert.calledTwice(update);
             sinon.assert.calledOnce(remove);

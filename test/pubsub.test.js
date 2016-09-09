@@ -27,12 +27,12 @@ describe('Pub/Sub', function() {
                 }
             },
             injected: {
-                inject_init: true,
+                injectInit: true,
                 value: function() {
-                    this.sub('message').add(this.save_message);
+                    this.sub('message').add(this.saveMessage);
                 }
             },
-            save_message: function(msg) {
+            saveMessage: function(msg) {
                 this.message = msg;
             },
             clear: function() {

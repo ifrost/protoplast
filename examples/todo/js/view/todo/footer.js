@@ -10,11 +10,11 @@
         html: '<footer class="footer">' +
             '<span class="todo-count" data-prop="counter"></span>' +
             '<ul class="filters" data-prop="filters">' +
-            '<li><a data-prop="filter_all" href="#/">All</a></li>' +
-            '<li><a data-prop="filter_undone" href="#/active">Active</a></li>' +
-            '<li><a data-prop="filter_done" href="#/completed">Completed</a></li>' +
+            '<li><a data-prop="filterAll" href="#/">All</a></li>' +
+            '<li><a data-prop="filterUndone" href="#/active">Active</a></li>' +
+            '<li><a data-prop="filterDone" href="#/completed">Completed</a></li>' +
             '</ul>' +
-            '<button class="clear-completed" data-prop="clear_all">Clear completed</button>' +
+            '<button class="clear-completed" data-prop="clearAll">Clear completed</button>' +
             '</footer>',
 
         state: null,
@@ -31,36 +31,36 @@
         },
 
         init: function () {
-            this.clear_all.on('click', function() {
-                this.dispatch('clear_all');
+            this.clearAll.on('click', function() {
+                this.dispatch('clearAll');
             }.bind(this));
 
             window.Protoplast.utils.bind(this, {
-                'state': this.update_state,
-                'all': this.update_visibility,
-                'done': [this.update_counter, this.update_clear_button],
-                'undone': [this.update_counter, this.update_clear_button]
+                'state': this.updateState,
+                'all': this.updateVisibility,
+                'done': [this.updateCounter, this.updateClearButton],
+                'undone': [this.updateCounter, this.updateClearButton]
             });
 
         },
 
-        update_state: function() {
-            this.filter_all.classed('selected', this.state === window.ViewStateModel.ALL);
-            this.filter_undone.classed('selected', this.state === window.ViewStateModel.UNDONE);
-            this.filter_done.classed('selected', this.state === window.ViewStateModel.DONE);
+        updateState: function() {
+            this.filterAll.classed('selected', this.state === window.ViewStateModel.ALL);
+            this.filterUndone.classed('selected', this.state === window.ViewStateModel.UNDONE);
+            this.filterDone.classed('selected', this.state === window.ViewStateModel.DONE);
         },
 
-        update_visibility: function() {
+        updateVisibility: function() {
             this.$root.style('display', this.all ? 'block' : 'none');
         },
 
-        update_counter: function() {
+        updateCounter: function() {
             var items = this.undone === 1 ? 'item' : 'items';
             this.counter.html('<strong>' + this.undone + '</strong> ' + items + ' left');
         },
 
-        update_clear_button: function() {
-            this.clear_all.style('display', this.done ? 'block' : 'none');
+        updateClearButton: function() {
+            this.clearAll.style('display', this.done ? 'block' : 'none');
         }
     });
 

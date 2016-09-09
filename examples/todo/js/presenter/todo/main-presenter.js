@@ -13,19 +13,19 @@
         
         init: function () {
             window.Protoplast.utils.bind(this, {
-                'todos.all': [this.update_toggle, this.update_toggle_visibility],
-                'todos.done': this.update_toggle
+                'todos.all': [this.updateToggle, this.updateToggleVisibility],
+                'todos.done': this.updateToggle
             });
             
-            this.view.on('toggle_all', this.controller.toggle_all.bind(this.controller));
+            this.view.on('toggleAll', this.controller.toggleAll.bind(this.controller));
         },
 
-        update_toggle_visibility: function() {
-            this.view.show_toggle = this.todos.all.length;
+        updateToggleVisibility: function() {
+            this.view.showToggle = this.todos.all.length;
         },
 
-        update_toggle: function() {
-            this.view.all_checked = this.todos.all.length === this.todos.done.length;
+        updateToggle: function() {
+            this.view.allChecked = this.todos.all.length === this.todos.done.length;
         }
 
     });

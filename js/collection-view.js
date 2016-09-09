@@ -6,7 +6,7 @@ var CollectionView = Model.extend({
 
     _sort: null,
 
-    _hidden_selected: null,
+    _hiddenSelected: null,
     
     selected: null,
 
@@ -35,12 +35,12 @@ var CollectionView = Model.extend({
         this._invalidate();
     },
 
-    add_filter: function(filter) {
+    addFilter: function(filter) {
         this._filters.push(filter);
         this._invalidate();
     },
 
-    remove_filter: function(filter) {
+    removeFilter: function(filter) {
         var index = this._filters.indexOf(filter);
         if (index !== -1) {
             this._filters.splice(index, 1);
@@ -48,12 +48,12 @@ var CollectionView = Model.extend({
         }
     },
 
-    add_sort: function(sort) {
+    addSort: function(sort) {
         this._sort.push(sort);
         this._invalidate();
     },
 
-    remove_sort: function(sort) {
+    removeSort: function(sort) {
         var index = this._sort.indexOf(sort);
         if (index !== -1) {
             this._sort.splice(index, 1);
@@ -73,18 +73,18 @@ var CollectionView = Model.extend({
         return this._current.forEach.apply(this._current, arguments);
     },
 
-    _resubscribe: function(filter_or_sort, event) {
+    _resubscribe: function(filterOrSort, event) {
         event.removed.forEach(function(item) {
-            if (filter_or_sort.properties) {
-                filter_or_sort.properties.forEach(function(property) {
+            if (filterOrSort.properties) {
+                filterOrSort.properties.forEach(function(property) {
                     item.off(property + '_changed', this.refresh, this);
                 }, this);
             }
         }, this);
 
         event.added.forEach(function(item) {
-            if (filter_or_sort.properties) {
-                filter_or_sort.properties.forEach(function(property) {
+            if (filterOrSort.properties) {
+                filterOrSort.properties.forEach(function(property) {
                     item.on(property + '_changed', this.refresh, this);
                 }, this);
             }
@@ -126,12 +126,12 @@ var CollectionView = Model.extend({
         }
         
         if (this.selected && this._current.indexOf(this.selected) === -1) {
-            this._hidden_selected = this.selected;
+            this._hiddenSelected = this.selected;
             this.selected = null;
         }
-        else if (!this.selected && this._hidden_selected && this._current.indexOf(this._hidden_selected) !== -1) {
-            this.selected = this._hidden_selected;
-            this._hidden_selected = null;
+        else if (!this.selected && this._hiddenSelected && this._current.indexOf(this._hiddenSelected) !== -1) {
+            this.selected = this._hiddenSelected;
+            this._hiddenSelected = null;
         }
         
         this.dispatch('changed');

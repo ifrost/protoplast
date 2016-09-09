@@ -7,28 +7,28 @@
             inject: 'todos'
         },
 
-        view_state: {
+        viewState: {
             inject: 'viewstate'
         },
 
-        app_model: {
+        appModel: {
             inject: 'appmodel'
         },
         
         init: {
-            inject_init: true,
+            injectInit: true,
             value: function() {
-                window.Protoplast.utils.bind_property(this, 'visible_todos', this.app_model, 'visible_todos');
+                window.Protoplast.utils.bindProperty(this, 'visibleTodos', this.appModel, 'visibleTodos');
             }
         },
 
-        visible_todos: {
-            computed: ['todos.todos', 'view_state.state'],
+        visibleTodos: {
+            computed: ['todos.todos', 'viewState.state'],
             value: function() {
-                if (this.view_state.state === window.ViewStateModel.UNDONE) {
+                if (this.viewState.state === window.ViewStateModel.UNDONE) {
                     return this.todos.undone;
                 }
-                else if (this.view_state.state === window.ViewStateModel.DONE) {
+                else if (this.viewState.state === window.ViewStateModel.DONE) {
                     return this.todos.done;
                 }
                 else {

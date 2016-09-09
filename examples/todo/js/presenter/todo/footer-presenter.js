@@ -11,22 +11,22 @@
             inject: 'todocontroller'
         },
 
-        view_state: {
+        viewState: {
             inject: 'viewstate'
         },
 
         init: function () {
             
             window.Protoplast.utils.bind(this.todos, {
-                'undone': this.update_counter,
-                'done': this.update_counter
+                'undone': this.updateCounter,
+                'done': this.updateCounter
             });
-            window.Protoplast.utils.bind_property(this.view_state, 'state', this.view, 'state');
+            window.Protoplast.utils.bindProperty(this.viewState, 'state', this.view, 'state');
 
-            this.view.on('clear_all', this.controller.clear_done.bind(this.controller));
+            this.view.on('clearAll', this.controller.clearDone.bind(this.controller));
         },
         
-        update_counter: function () {
+        updateCounter: function () {
             this.view.done = this.todos.done.length;
             this.view.undone = this.todos.undone.length;
         }

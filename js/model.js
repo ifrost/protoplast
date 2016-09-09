@@ -2,7 +2,7 @@ var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher'),
     utils = require('./utils');
 
-function define_computed_property(name, desc) {
+function defineComputedProperty(name, desc) {
     var calc = desc.value;
 
     delete desc.value;
@@ -23,8 +23,8 @@ function define_computed_property(name, desc) {
     }
 }
 
-function define_bindable_property(name, desc, proto) {
-    var initial_value = desc.value;
+function defineBindableProperty(name, desc, proto) {
+    var initialValue = desc.value;
 
     delete desc.value;
     delete desc.writable;
@@ -40,33 +40,33 @@ function define_bindable_property(name, desc, proto) {
             this.dispatch(name + '_changed', value, old);
         }
     };
-    proto['_' + name] = initial_value;
+    proto['_' + name] = initialValue;
 }
 
 var Model = Protoplast.extend([Dispatcher], {
 
     $create: function() {
-        for (var computed_property in this.$meta.properties.computed) {
-            this.$meta.properties.computed[computed_property].forEach(function(chain) {
+        for (var computedProperty in this.$meta.properties.computed) {
+            this.$meta.properties.computed[computedProperty].forEach(function(chain) {
                 (function(){
                     utils.bind(this, chain, function() {
-                        this[computed_property] = undefined;
+                        this[computedProperty] = undefined;
                     }.bind(this));
-                }.bind(this))(computed_property);
+                }.bind(this))(computedProperty);
             }, this);
         }
     },
 
-    $define_property: function(property, desc) {
+    $defineProperty: function(property, desc) {
 
         if (this.$meta.properties.computed && this.$meta.properties.computed[property]) {
-            define_computed_property(property, desc);
+            defineComputedProperty(property, desc);
         }
         else if (!desc.get || ['number', 'boolean', 'string'].indexOf(typeof(desc.value)) !== -1) {
-            define_bindable_property(property, desc, this);
+            defineBindableProperty(property, desc, this);
         }
 
-        Protoplast.$define_property.call(this, property, desc);
+        Protoplast.$defineProperty.call(this, property, desc);
     }
 
 });

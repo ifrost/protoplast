@@ -8,7 +8,7 @@ var Model = require('./model'),
 var Component = Model.extend({
 
     $meta: {
-        dom_processors: [utils.dom_processors.create_component, utils.dom_processors.inject_element]
+        domProcessors: [utils.domProcessors.createComponents, utils.domProcessors.injectElement]
     },
     
     tag: '',
@@ -21,7 +21,7 @@ var Component = Model.extend({
         },
         set: function(value) {
             this._root = value;
-            this.process_root();
+            this.processRoot();
         }
     },
 
@@ -53,10 +53,10 @@ var Component = Model.extend({
     /**
      * Process DOM using defined DOM processors
      */
-    process_root: function() {
+    processRoot: function() {
         var i, elements, element, value;
         if (this._root) {
-            (this.$meta.dom_processors || []).forEach(function(processor) {
+            (this.$meta.domProcessors || []).forEach(function(processor) {
                 elements =  this._root.querySelectorAll('[' + processor.attribute + ']');
                 for (i = 0; i < elements.length; i++) {
                     element = elements[i];
@@ -98,7 +98,7 @@ var Component = Model.extend({
      * Template method, used to create DOM of the component
      */
     init: {
-        inject_init: true,
+        injectInit: true,
         value: function() {}
     },
 

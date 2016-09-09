@@ -54,7 +54,7 @@ describe('CollectionView', function() {
         todos.add(xyzzy);
 
         var done = CollectionView.create(todos);
-        done.add_filter({
+        done.addFilter({
             properties: ['done'],
             fn: function(todo) {
                 return todo.done;
@@ -71,7 +71,7 @@ describe('CollectionView', function() {
 
     it('filters item when the filter is set', function() {
 
-        view.add_filter({
+        view.addFilter({
             fn: function(item) {
                 return item % 2 == 0;
             }
@@ -84,7 +84,7 @@ describe('CollectionView', function() {
 
     it('sorts items when the sort function is set', function() {
 
-        view.add_sort({
+        view.addSort({
             fn: function(a, b) {
                 return b - a;
             }
@@ -117,7 +117,7 @@ describe('CollectionView', function() {
 
         var view = CollectionView.create(todos);
 
-        view.add_sort({
+        view.addSort({
             fn: function(a, b) {
                 if (a.done === b.done) {
                     return 0;
@@ -127,7 +127,7 @@ describe('CollectionView', function() {
                 }
             }
         });
-        view.add_sort({
+        view.addSort({
             fn: function(a, b) {
                 return a.text > b.text ? 1 : -1;
             }
@@ -154,7 +154,7 @@ describe('CollectionView', function() {
             }
         };
 
-        view.add_sort(sort);
+        view.addSort(sort);
         collection.add(3);
 
         chai.assert.lengthOf(view, 3);
@@ -162,7 +162,7 @@ describe('CollectionView', function() {
         chai.assert.strictEqual(view.get(1), 2);
         chai.assert.strictEqual(view.get(2), 1);
 
-        view.remove_sort(sort);
+        view.removeSort(sort);
 
         chai.assert.strictEqual(view.get(0), 1);
         chai.assert.strictEqual(view.get(1), 2);
@@ -189,10 +189,10 @@ describe('CollectionView', function() {
         view.selected = 2;
         chai.assert.strictEqual(view.selected, 2);
 
-        view.add_filter(filter);
+        view.addFilter(filter);
         chai.assert.isNull(view.selected);
 
-        view.remove_filter(filter);
+        view.removeFilter(filter);
         chai.assert.strictEqual(view.selected, 2);
 
     });
@@ -209,7 +209,7 @@ describe('CollectionView', function() {
             }
         };
 
-        view.add_filter(filter);
+        view.addFilter(filter);
         collection.add(3);
 
         var handler = sinon.stub();

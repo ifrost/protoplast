@@ -5,7 +5,7 @@ var utils = require('./utils');
  */
 var Protoplast = {
     $meta: {},
-    $define_property: function(property, desc) {
+    $defineProperty: function(property, desc) {
         Object.defineProperty(this, property, desc);
     },
     create: function() {
@@ -20,7 +20,7 @@ var Protoplast = {
  * @returns {Object}
  */
 Protoplast.extend = function(mixins, description) {
-    var proto = Object.create(this), meta, mixins_meta, desc;
+    var proto = Object.create(this), meta, mixinsMeta, desc;
 
     // normalise parameters
     if (!(mixins instanceof Array)) {
@@ -50,7 +50,7 @@ Protoplast.extend = function(mixins, description) {
     proto = utils.mixin(proto, mixins);
 
     // create description for all properties (properties are defined at the end)
-    var property_definitions = [];
+    var propertyDefinitions = [];
 
     for (var property in description) {
         
@@ -82,26 +82,26 @@ Protoplast.extend = function(mixins, description) {
                 desc.configurable = true;
             }
         }
-        property_definitions.push({
+        propertyDefinitions.push({
             property : property,
             desc: desc
         });
     }
 
     // mix meta data from the mixins into one object
-    mixins_meta = (mixins || []).reduce(function(current, next) {
+    mixinsMeta = (mixins || []).reduce(function(current, next) {
         return utils.merge(current, next.$meta);
     }, {});
     // mix all mixins meta data
-    meta = utils.merge(meta, mixins_meta);
+    meta = utils.merge(meta, mixinsMeta);
     // mix base prototype meta to the current meta
     proto.$meta = utils.merge(meta, this.$meta);
 
     // define properties
-    property_definitions.forEach(function(definition) {
+    propertyDefinitions.forEach(function(definition) {
         var property = definition.property,
             desc = definition.desc;
-        proto.$define_property(property, desc);
+        proto.$defineProperty(property, desc);
     });
 
     return proto;

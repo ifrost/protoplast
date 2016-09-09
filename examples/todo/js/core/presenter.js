@@ -12,7 +12,7 @@
         },
 
         init: {
-            inject_init: true,
+            injectInit: true,
             value: function() {}
         }
     });

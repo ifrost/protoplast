@@ -56,17 +56,17 @@ describe('Dispatcher', function() {
 
         it('removes handlers', function() {
 
-            var removed_handler = sinon.spy();
-            var active_handler = sinon.spy();
+            var removedHandler = sinon.spy();
+            var activeHandler = sinon.spy();
 
-            dispatcher.on('message', removed_handler);
-            dispatcher.on('message', active_handler);
-            dispatcher.off('message', removed_handler);
+            dispatcher.on('message', removedHandler);
+            dispatcher.on('message', activeHandler);
+            dispatcher.off('message', removedHandler);
 
             dispatcher.hello();
 
-            sinon.assert.called(active_handler);
-            sinon.assert.notCalled(removed_handler);
+            sinon.assert.called(activeHandler);
+            sinon.assert.notCalled(removedHandler);
         });
 
         it('noops removing non-exisitng handlers', function() {

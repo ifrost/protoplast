@@ -12,17 +12,17 @@
         done: null,
         
         $create: function() {
-            this.init_data();
+            this.initData();
 
             window.Protoplast.utils.bind(this, 'todos', this.store.bind(this));
 
-            this.create_views();
+            this.createViews();
         },
 
-        init_data: function() {
-            this.store_id('todos');
+        initData: function() {
+            this.storeId('todos');
 
-            var stored = this.store_read();
+            var stored = this.storeRead();
             var array = stored ? stored : [];
             
             array = array.map(function(item) {
@@ -34,21 +34,21 @@
             this.todos = window.Protoplast.Collection.create(array);
         },
 
-        create_views: function() {
-            this.done = this.create_done_view();
-            this.undone = this.create_undone_view();
-            this.all = this.create_all_view();
+        createViews: function() {
+            this.done = this.createDoneView();
+            this.undone = this.createUndoneView();
+            this.all = this.createAllView();
         },
 
-        create_done_view: function() {
+        createDoneView: function() {
             var done = window.Protoplast.CollectionView.create(this.todos);
-            done.add_filter({
+            done.addFilter({
                 properties: ['done'],
                 fn: function(item) {
                     return item.done
                 }
             });
-            done.add_sort({
+            done.addSort({
                 properties: ['text'],
                 fn: function(a,b) {
                     return a.text > b.text ? 1 : -1;
@@ -57,15 +57,15 @@
             return done;
         },
 
-        create_undone_view: function() {
+        createUndoneView: function() {
             var undone = window.Protoplast.CollectionView.create(this.todos);
-            undone.add_filter({
+            undone.addFilter({
                 properties: ['done'],
                 fn: function(item) {
                     return !item.done
                 }
             });
-            undone.add_sort({
+            undone.addSort({
                 properties: ['text'],
                 fn: function(a,b) {
                     return a.text > b.text ? 1 : -1;
@@ -74,15 +74,15 @@
             return undone;
         },
 
-        create_all_view: function() {
+        createAllView: function() {
             var all = window.Protoplast.CollectionView.create(this.todos);
-            all.add_sort({
+            all.addSort({
                 properties: ['done'],
                 fn: function(a,b) {
-                    return a.done == b.done ? 0  : (a.done ? 1 : -1);
+                    return a.done == b.done ? 0 : (a.done ? 1 : -1);
                 }
             });
-            all.add_sort({
+            all.addSort({
                 properties: ['text'],
                 fn: function(a,b) {
                     return a.text > b.text ? 1 : -1;
@@ -92,7 +92,7 @@
         },
 
         store: function() {
-            this.store_save(this.todos);
+            this.storeSave(this.todos);
         },
 
         add: function(todo) {
@@ -108,19 +108,19 @@
             this.store();
         },
 
-        edit_todo_text: function(todo, text) {
+        editTodoText: function(todo, text) {
             todo.text = text;
             this.store();
         },
 
-        toggle_all: function(value) {
+        toggleAll: function(value) {
             this.todos.forEach(function(todo) {
                 todo.done = value;
             });
             this.store();
         },
 
-        all_done: {
+        allDone: {
             get: function() {
                 return this.all.length === this.done.length;
             }

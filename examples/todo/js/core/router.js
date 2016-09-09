@@ -1,7 +1,7 @@
 (function(window) {
     'use strict';
 
-    var url_to_state = {
+    var urlToState = {
         '/': window.ViewStateModel.ALL,
         '/active': window.ViewStateModel.UNDONE,
         '/completed': window.ViewStateModel.DONE
@@ -20,8 +20,8 @@
 
         route: function() {
             var url = location.hash.slice(1) || '/';
-            if (url_to_state[url]) {
-                this.pub('view/change', url_to_state[url]);
+            if (urlToState[url]) {
+                this.pub('view/change', urlToState[url]);
             }
         }
     });

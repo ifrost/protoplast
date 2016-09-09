@@ -5,7 +5,7 @@
 
         $meta: {
             constructors: [Protoplast.constructors.autobind],
-            element_wrapper: d3.select.bind(d3)
+            elementWrapper: d3.select.bind(d3)
         },
 
         pub: {

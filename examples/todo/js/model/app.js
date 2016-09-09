@@ -3,7 +3,7 @@
 
     window.AppModel = window.Protoplast.Model.extend({
 
-        visible_todos: null
+        visibleTodos: null
 
     });
 

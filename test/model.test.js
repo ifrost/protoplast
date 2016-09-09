@@ -72,19 +72,19 @@ describe('Model', function() {
     it('resolves property chain', function() {
 
         var valid = sinon.stub(),
-            valid_nested = sinon.stub(),
+            validNested = sinon.stub(),
             invalid = sinon.stub();
 
         var object = {foobar: {foo: {bar: 'test'}}};
 
-        Protoplast.utils.resolve_property(object, 'foobar.foo.bar', valid);
-        Protoplast.utils.resolve_property(object, 'foobar.foo', valid_nested);
-        Protoplast.utils.resolve_property(object, 'foobar.invalid.bar', invalid);
+        Protoplast.utils.resolveProperty(object, 'foobar.foo.bar', valid);
+        Protoplast.utils.resolveProperty(object, 'foobar.foo', validNested);
+        Protoplast.utils.resolveProperty(object, 'foobar.invalid.bar', invalid);
 
         sinon.assert.calledOnce(valid);
         sinon.assert.calledWith(valid, 'test');
-        sinon.assert.calledOnce(valid_nested);
-        sinon.assert.calledWith(valid_nested, object.foobar.foo);
+        sinon.assert.calledOnce(validNested);
+        sinon.assert.calledWith(validNested, object.foobar.foo);
         sinon.assert.notCalled(invalid)
     });
 
@@ -105,20 +105,20 @@ describe('Model', function() {
 
         var test = TestModel.create();
 
-        var change_handler = sinon.spy();
+        var changeHandler = sinon.spy();
 
-        test.on('foo_changed', change_handler);
+        test.on('foo_changed', changeHandler);
 
-        sinon.assert.notCalled(change_handler);
+        sinon.assert.notCalled(changeHandler);
         test.bar = 1;
-        sinon.assert.calledOnce(change_handler);
-        sinon.assert.calledWith(change_handler, undefined, undefined); // old value is undefined because property was not computed
+        sinon.assert.calledOnce(changeHandler);
+        sinon.assert.calledWith(changeHandler, undefined, undefined); // old value is undefined because property was not computed
 
         test.foo; // calculate property, result -> 1*2=2
         test.bar = 2; // new value is not calculated automatically
 
-        sinon.assert.calledTwice(change_handler);
-        sinon.assert.calledWith(change_handler, undefined, 2);
+        sinon.assert.calledTwice(changeHandler);
+        sinon.assert.calledWith(changeHandler, undefined, 2);
     });
 
     it('clears binding handlers', function() {
@@ -130,7 +130,7 @@ describe('Model', function() {
         var level1 = Node.create(),
             level2 = Node.create(),
             level3 = Node.create(),
-            level2_replace = Node.create(),
+            level2Replace = Node.create(),
             handler = sinon.stub();
 
         Protoplast.utils.bind(level1, 'child.child', handler);
@@ -141,10 +141,10 @@ describe('Model', function() {
 
         chai.assert.lengthOf(helper.handlers(level2, 'child_changed'), 1);
 
-        level2_replace.child = level3;
-        level1.child = level2_replace;
+        level2Replace.child = level3;
+        level1.child = level2Replace;
 
-        chai.assert.lengthOf(helper.handlers(level2_replace, 'child_changed'), 1);
+        chai.assert.lengthOf(helper.handlers(level2Replace, 'child_changed'), 1);
         chai.assert.lengthOf(helper.handlers(level2, 'child_changed'), 0);
     });
 
@@ -181,30 +181,30 @@ describe('Model', function() {
             var john = Person.create('John', 'Baker', 'London');
             var hector = Person.create('Hector');
 
-            var john_city = sinon.stub();
-            var hector_city = sinon.stub();
+            var johnCity = sinon.stub();
+            var hectorCity = sinon.stub();
 
-            Protoplast.utils.bind(john, 'address.city', john_city);
-            Protoplast.utils.bind(hector, 'address.city', hector_city);
+            Protoplast.utils.bind(john, 'address.city', johnCity);
+            Protoplast.utils.bind(hector, 'address.city', hectorCity);
 
-            sinon.assert.calledOnce(john_city); // city already defined
-            sinon.assert.calledWith(john_city, 'London');
-            sinon.assert.notCalled(hector_city); // address not defined
+            sinon.assert.calledOnce(johnCity); // city already defined
+            sinon.assert.calledWith(johnCity, 'London');
+            sinon.assert.notCalled(hectorCity); // address not defined
 
             // setting address
             hector.address = Address.create('East', 'Manchester');
-            sinon.assert.calledOnce(hector_city);
-            sinon.assert.calledWith(hector_city, 'Manchester');
+            sinon.assert.calledOnce(hectorCity);
+            sinon.assert.calledWith(hectorCity, 'Manchester');
 
             // changing address
             john.address = Address.create('West', 'Liverpool');
-            sinon.assert.calledTwice(john_city);
-            sinon.assert.calledWith(john_city, 'Liverpool');
+            sinon.assert.calledTwice(johnCity);
+            sinon.assert.calledWith(johnCity, 'Liverpool');
 
             // changing city directly
             hector.address.city = 'Southampton';
-            sinon.assert.calledTwice(hector_city);
-            sinon.assert.calledWith(hector_city, 'Southampton');
+            sinon.assert.calledTwice(hectorCity);
+            sinon.assert.calledWith(hectorCity, 'Southampton');
         });
 
         it('binding between models', function() {
@@ -212,7 +212,7 @@ describe('Model', function() {
             var agent = Person.create('Agent', 'Baker', 'London');
             var spy = Person.create('Spy', 'Secret', '?');
 
-            Protoplast.utils.bind_property(agent, 'address.city', spy, 'address.city');
+            Protoplast.utils.bindProperty(agent, 'address.city', spy, 'address.city');
 
             chai.assert.strictEqual(spy.address.city, 'London');
 
@@ -225,14 +225,14 @@ describe('Model', function() {
 
         it('computed property', function() {
 
-            var calc_counter = 0;
+            var calcCounter = 0;
 
             var ExtPerson = Person.extend({
 
                 info: {
                     computed: ['address.city', 'address.street'],
                     value: function() {
-                        calc_counter++;
+                        calcCounter++;
                         return this.name + ' address: ' + this.address.street + ', ' + this.address.city;
                     }
                 }
@@ -241,14 +241,14 @@ describe('Model', function() {
 
             var john = ExtPerson.create('John', 'Baker', 'London');
 
-            chai.assert.strictEqual(calc_counter, 0);
+            chai.assert.strictEqual(calcCounter, 0);
             chai.assert.strictEqual(john.info, 'John address: Baker, London');
-            chai.assert.strictEqual(calc_counter, 1);
+            chai.assert.strictEqual(calcCounter, 1);
 
             john.address.street = 'West';
-            chai.assert.strictEqual(calc_counter, 1);
+            chai.assert.strictEqual(calcCounter, 1);
             john.info; // getter
-            chai.assert.strictEqual(calc_counter, 2);
+            chai.assert.strictEqual(calcCounter, 2);
 
             chai.assert.strictEqual(john.info, 'John address: West, London');
 
@@ -259,14 +259,14 @@ describe('Model', function() {
 
         it('binding to computed properties', function() {
 
-            var calc_counter = 0;
+            var calcCounter = 0;
 
             var ExtPerson = Person.extend({
 
                 info: {
                     computed: ['address.city', 'address.street'],
                     value: function() {
-                        calc_counter++;
+                        calcCounter++;
                         return this.name + ' address: ' + this.address.street + ', ' + this.address.city;
                     }
                 }
@@ -278,7 +278,7 @@ describe('Model', function() {
             });
 
             var Destination = Model.extend({
-                john_info: null
+                johnInfo: null
             });
 
             var john = ExtPerson.create('John', 'Baker', 'London');
@@ -287,16 +287,16 @@ describe('Model', function() {
             var handler = sinon.stub();
 
             Protoplast.utils.bind(container, 'person.info', handler);
-            chai.assert.strictEqual(calc_counter, 0);
-            Protoplast.utils.bind_property(container, 'person.info', destination, 'john_info');
-            chai.assert.strictEqual(calc_counter, 0);
+            chai.assert.strictEqual(calcCounter, 0);
+            Protoplast.utils.bindProperty(container, 'person.info', destination, 'johnInfo');
+            chai.assert.strictEqual(calcCounter, 0);
 
             container.person = john;
-            chai.assert.strictEqual(calc_counter, 1);
+            chai.assert.strictEqual(calcCounter, 1);
             sinon.assert.calledOnce(handler);
             sinon.assert.calledWith(handler, 'John address: Baker, London');
-            chai.assert.strictEqual(destination.john_info, 'John address: Baker, London');
-            chai.assert.strictEqual(calc_counter, 1);
+            chai.assert.strictEqual(destination.johnInfo, 'John address: Baker, London');
+            chai.assert.strictEqual(calcCounter, 1);
         });
 
         describe('collection binding', function() {
@@ -306,10 +306,10 @@ describe('Model', function() {
             beforeEach(function() {
                 var TestModel = Model.extend({
                     list: null,
-                    create_list: function() {
+                    createList: function() {
                         this.list = Collection.create([1,2]);
                     },
-                    modify_list: function() {
+                    modifyList: function() {
                         this.list.add(3);
                     }
                 });
@@ -317,19 +317,19 @@ describe('Model', function() {
                 test = TestModel.create();
                 handler = sinon.stub();
 
-                Protoplast.utils.bind_collection(test, 'list', handler);
+                Protoplast.utils.bindCollection(test, 'list', handler);
             });
 
             it('binding a collection changes', function() {
 
                 sinon.assert.calledOnce(handler);
 
-                test.create_list();
+                test.createList();
                 sinon.assert.calledTwice(handler);
                 chai.assert.deepEqual(handler.lastCall.args[0].toArray(), [1,2]);
 
                 handler.reset();
-                test.modify_list();
+                test.modifyList();
                 sinon.assert.calledOnce(handler);
                 chai.assert.deepEqual(handler.lastCall.args[0].toArray(), [1,2, 3]);
 
@@ -337,12 +337,12 @@ describe('Model', function() {
 
             it('clear collection bindings', function() {
 
-                test.create_list();
-                var old_list = test.list;
+                test.createList();
+                var oldList = test.list;
 
-                test.create_list();
+                test.createList();
 
-                chai.assert.lengthOf(helper.handlers(old_list, 'changed'), 0);
+                chai.assert.lengthOf(helper.handlers(oldList, 'changed'), 0);
                 chai.assert.lengthOf(helper.handlers(test.list, 'changed'), 1);
             });
 
@@ -355,32 +355,32 @@ describe('Model', function() {
                     
                     $create: function() {
                         Protoplast.utils.bind(this, {
-                            'person.address.city': this.city_changed
+                            'person.address.city': this.cityChanged
                         });
                     },
 
-                    city_changed: handler
+                    cityChanged: handler
                 });
 
-                var boston_john = Person.create('John', 'Wall Street', 'Boston');
-                var moving_jane = Person.create('Jane', 'Baker Street', 'London');
+                var bostonJohn = Person.create('John', 'Wall Street', 'Boston');
+                var movingJane = Person.create('Jane', 'Baker Street', 'London');
 
                 var test = Test.create();
 
                 sinon.assert.notCalled(handler);
-                test.person = moving_jane;
+                test.person = movingJane;
                 sinon.assert.calledOnce(handler);
 
-                moving_jane.address.city = 'Liverpool';
+                movingJane.address.city = 'Liverpool';
                 sinon.assert.calledTwice(handler);
 
-                moving_jane.address.street = 'High Street';
+                movingJane.address.street = 'High Street';
                 sinon.assert.calledTwice(handler);
 
-                test.person = boston_john;
+                test.person = bostonJohn;
                 sinon.assert.calledThrice(handler);
 
-                boston_john.address.street = 'Newman Street';
+                bostonJohn.address.street = 'Newman Street';
                 sinon.assert.calledThrice(handler);
             });
 

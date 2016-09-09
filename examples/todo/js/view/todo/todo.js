@@ -9,7 +9,7 @@
 
         data: null,
 
-        html: '<li><div class="view" data-prop="view"><input class="toggle" type="checkbox" data-prop="toggle" /><label data-prop="label"></label><button class="destroy" data-prop="remove_button"></button></div><input class="edit" data-prop="edit_input"></li>',
+        html: '<li><div class="view" data-prop="view"><input class="toggle" type="checkbox" data-prop="toggle" /><label data-prop="label"></label><button class="destroy" data-prop="removeButton"></button></div><input class="edit" data-prop="editInput"></li>',
         
         init: function () {
 
@@ -26,18 +26,18 @@
                 this.dispatch('toggle', this.data);
             }.bind(this));
 
-            this.remove_button.on('click', function() {
+            this.removeButton.on('click', function() {
                 this.dispatch('remove', this.data);
             }.bind(this));
 
             this.label.on('dblclick', function() {
-                this.enter_edit_mode();
+                this.enterEditMode();
             }.bind(this));
 
-            this.edit_input.on('keypress', function() {
-                var text = this.edit_input.property('value').trim();
+            this.editInput.on('keypress', function() {
+                var text = this.editInput.property('value').trim();
                 if (d3.event.keyCode === 13) {
-                    this.exit_edit_mode();
+                    this.exitEditMode();
                     if (text.length) {
                         this.dispatch('edit', {todo: this.data, text: text});
                     }
@@ -47,12 +47,12 @@
                 }
             }.bind(this));
 
-            this.edit_input.on('click', function() {
+            this.editInput.on('click', function() {
                 d3.event.stopPropagation();
             });
         },
 
-        fade_out: function(callback) {
+        fadeOut: function(callback) {
             this.view.style({opacity: 1, height: '58px'})
                 .transition().duration(200)
                 .style({opacity: 0, height: '0px'})
@@ -65,12 +65,12 @@
             this.toggle.property('checked', this.data.done);
         },
 
-        enter_edit_mode: function () {
+        enterEditMode: function () {
             this.$root.classed('editing', true);
-            this.edit_input.property('value', this.data.text).node().focus();
+            this.editInput.property('value', this.data.text).node().focus();
         },
 
-        exit_edit_mode: function () {
+        exitEditMode: function () {
             this.$root.classed('editing', false);
         }
 

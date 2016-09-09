@@ -81,7 +81,7 @@ describe('Dependency Injection', function() {
 
         Foo = Protoplast.extend({
             injected: {
-                inject_init: true,
+                injectInit: true,
                 value: function() {
                     bar = Bar.create();
                     this.__fastinject__(bar);

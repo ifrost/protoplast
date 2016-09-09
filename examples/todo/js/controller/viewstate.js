@@ -3,14 +3,14 @@
 
     window.ViewStateController = window.Controller.extend({
 
-        view_state: {
+        viewState: {
             inject: 'viewstate'
         },
 
-        change_view_state: {
+        changeViewState: {
             sub: 'view/change',
             value: function(state) {
-                this.view_state.state = state;
+                this.viewState.state = state;
             }
         }
 
