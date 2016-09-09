@@ -9,19 +9,13 @@
 
         tag: 'ul',
 
-        todos: {
-            inject: 'todos'
-        },
-
-        app_model: {
-            inject: 'appmodel'
-        },
+        visible_todos: null,
         
         init: function () {
 
             this.$root.classed('todo-list', true);
             
-            window.Protoplast.utils.render_list(this, 'app_model.visible_todos', {
+            window.Protoplast.utils.render_list(this, 'visible_todos', {
                 renderer: window.TodoView,
                 renderer_data_property: 'data',
                 remove: function(parent, child) {
