@@ -1,7 +1,7 @@
 (function(window) {
     'use strict';
 
-    window.Presenter = window.Protoplast.extend({
+    window.Presenter = window.Protoplast.Model.extend({
 
         $meta: {
             constructors: [Protoplast.constructors.autobind]

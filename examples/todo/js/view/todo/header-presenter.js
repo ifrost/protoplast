@@ -3,12 +3,16 @@
 
     window.HeaderPresenter = window.Presenter.extend({
 
+        controller: {
+            inject: 'todocontroller'
+        },
+
         init: function () {
             this.view.on('submit', this.submit_todo);
         },
 
         submit_todo: function(text) {
-            this.pub('todos/add', text);
+            this.controller.add_todo(text);
         }
 
     });

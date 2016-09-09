@@ -1,22 +1,23 @@
 (function (window) {
     'use strict';
 
-    window.MainViewPresenter = window.Presenter.extend({
+    window.MainPresenter = window.Presenter.extend({
 
         todos: {
             inject: 'todos'
         },
 
+        controller: {
+            inject: 'todocontroller'
+        },
+        
         init: function () {
             window.Protoplast.utils.bind_property(this, 'todos', this.view, 'todos');
-            this.pub('todos/toggle_all', this.all_checked);
-
+            
+            this.view.update_toggle();
+            this.view.on('toggle_all', this.controller.toggle_all.bind(this.controller));
         },
-
-        clear_all: function() {
-            this.pub('todos/clear_done');
-        },
-
+        
         update_counter: function () {
             this.view.done = this.todos.done.length;
             this.view.undone = this.todos.undone.length;

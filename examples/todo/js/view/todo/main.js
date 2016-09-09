@@ -3,8 +3,8 @@
 
     window.MainView = window.View.extend({
         
-        todos: {
-            inject: 'todos'
+        $meta: {
+            presenter: window.MainPresenter
         },
 
         html: '<section class="main">' +
@@ -16,6 +16,8 @@
         todos_view: {
             component: window.TodosView
         },
+
+        todos: null,
 
         all_checked: {
             get: function() {
@@ -29,10 +31,11 @@
 
             window.Protoplast.utils.bind(this.todos, 'done', this.update_toggle);
             window.Protoplast.utils.bind(this.todos, 'all', this.update_toggle_visibility);
+            window.Protoplast.utils.bind(this.todos, 'all', this.update_toggle);
         },
         
         toggle: function () {
-            this.pub('todos/toggle_all', this.all_checked);
+            this.dispatch('toggle_all', this.all_checked);
         },
 
         update_toggle: function () {

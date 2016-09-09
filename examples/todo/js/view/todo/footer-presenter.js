@@ -7,6 +7,10 @@
             inject: 'todos'
         },
 
+        controller: {
+            inject: 'todocontroller'
+        },
+
         view_state: {
             inject: 'viewstate'
         },
@@ -19,13 +23,9 @@
             });
             window.Protoplast.utils.bind_property(this.view_state, 'state', this.view, 'state');
 
-            this.view.on('clear_all', this.clear_all, this);
+            this.view.on('clear_all', this.controller.clear_done.bind(this.controller));
         },
-
-        clear_all: function() {
-            this.pub('todos/clear_done');
-        },
-
+        
         update_counter: function () {
             this.view.done = this.todos.done.length;
             this.view.undone = this.todos.undone.length;

@@ -2,6 +2,10 @@
     'use strict';
 
     window.TodoView = window.View.extend({
+        
+        $meta: {
+            presenter: window.TodoPresenter
+        },
 
         data: null,
 
@@ -19,11 +23,11 @@
                 .style({opacity: 1, height: '58px'});
 
             this.toggle.on('click', function(){
-                this.pub('todos/toggle', this.data);
+                this.dispatch('toggle', this.data);
             }.bind(this));
 
             this.remove_button.on('click', function() {
-                this.pub('todos/remove', this.data);
+                this.dispatch('remove', this.data);
             }.bind(this));
 
             this.label.on('dblclick', function() {
@@ -35,10 +39,10 @@
                 if (d3.event.keyCode === 13) {
                     this.exit_edit_mode();
                     if (text.length) {
-                        this.pub('todos/edit', {todo: this.data, text: text});
+                        this.dispatch('edit', {todo: this.data, text: text});
                     }
                     else {
-                        this.pub('todos/remove', this.data);
+                        this.dispatch('remove', this.data);
                     }
                 }
             }.bind(this));
