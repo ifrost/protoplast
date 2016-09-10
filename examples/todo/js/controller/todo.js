@@ -24,7 +24,7 @@
         },
 
         clearDone: function() {
-            this.todos.done.concat().forEach(function(todo) {
+            this.todos.done.forEach(function(todo) {
                 this.removeTodo(todo);
             }, this);
         },
