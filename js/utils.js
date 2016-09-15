@@ -1,6 +1,7 @@
 var common = require('./utils/common'),
     binding = require('./utils/binding'),
-    component = require('./utils/component');
+    component = require('./utils/component'),
+    html = require('./utils/html');
 
 module.exports = {
     createObject: common.createObject,
@@ -18,5 +19,7 @@ module.exports = {
     domProcessors: {
         injectElement: component.domProcessors.injectElement,
         createComponents: component.domProcessors.createComponents
-    }
+    },
+    
+    html: html
 };

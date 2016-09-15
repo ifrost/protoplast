@@ -23,21 +23,30 @@ describe('Component', function() {
         chai.assert.strictEqual(component.root.tagName, 'DIV');
     });
 
-    it.skip('creates a table row properly', function() {
+    it('creates a table row properly', function() {
 
         var Table = Component.extend({
             html: '<table></table>'
         });
 
         var Row = Component.extend({
-            html: '<tr><td id="row">1</td></tr>'
+            html: '<tr></tr>',
+            validParent: 'table'
+        });
+
+        var Column = Component.extend({
+            html: '<td id="row">1</td>',
+            validParent: 'tr'
         });
 
         var table = Table.create();
         var row = Row.create();
+        var column = Column.create();
 
+        row.add(column);
         table.add(row);
-        chai.assert.ok(global.document.getElementById('row').innerHTML, '1');
+
+        chai.assert.ok(table.root.innerHTML.indexOf('td id="row"') !== -1);
 
     });
 

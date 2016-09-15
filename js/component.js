@@ -35,6 +35,8 @@ var Component = Model.extend({
      * Init the object, construct and process DOM
      */
     $create: function() {
+        var domWrapper;
+
         this._children = [];
 
         if (!this.tag && !this.html) {
@@ -45,9 +47,11 @@ var Component = Model.extend({
             this.html = '<' + this.tag + '></' + this.tag + '>';
         }
 
-        var container = document.createElement('div');
-        container.innerHTML = this.html;
-        this.root = container.firstChild;
+        domWrapper = utils.html.parseHTML(this.html);
+        if (domWrapper.children.length > 1) {
+            throw new Error('Component should have only one root element');
+        }
+        this.root = domWrapper.firstChild;
     },
 
     /**
