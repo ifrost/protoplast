@@ -74,7 +74,7 @@ var createRendererFunction = function(host, opts) {
 };
 
 var renderList = function(host, sourceChain, opts) {
-    var rendererFunction = createRendererFunction(host, opts);
+    var rendererFunction = createRendererFunction(opts.parent || host, opts);
     binding.bindCollection(host, sourceChain, rendererFunction);
 };
 
