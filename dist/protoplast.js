@@ -235,6 +235,8 @@ var Component = Model.extend({
      * Init the object, construct and process DOM
      */
     $create: function() {
+        var domWrapper;
+
         this._children = [];
 
         if (!this.tag && !this.html) {
@@ -245,9 +247,11 @@ var Component = Model.extend({
             this.html = '<' + this.tag + '></' + this.tag + '>';
         }
 
-        var container = document.createElement('div');
-        container.innerHTML = this.html;
-        this.root = container.firstChild;
+        domWrapper = utils.html.parseHTML(this.html);
+        if (domWrapper.children.length > 1) {
+            throw new Error('Component should have only one root element');
+        }
+        this.root = domWrapper.firstChild;
     },
 
     /**
@@ -343,7 +347,7 @@ var Component = Model.extend({
         var index = this._children.indexOf(child);
         if (index !== -1) {
             this._children.splice(index, 1);
-            this.root.removeChild(child.root);
+            child.root.parentNode.removeChild(child.root);
             child.destroy();
         }
     },
@@ -352,11 +356,12 @@ var Component = Model.extend({
      * Attaches a component by replacing the provided element. Element must be an element inside the parent component.
      * @param {Component} child
      * @param {Element} element
+     * @param {HTMLElement} root if different than child.root
      */
-    attach: function(child, element) {
+    attach: function(child, element, root) {
         this._children.push(child);
-        this.root.insertBefore(child.root, element);
-        this.root.removeChild(element);
+        (root || this.root).insertBefore(child.root, element);
+        (root || this.root).removeChild(element);
     }
 });
 
@@ -742,7 +747,8 @@ module.exports = Protoplast;
 },{"./utils":9}],9:[function(require,module,exports){
 var common = require('./utils/common'),
     binding = require('./utils/binding'),
-    component = require('./utils/component');
+    component = require('./utils/component'),
+    html = require('./utils/html');
 
 module.exports = {
     createObject: common.createObject,
@@ -760,10 +766,12 @@ module.exports = {
     domProcessors: {
         injectElement: component.domProcessors.injectElement,
         createComponents: component.domProcessors.createComponents
-    }
+    },
+    
+    html: html
 };
 
-},{"./utils/binding":10,"./utils/common":11,"./utils/component":12}],10:[function(require,module,exports){
+},{"./utils/binding":10,"./utils/common":11,"./utils/component":12,"./utils/html":13}],10:[function(require,module,exports){
 var resolveProperty = function(host, chain, handler) {
     var props = chain.split('.');
 
@@ -995,7 +1003,7 @@ var createComponents = {
     attribute: 'data-comp',
     process: function(component, element, value) {
         var child = component[value] = component.$meta.properties.component[value].create();
-        component.attach(child, element);
+        component.attach(child, element, element.parentNode);
     }
 };
 
@@ -1043,7 +1051,7 @@ var createRendererFunction = function(host, opts) {
 };
 
 var renderList = function(host, sourceChain, opts) {
-    var rendererFunction = createRendererFunction(host, opts);
+    var rendererFunction = createRendererFunction(opts.parent || host, opts);
     binding.bindCollection(host, sourceChain, rendererFunction);
 };
 
@@ -1056,6 +1064,80 @@ module.exports = {
     }
 };
 },{"./binding":10}],13:[function(require,module,exports){
+/**
+ * Source: https://gist.github.com/Munawwar/6e6362dbdf77c7865a99
+ *
+ * jQuery 2.1.3's parseHTML (without scripts options).
+ * Unlike jQuery, this returns a DocumentFragment, which is more convenient to insert into DOM.
+ * MIT license.
+ *
+ * If you only support Edge 13+ then try this:
+ function parseHTML(html, context) {
+        var t = (context || document).createElement('template');
+            t.innerHTML = html;
+        return t.content.cloneNode(true);
+    }
+ */
+var parseHTML = (function() {
+    var rxhtmlTag = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi,
+        rtagName = /<([\w:]+)/,
+        rhtml = /<|&#?\w+;/,
+    // We have to close these tags to support XHTML (#13200)
+        wrapMap = {
+            // Support: IE9
+            option: [1, "<select multiple='multiple'>", "</select>"],
+
+            thead: [1, "<table>", "</table>"],
+            col: [2, "<table><colgroup>", "</colgroup></table>"],
+            tr: [2, "<table><tbody>", "</tbody></table>"],
+            td: [3, "<table><tbody><tr>", "</tr></tbody></table>"],
+
+            _default: [0, "", ""]
+        };
+
+    /**
+     * @param {String} elem A string containing html
+     * @param {Document} context
+     */
+    return function parseHTML(elem, context) {
+        context = context || document;
+
+        var tmp, tag, wrap, j,
+            fragment = context.createDocumentFragment();
+
+        if (!rhtml.test(elem)) {
+            fragment.appendChild(context.createTextNode(elem));
+
+            // Convert html into DOM nodes
+        } else {
+            tmp = fragment.appendChild(context.createElement("div"));
+
+            // Deserialize a standard representation
+            tag = (rtagName.exec(elem) || ["", ""])[1].toLowerCase();
+            wrap = wrapMap[tag] || wrapMap._default;
+            tmp.innerHTML = wrap[1] + elem.replace(rxhtmlTag, "<$1></$2>") + wrap[2];
+
+            // Descend through wrappers to the right content
+            j = wrap[0];
+            while (j--) {
+                tmp = tmp.lastChild;
+            }
+
+            // Remove wrappers and append created nodes to fragment
+            fragment.removeChild(fragment.firstChild);
+            while (tmp.firstChild) {
+                fragment.appendChild(tmp.firstChild);
+            }
+        }
+
+        return fragment;
+    };
+}());
+
+module.exports = {
+    parseHTML: parseHTML
+};
+},{}],14:[function(require,module,exports){
 (function (global){
 var Protoplast = require('./js/protoplast'),
     Collection = require('./js/collection'),
@@ -1083,5 +1165,5 @@ var protoplast = {
 global.Protoplast = protoplast;
 module.exports = protoplast;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./js/collection":2,"./js/collection-view":1,"./js/component":3,"./js/constructors":4,"./js/di":5,"./js/dispatcher":6,"./js/model":7,"./js/protoplast":8,"./js/utils":9}]},{},[13])(13)
+},{"./js/collection":2,"./js/collection-view":1,"./js/component":3,"./js/constructors":4,"./js/di":5,"./js/dispatcher":6,"./js/model":7,"./js/protoplast":8,"./js/utils":9}]},{},[14])(14)
 });
