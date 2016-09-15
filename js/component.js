@@ -143,7 +143,7 @@ var Component = Model.extend({
         var index = this._children.indexOf(child);
         if (index !== -1) {
             this._children.splice(index, 1);
-            this.root.removeChild(child.root);
+            child.root.parentNode.removeChild(child.root);
             child.destroy();
         }
     },
@@ -152,11 +152,12 @@ var Component = Model.extend({
      * Attaches a component by replacing the provided element. Element must be an element inside the parent component.
      * @param {Component} child
      * @param {Element} element
+     * @param {HTMLElement} root if different than child.root
      */
-    attach: function(child, element) {
+    attach: function(child, element, root) {
         this._children.push(child);
-        this.root.insertBefore(child.root, element);
-        this.root.removeChild(element);
+        (root || this.root).insertBefore(child.root, element);
+        (root || this.root).removeChild(element);
     }
 });
 

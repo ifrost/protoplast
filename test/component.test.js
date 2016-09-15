@@ -397,7 +397,7 @@ describe('Components Dependency Injection', function() {
 
         });
 
-        it.skip('creates components and replaces elements marked with data-comp nested in DOM', function() {
+        it('creates components and replaces elements marked with data-comp nested in DOM', function() {
 
             var Child = Component.extend({
                 foo: 'foo'
@@ -413,6 +413,7 @@ describe('Components Dependency Injection', function() {
             chai.assert.isNotNull(root.foo);
             chai.assert.equal(root.foo.foo, 'foo');
 
+            root.remove(root.foo);
         });
 
     });

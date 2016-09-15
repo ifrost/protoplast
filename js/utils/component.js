@@ -26,7 +26,7 @@ var createComponents = {
     attribute: 'data-comp',
     process: function(component, element, value) {
         var child = component[value] = component.$meta.properties.component[value].create();
-        component.attach(child, element);
+        component.attach(child, element, element.parentNode);
     }
 };
 
