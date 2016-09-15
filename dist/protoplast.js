@@ -1091,6 +1091,7 @@ var parseHTML = (function() {
             col: [2, "<table><colgroup>", "</colgroup></table>"],
             tr: [2, "<table><tbody>", "</tbody></table>"],
             td: [3, "<table><tbody><tr>", "</tr></tbody></table>"],
+            tbody: [1, "<table>", "</table>"],
 
             _default: [0, "", ""]
         };
