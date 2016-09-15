@@ -23,6 +23,24 @@ describe('Component', function() {
         chai.assert.strictEqual(component.root.tagName, 'DIV');
     });
 
+    it.skip('creates a table row properly', function() {
+
+        var Table = Component.extend({
+            html: '<table></table>'
+        });
+
+        var Row = Component.extend({
+            html: '<tr><td id="row">1</td></tr>'
+        });
+
+        var table = Table.create();
+        var row = Row.create();
+
+        table.add(row);
+        chai.assert.ok(global.document.getElementById('row').innerHTML, '1');
+
+    });
+
     it('adds a child to a component', function() {
         var Root = Component.extend({tag: 'div'});
         var Child = Component.extend({tag: 'span'});
@@ -370,6 +388,24 @@ describe('Components Dependency Injection', function() {
             var Root = Component.extend({
                 foo: {component: Child},
                 html: '<div><span data-comp="foo"></span></div>'
+            });
+
+            var root = Root.create();
+
+            chai.assert.isNotNull(root.foo);
+            chai.assert.equal(root.foo.foo, 'foo');
+
+        });
+
+        it.skip('creates components and replaces elements marked with data-comp nested in DOM', function() {
+
+            var Child = Component.extend({
+                foo: 'foo'
+            });
+
+            var Root = Component.extend({
+                foo: {component: Child},
+                html: '<div><p><span data-comp="foo"></span></p></div>'
             });
 
             var root = Root.create();
