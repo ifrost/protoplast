@@ -81,6 +81,7 @@ var renderList = function(host, sourceChain, opts) {
 module.exports = {
     createRendererFunction: createRendererFunction,
     renderList: renderList,
+    renderListDefaults: renderListDefaultOptions,
     domProcessors: {
         injectElement: injectElement,
         createComponents: createComponents

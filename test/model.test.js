@@ -307,7 +307,7 @@ describe('Model', function() {
                 var TestModel = Model.extend({
                     list: null,
                     createList: function() {
-                        this.list = Collection.create([1,2]);
+                        this.list = Collection.create([1, 2]);
                     },
                     modifyList: function() {
                         this.list.add(3);
@@ -326,12 +326,12 @@ describe('Model', function() {
 
                 test.createList();
                 sinon.assert.calledTwice(handler);
-                chai.assert.deepEqual(handler.lastCall.args[0].toArray(), [1,2]);
+                chai.assert.deepEqual(handler.lastCall.args[0].toArray(), [1, 2]);
 
                 handler.reset();
                 test.modifyList();
                 sinon.assert.calledOnce(handler);
-                chai.assert.deepEqual(handler.lastCall.args[0].toArray(), [1,2, 3]);
+                chai.assert.deepEqual(handler.lastCall.args[0].toArray(), [1, 2, 3]);
 
             });
 
@@ -352,7 +352,7 @@ describe('Model', function() {
 
                 var Test = Model.extend({
                     person: null,
-                    
+
                     $create: function() {
                         Protoplast.utils.bind(this, {
                             'person.address.city': this.cityChanged

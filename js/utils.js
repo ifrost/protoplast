@@ -11,6 +11,7 @@ module.exports = {
 
     resolveProperty: binding.resolveProperty,
     bind: binding.bind,
+    bindSetter: binding.bindSetter,
     bindProperty: binding.bindProperty,
     bindCollection: binding.bindCollection,
 
