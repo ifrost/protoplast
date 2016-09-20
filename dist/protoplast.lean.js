@@ -127,6 +127,7 @@ module.exports = {
 
     resolveProperty: binding.resolveProperty,
     bind: binding.bind,
+    bindSetter: binding.bindSetter,
     bindProperty: binding.bindProperty,
     bindCollection: binding.bindCollection,
 
@@ -427,6 +428,7 @@ var renderList = function(host, sourceChain, opts) {
 module.exports = {
     createRendererFunction: createRendererFunction,
     renderList: renderList,
+    renderListDefaults: renderListDefaultOptions,
     domProcessors: {
         injectElement: injectElement,
         createComponents: createComponents

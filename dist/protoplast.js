@@ -248,7 +248,7 @@ var Component = Model.extend({
         }
 
         domWrapper = utils.html.parseHTML(this.html);
-        if (domWrapper.children.length > 1) {
+        if (domWrapper.childNodes.length > 1) {
             throw new Error('Component should have only one root element');
         }
         this.root = domWrapper.firstChild;
@@ -333,10 +333,10 @@ var Component = Model.extend({
             throw new Error('Child component should have root property');
         }
         this._children.push(child);
+        this.root.appendChild(child.root);
         if (this.__fastinject__) {
             this.__fastinject__(child);
         } // otherwise it will be injected when __fastinject__ is set
-        this.root.appendChild(child.root);
     },
 
     /**
@@ -758,6 +758,7 @@ module.exports = {
 
     resolveProperty: binding.resolveProperty,
     bind: binding.bind,
+    bindSetter: binding.bindSetter,
     bindProperty: binding.bindProperty,
     bindCollection: binding.bindCollection,
 
@@ -1058,6 +1059,7 @@ var renderList = function(host, sourceChain, opts) {
 module.exports = {
     createRendererFunction: createRendererFunction,
     renderList: renderList,
+    renderListDefaults: renderListDefaultOptions,
     domProcessors: {
         injectElement: injectElement,
         createComponents: createComponents
