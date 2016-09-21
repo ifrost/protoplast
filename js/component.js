@@ -1,11 +1,11 @@
-var Model = require('./model'),
+var Object = require('./object'),
     utils = require('./utils');
 
 /**
  * Creates a simple component tree-like architecture for the view layer. Used with DI
  * @alias Component
  */
-var Component = Model.extend({
+var Component = Object.extend({
 
     $meta: {
         domProcessors: [utils.domProcessors.createComponents, utils.domProcessors.injectElement]

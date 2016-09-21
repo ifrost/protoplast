@@ -198,14 +198,14 @@ var Collection = Model.extend({
 
 module.exports = Collection;
 },{"./model":7}],3:[function(require,module,exports){
-var Model = require('./model'),
+var Object = require('./object'),
     utils = require('./utils');
 
 /**
  * Creates a simple component tree-like architecture for the view layer. Used with DI
  * @alias Component
  */
-var Component = Model.extend({
+var Component = Object.extend({
 
     $meta: {
         domProcessors: [utils.domProcessors.createComponents, utils.domProcessors.injectElement]
@@ -384,7 +384,7 @@ Component.Root = function(element, context) {
 module.exports = Component;
 
 
-},{"./model":7,"./utils":9}],4:[function(require,module,exports){
+},{"./object":8,"./utils":10}],4:[function(require,module,exports){
 /**
  * Collection of constructors
  */
@@ -514,7 +514,7 @@ var Context = Protoplast.extend({
 module.exports = Context;
 
 
-},{"./dispatcher":6,"./protoplast":8}],6:[function(require,module,exports){
+},{"./dispatcher":6,"./protoplast":9}],6:[function(require,module,exports){
 
 var Protoplast = require('./protoplast');
 
@@ -551,7 +551,7 @@ var Dispatcher = Protoplast.extend({
 
 module.exports = Dispatcher;
 
-},{"./protoplast":8}],7:[function(require,module,exports){
+},{"./protoplast":9}],7:[function(require,module,exports){
 var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher'),
     utils = require('./utils');
@@ -629,7 +629,25 @@ var Model = Protoplast.extend([Dispatcher], {
 });
 
 module.exports = Model;
-},{"./dispatcher":6,"./protoplast":8,"./utils":9}],8:[function(require,module,exports){
+},{"./dispatcher":6,"./protoplast":9,"./utils":10}],8:[function(require,module,exports){
+var constructors = require('./constructors'),
+    Model = require('./model');
+
+var Object = Model.extend({
+    
+    $meta: {
+        constructors: [constructors.autobind]
+    },
+    
+    init: {
+        injectInit: true,
+        value: function() {}
+    }
+    
+});
+
+module.exports = Object;
+},{"./constructors":4,"./model":7}],9:[function(require,module,exports){
 (function (global){
 var utils = require('./utils');
 
@@ -744,7 +762,7 @@ global.Protoplast = Protoplast;
 module.exports = Protoplast;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./utils":9}],9:[function(require,module,exports){
+},{"./utils":10}],10:[function(require,module,exports){
 var common = require('./utils/common'),
     binding = require('./utils/binding'),
     component = require('./utils/component'),
@@ -772,7 +790,7 @@ module.exports = {
     html: html
 };
 
-},{"./utils/binding":10,"./utils/common":11,"./utils/component":12,"./utils/html":13}],10:[function(require,module,exports){
+},{"./utils/binding":11,"./utils/common":12,"./utils/component":13,"./utils/html":14}],11:[function(require,module,exports){
 var resolveProperty = function(host, chain, handler) {
     var props = chain.split('.');
 
@@ -885,7 +903,7 @@ module.exports = {
     bindProperty: bindProperty,
     bindCollection: bindCollection
 };
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 var idCounter = 0;
 
 /**
@@ -975,7 +993,7 @@ module.exports = {
     mixin: mixin,
     uniqueId: uniqueId
 };
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var binding = require('./binding');
 
 /**
@@ -1065,7 +1083,7 @@ module.exports = {
         createComponents: createComponents
     }
 };
-},{"./binding":10}],13:[function(require,module,exports){
+},{"./binding":11}],14:[function(require,module,exports){
 /**
  * Source: https://gist.github.com/Munawwar/6e6362dbdf77c7865a99
  *
@@ -1140,7 +1158,7 @@ var parseHTML = (function() {
 module.exports = {
     parseHTML: parseHTML
 };
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function (global){
 var Protoplast = require('./js/protoplast'),
     Collection = require('./js/collection'),
@@ -1149,6 +1167,7 @@ var Protoplast = require('./js/protoplast'),
     Context = require('./js/di'),
     Component = require('./js/component'),
     Model = require('./js/model'),
+    Object = require('./js/object'),
     utils = require('./js/utils'),
     constructors = require('./js/constructors');
 
@@ -1159,6 +1178,7 @@ var protoplast = {
     Context: Context,
     Component: Component,
     Model: Model,
+    Object: Object,
     Collection: Collection,
     CollectionView: CollectionView,
     constructors: constructors,
@@ -1168,5 +1188,5 @@ var protoplast = {
 global.Protoplast = protoplast;
 module.exports = protoplast;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./js/collection":2,"./js/collection-view":1,"./js/component":3,"./js/constructors":4,"./js/di":5,"./js/dispatcher":6,"./js/model":7,"./js/protoplast":8,"./js/utils":9}]},{},[14])(14)
+},{"./js/collection":2,"./js/collection-view":1,"./js/component":3,"./js/constructors":4,"./js/di":5,"./js/dispatcher":6,"./js/model":7,"./js/object":8,"./js/protoplast":9,"./js/utils":10}]},{},[15])(15)
 });

@@ -5,6 +5,7 @@ var Protoplast = require('./js/protoplast'),
     Context = require('./js/di'),
     Component = require('./js/component'),
     Model = require('./js/model'),
+    Object = require('./js/object'),
     utils = require('./js/utils'),
     constructors = require('./js/constructors');
 
@@ -15,6 +16,7 @@ var protoplast = {
     Context: Context,
     Component: Component,
     Model: Model,
+    Object: Object,
     Collection: Collection,
     CollectionView: CollectionView,
     constructors: constructors,
