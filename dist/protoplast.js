@@ -654,14 +654,15 @@ var utils = require('./utils');
 /**
  * Base protoplast
  */
-var Protoplast = {
-    $meta: {},
-    $defineProperty: function(property, desc) {
-        Object.defineProperty(this, property, desc);
-    },
-    create: function() {
-        return utils.createObject(this, arguments);
-    }
+var Protoplast = new (function() {
+});
+
+Protoplast.$meta = {};
+Protoplast.$defineProperty = function(property, desc) {
+    Object.defineProperty(this, property, desc);
+};
+Protoplast.create = function() {
+    return utils.createObject(this, arguments);
 };
 
 /**
@@ -704,7 +705,7 @@ Protoplast.extend = function(mixins, description) {
     var propertyDefinitions = [];
 
     for (var property in description) {
-        
+
         if (Object.prototype.toString.call(description[property]) !== "[object Object]") {
             desc = {value: description[property], writable: true, enumerable: true, configurable: true};
         } else {
@@ -734,7 +735,7 @@ Protoplast.extend = function(mixins, description) {
             }
         }
         propertyDefinitions.push({
-            property : property,
+            property: property,
             desc: desc
         });
     }
@@ -771,6 +772,8 @@ var common = require('./utils/common'),
 module.exports = {
     createObject: common.createObject,
     merge: common.merge,
+    isLiteral: common.isLiteral,
+    isPrimitive: common.isPrimitive,
     mixin: common.mixin,
     uniqueId: common.uniqueId,
 
@@ -932,6 +935,14 @@ function createObject(proto, args) {
     return instance;
 }
 
+function isPrimitive(value) {
+    return ['number', 'boolean', 'string', 'function'].indexOf(typeof(value)) !== -1;
+}
+
+function isLiteral(value) {
+    return value && value.constructor === Object;
+}
+
 /**
  * Merges source object into destination. Arrays are concatenated, primitives taken from the source if not
  * defined and complex object merged recursively
@@ -945,7 +956,7 @@ function merge(destination, source) {
             if (source[property] instanceof Array) {
                 destination[property] = source[property].concat(destination[property] || []);
             }
-            else if (['number', 'boolean', 'string', 'function'].indexOf(typeof(source[property])) !== -1) {
+            else if (isPrimitive(source[property]) || !isLiteral(source[property])) {
                 if (!destination.hasOwnProperty(property)) {
                     destination[property] = source[property];
                 }
@@ -990,6 +1001,8 @@ function mixin(instance, mixins) {
 module.exports = {
     createObject: createObject,
     merge: merge,
+    isLiteral: isLiteral,
+    isPrimitive: isPrimitive,
     mixin: mixin,
     uniqueId: uniqueId
 };
