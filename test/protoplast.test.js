@@ -118,6 +118,29 @@ describe('Protoplast', function() {
             });
         });
 
+        it('overrides non-literal objects', function() {
+            var Base, Sub;
+
+            var baseMetaObj = Protoplast.extend({base: 'base', common: 'baseCommon'}).create(),
+                subMetaObj = Protoplast.extend({sub: 'sub', common: 'subCommon'}).create();
+
+            Base = Protoplast.extend({
+                $meta: {
+                    obj: baseMetaObj
+                }
+            });
+
+            Sub = Base.extend({
+                $meta: {
+                    obj: subMetaObj
+                }
+            });
+
+            chai.assert.strictEqual(Sub.$meta.obj.sub, 'sub');
+            chai.assert.strictEqual(Sub.$meta.obj.common, 'subCommon');
+            chai.assert.isUndefined(Sub.$meta.obj.base);
+        });
+
         it('assigns meta data with instances', function() {
             var Base = Protoplast.extend(), base;
             base = Base.create();

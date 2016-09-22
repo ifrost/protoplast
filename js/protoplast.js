@@ -3,14 +3,15 @@ var utils = require('./utils');
 /**
  * Base protoplast
  */
-var Protoplast = {
-    $meta: {},
-    $defineProperty: function(property, desc) {
-        Object.defineProperty(this, property, desc);
-    },
-    create: function() {
-        return utils.createObject(this, arguments);
-    }
+var Protoplast = new (function() {
+});
+
+Protoplast.$meta = {};
+Protoplast.$defineProperty = function(property, desc) {
+    Object.defineProperty(this, property, desc);
+};
+Protoplast.create = function() {
+    return utils.createObject(this, arguments);
 };
 
 /**
@@ -53,7 +54,7 @@ Protoplast.extend = function(mixins, description) {
     var propertyDefinitions = [];
 
     for (var property in description) {
-        
+
         if (Object.prototype.toString.call(description[property]) !== "[object Object]") {
             desc = {value: description[property], writable: true, enumerable: true, configurable: true};
         } else {
@@ -83,7 +84,7 @@ Protoplast.extend = function(mixins, description) {
             }
         }
         propertyDefinitions.push({
-            property : property,
+            property: property,
             desc: desc
         });
     }

@@ -26,6 +26,14 @@ function createObject(proto, args) {
     return instance;
 }
 
+function isPrimitive(value) {
+    return ['number', 'boolean', 'string', 'function'].indexOf(typeof(value)) !== -1;
+}
+
+function isLiteral(value) {
+    return value && value.constructor === Object;
+}
+
 /**
  * Merges source object into destination. Arrays are concatenated, primitives taken from the source if not
  * defined and complex object merged recursively
@@ -39,7 +47,7 @@ function merge(destination, source) {
             if (source[property] instanceof Array) {
                 destination[property] = source[property].concat(destination[property] || []);
             }
-            else if (['number', 'boolean', 'string', 'function'].indexOf(typeof(source[property])) !== -1) {
+            else if (isPrimitive(source[property]) || !isLiteral(source[property])) {
                 if (!destination.hasOwnProperty(property)) {
                     destination[property] = source[property];
                 }
@@ -84,6 +92,8 @@ function mixin(instance, mixins) {
 module.exports = {
     createObject: createObject,
     merge: merge,
+    isLiteral: isLiteral,
+    isPrimitive: isPrimitive,
     mixin: mixin,
     uniqueId: uniqueId
 };

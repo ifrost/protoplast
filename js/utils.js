@@ -6,6 +6,8 @@ var common = require('./utils/common'),
 module.exports = {
     createObject: common.createObject,
     merge: common.merge,
+    isLiteral: common.isLiteral,
+    isPrimitive: common.isPrimitive,
     mixin: common.mixin,
     uniqueId: common.uniqueId,
 
