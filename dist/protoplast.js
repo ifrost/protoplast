@@ -198,7 +198,8 @@ var Collection = Model.extend({
 
 module.exports = Collection;
 },{"./model":7}],3:[function(require,module,exports){
-var Object = require('./object'),
+var Context = require('./di'),
+    Object = require('./object'),
     utils = require('./utils');
 
 /**
@@ -362,6 +363,16 @@ var Component = Object.extend({
         this._children.push(child);
         (root || this.root).insertBefore(child.root, element);
         (root || this.root).removeChild(element);
+    },
+
+    /**
+     * Attaches the component to a root created on a provided element
+     * @param element
+     * @param context
+     */
+    attachTo: function(element, context) {
+        var parent = Component.Root(element, context);
+        parent.add(this);
     }
 });
 
@@ -374,17 +385,16 @@ var Component = Object.extend({
  */
 Component.Root = function(element, context) {
     var component = Component.create();
+    context = context || Context.create();
     component.root = element;
-    if (context) {
-        context.register(component);
-    }
+    context.register(component);
     return component;
 };
 
 module.exports = Component;
 
 
-},{"./object":8,"./utils":10}],4:[function(require,module,exports){
+},{"./di":5,"./object":8,"./utils":10}],4:[function(require,module,exports){
 /**
  * Collection of constructors
  */
@@ -631,6 +641,7 @@ var Model = Protoplast.extend([Dispatcher], {
 module.exports = Model;
 },{"./dispatcher":6,"./protoplast":9,"./utils":10}],8:[function(require,module,exports){
 var constructors = require('./constructors'),
+    utils = require('./utils'),
     Model = require('./model');
 
 var Object = Model.extend({
@@ -642,12 +653,20 @@ var Object = Model.extend({
     init: {
         injectInit: true,
         value: function() {}
+    },
+
+    bind: function(chain, handler) {
+        utils.bind(this, chain, handler);
+    },
+
+    bindProperty: function(chain, dest, destChain) {
+        utils.bindProperty(this, chain, dest, destChain);
     }
     
 });
 
 module.exports = Object;
-},{"./constructors":4,"./model":7}],9:[function(require,module,exports){
+},{"./constructors":4,"./model":7,"./utils":10}],9:[function(require,module,exports){
 (function (global){
 var utils = require('./utils');
 

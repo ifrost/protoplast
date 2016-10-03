@@ -1,4 +1,5 @@
-var Object = require('./object'),
+var Context = require('./di'),
+    Object = require('./object'),
     utils = require('./utils');
 
 /**
@@ -162,6 +163,16 @@ var Component = Object.extend({
         this._children.push(child);
         (root || this.root).insertBefore(child.root, element);
         (root || this.root).removeChild(element);
+    },
+
+    /**
+     * Attaches the component to a root created on a provided element
+     * @param element
+     * @param context
+     */
+    attachTo: function(element, context) {
+        var parent = Component.Root(element, context);
+        parent.add(this);
     }
 });
 
@@ -174,10 +185,9 @@ var Component = Object.extend({
  */
 Component.Root = function(element, context) {
     var component = Component.create();
+    context = context || Context.create();
     component.root = element;
-    if (context) {
-        context.register(component);
-    }
+    context.register(component);
     return component;
 };
 
