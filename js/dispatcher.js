@@ -26,9 +26,18 @@ var Dispatcher = Protoplast.extend({
     },
 
     off: function(topic, handler, context) {
-        this._topics[topic] = (this._topics[topic] || []).filter(function(config) {
-            return handler ? config.handler !== handler : config.context !== context
-        })
+        if (!topic) {
+            for (topic in this._topics) {
+                if (this._topics.hasOwnProperty(topic)) {
+                    this.off(topic, handler, context);
+                }
+            }
+        }
+        else {
+            this._topics[topic] = (this._topics[topic] || []).filter(function(config) {
+                return handler ? config.handler !== handler : config.context !== context
+            })
+        }
     }
 });
 

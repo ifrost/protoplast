@@ -299,6 +299,146 @@ describe('Model', function() {
             chai.assert.strictEqual(calcCounter, 1);
         });
 
+        describe('watchers', function() {
+
+            var handler, item1, item2, item3, collection;
+
+            beforeEach(function() {
+                var Item = Model.extend({
+                    item: null,
+                    collection: null,
+                    text: ''
+                });
+
+                handler = sinon.stub();
+
+                item1 = Item.create();
+                item2 = Item.create();
+                item3 = Item.create();
+
+                collection = Collection.create();
+
+                item1.item = item2;
+                item2.item = item3;
+                item3.text = 'item3';
+
+                item2.collection = collection;
+
+            });
+
+            it('setter watcher', function() {
+
+                var watcher = Protoplast.utils.bindSetter(item1, 'item.item.text', handler);
+
+                item2.item = item3;
+                item1.item = item2;
+
+                chai.assert.lengthOf(helper.handlers(item1), 1);
+                chai.assert.lengthOf(helper.handlers(item2), 1);
+                chai.assert.lengthOf(helper.handlers(item3), 1);
+
+                watcher.stop();
+
+                chai.assert.lengthOf(helper.handlers(item1), 0);
+                chai.assert.lengthOf(helper.handlers(item2), 0);
+                chai.assert.lengthOf(helper.handlers(item3), 0);
+
+                watcher.start();
+
+                chai.assert.lengthOf(helper.handlers(item1), 1);
+                chai.assert.lengthOf(helper.handlers(item2), 1);
+                chai.assert.lengthOf(helper.handlers(item3), 1);
+
+            });
+
+            it('collection watcher', function() {
+
+                var watcher = Protoplast.utils.bindCollection(item1, 'item.collection', handler);
+
+                chai.assert.lengthOf(helper.handlers(item1), 1);
+                chai.assert.lengthOf(helper.handlers(item2), 1);
+                chai.assert.lengthOf(helper.handlers(collection), 1);
+
+                watcher.stop();
+
+                chai.assert.lengthOf(helper.handlers(item1), 0);
+                chai.assert.lengthOf(helper.handlers(item2), 0);
+                chai.assert.lengthOf(helper.handlers(collection), 0);
+
+                watcher.start();
+
+                chai.assert.lengthOf(helper.handlers(item1), 1);
+                chai.assert.lengthOf(helper.handlers(item2), 1);
+                chai.assert.lengthOf(helper.handlers(collection), 1);
+
+            });
+
+            it('bind watcher', function() {
+
+                var watcher = Protoplast.utils.bind(item1, {
+                    'item.item.text': handler,
+                    'item.collection': handler
+                });
+
+                chai.assert.lengthOf(helper.handlers(item1), 2);
+                chai.assert.lengthOf(helper.handlers(item2), 2);
+                chai.assert.lengthOf(helper.handlers(item3), 1);
+                chai.assert.lengthOf(helper.handlers(collection), 1);
+
+                watcher.stop();
+
+                chai.assert.lengthOf(helper.handlers(item1), 0);
+                chai.assert.lengthOf(helper.handlers(item2), 0);
+                chai.assert.lengthOf(helper.handlers(item3), 0);
+                chai.assert.lengthOf(helper.handlers(collection), 0);
+
+                watcher.start();
+
+                chai.assert.lengthOf(helper.handlers(item1), 2);
+                chai.assert.lengthOf(helper.handlers(item2), 2);
+                chai.assert.lengthOf(helper.handlers(item3), 1);
+                chai.assert.lengthOf(helper.handlers(collection), 1);
+            });
+
+            it('bind property watcher', function() {
+
+                var watcher = Protoplast.utils.bindProperty(item1, 'item.item', {}, 'value');
+
+                chai.assert.lengthOf(helper.handlers(item1), 1);
+                chai.assert.lengthOf(helper.handlers(item2), 1);
+
+                watcher.stop();
+
+                chai.assert.lengthOf(helper.handlers(item1), 0);
+                chai.assert.lengthOf(helper.handlers(item2), 0);
+
+                watcher.start();
+
+                chai.assert.lengthOf(helper.handlers(item1), 1);
+                chai.assert.lengthOf(helper.handlers(item2), 1);
+
+            });
+
+            it('stopping a watcher keeps other handlers', function() {
+
+                var otherHandler = sinon.stub();
+
+                var watcher = Protoplast.utils.bind(item1, {
+                    'item.item.text': handler,
+                    'item.collection': handler
+                });
+
+                item2.on('test', otherHandler);
+
+                chai.assert.lengthOf(helper.handlers(item2), 3);
+
+                watcher.stop();
+
+                chai.assert.lengthOf(helper.handlers(item2), 1);
+            });
+
+        });
+
         describe('collection binding', function() {
 
             var test, handler;

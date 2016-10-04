@@ -78,6 +78,23 @@ describe('Dispatcher', function() {
             });
         });
 
+        it('removes all handlers with specific context', function() {
+            var handler = sinon.stub(),
+                other = sinon.stub(),
+                context = {},
+                otherContext = {};
+
+            dispatcher.on('message', handler, context);
+            dispatcher.on('message', other, otherContext);
+
+            dispatcher.off(null, null, context);
+
+            dispatcher.hello();
+
+            sinon.assert.notCalled(handler);
+            sinon.assert.called(other);
+        });
+
     });
 
 });

@@ -17,11 +17,12 @@ var resolveProperty = function(host, chain, handler) {
 
 };
 
-var bindSetter = function(host, chain, handler) {
-    var props = chain.split('.');
+var bindSetter = function(host, chain, handler, context) {
+    var props = chain.split('.'),
+        context = context || {};
 
     if (props.length === 1) {
-        host.on(chain + '_changed', handler);
+        host.on(chain + '_changed', handler, context);
         handler(host[chain]);
     }
     else {
@@ -30,23 +31,43 @@ var bindSetter = function(host, chain, handler) {
         if (subHost) {
             bindSetter(subHost, subChain, function() {
                 resolveProperty(subHost, subChain, handler);
-            });
+            }, context);
         }
         host.on(props[0] + '_changed', function(_, previous) {
             if (previous && previous.on) {
                 previous.off(props[0] + '_changed', handler);
             }
-            bindSetter(host[props[0]], subChain, handler);
-        });
+            bindSetter(host[props[0]], subChain, handler, context);
+        }, context);
     }
 
+    return {
+        start: function() {
+            bindSetter(host, chain, handler);
+        },
+        stop: function() {
+            resolveProperty(host, chain, function(value) {
+                if (value.off) {
+                    value.off(null, null, context);
+                }
+            });
+            while (props.length) {
+                props.pop();
+                resolveProperty(host, props.join('.'), function(value) {
+                    value.off(null, null, context);
+                });
+            }
+        }
+    }
 };
 
-var bindCollection = function(host, sourceChain, handler) {
+var bindCollection = function(host, sourceChain, handler, context) {
 
     var previousList = null, previousHandler;
 
-    bindSetter(host, sourceChain, function() {
+    context = context || {};
+
+    return bindSetter(host, sourceChain, function() {
         resolveProperty(host, sourceChain, function(list) {
             if (previousList) {
                 if (previousList.off) {
@@ -59,29 +80,44 @@ var bindCollection = function(host, sourceChain, handler) {
                 previousList = list;
                 previousHandler = handler.bind(host, list);
                 if (list.on) {
-                    list.on('changed', previousHandler);
+                    list.on('changed', previousHandler, context);
                 }
             }
             handler(list);
         });
-    });
+    }, context);
 
 };
 
 var bind = function(host, bindingsOrChain, handler) {
     var handlersList;
     if (arguments.length === 3) {
-        bindCollection(host, bindingsOrChain, handler);
+        return bindCollection(host, bindingsOrChain, handler);
     }
     else {
+        var watchers = [], subWatcher;
         for (var binding in bindingsOrChain) {
-            handlersList = bindingsOrChain[binding];
-            if (!(handlersList instanceof Array)) {
-                handlersList = [handlersList];
+            if (bindingsOrChain.hasOwnProperty(binding)) {
+                handlersList = bindingsOrChain[binding];
+                if (!(handlersList instanceof Array)) {
+                    handlersList = [handlersList];
+                }
+                handlersList.forEach(function(handler) {
+                    subWatcher = bind(host, binding, handler.bind(host));
+                    watchers.push(subWatcher);
+                });
             }
-            handlersList.forEach(function(handler) {
-                bind(host, binding, handler.bind(host));
-            });
+        }
+        var args = arguments;
+        return {
+            start: function() {
+                bind.apply(null, args);
+            },
+            stop: function() {
+                watchers.forEach(function(watcher) {
+                    watcher.stop();
+                });
+            }
         }
     }
 };
@@ -91,7 +127,7 @@ var bindProperty = function(host, hostChain, dest, destChain) {
     var props = destChain.split('.');
     var prop = props.pop();
 
-    bind(host, hostChain, function() {
+    return bind(host, hostChain, function() {
         resolveProperty(host, hostChain, function(value) {
             resolveProperty(dest, props.join('.'), function(finalObject) {
                 if (finalObject) {
