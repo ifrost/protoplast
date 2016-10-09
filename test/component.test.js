@@ -317,25 +317,30 @@ describe('Components Dependency Injection', function() {
     });
 
     it('mounts component by replacing a custom tag', function() {
-        var presenterInit = sinon.stub();
+        var presenterInit = sinon.stub(),
+            componentInit = sinon.stub();
 
         document.body.innerHTML = '<div><my-component/></div>';
 
         var MyPresenter = Protoplast.Object.extend({
-            init: presenterInit
+            init: function() {
+                presenterInit();
+            }
         });
 
         var MyComponent = Component.extend({
             $meta: {
                 presenter: MyPresenter
             },
-            html: '<span>Test</span>'
+            html: '<span>Test</span>',
+            init: componentInit
         });
 
         Protoplast.Component.Mount('my-component', MyComponent);
 
         chai.assert.strictEqual(document.body.innerHTML, '<div><span>Test</span></div>');
         sinon.assert.calledOnce(presenterInit);
+        sinon.assert.calledOnce(componentInit);
     });
 
     describe('Component features', function() {
