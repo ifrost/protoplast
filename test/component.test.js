@@ -316,6 +316,28 @@ describe('Components Dependency Injection', function() {
 
     });
 
+    it('mounts component by replacing a custom tag', function() {
+        var presenterInit = sinon.stub();
+
+        document.body.innerHTML = '<div><my-component/></div>';
+
+        var MyPresenter = Protoplast.Object.extend({
+            init: presenterInit
+        });
+
+        var MyComponent = Component.extend({
+            $meta: {
+                presenter: MyPresenter
+            },
+            html: '<span>Test</span>'
+        });
+
+        Protoplast.Component.Mount('my-component', MyComponent);
+
+        chai.assert.strictEqual(document.body.innerHTML, '<div><span>Test</span></div>');
+        sinon.assert.calledOnce(presenterInit);
+    });
+
     describe('Component features', function() {
 
         describe('Presenter', function() {
