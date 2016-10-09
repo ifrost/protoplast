@@ -409,6 +409,7 @@ Component.Mount = function(tag, Component, context) {
         element.parentNode.removeChild(element);
 
         context.register(component);
+        context.process(component);
     }
 
     return component;
