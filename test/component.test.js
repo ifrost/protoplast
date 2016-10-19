@@ -452,66 +452,157 @@ describe('Components Dependency Injection', function() {
             root.remove(root.foo);
         });
 
+        describe('shortcuts', function() {
+
+            var component, handler, main;
+
+            beforeEach(function() {
+                handler = sinon.spy();
+
+                var element = document.createElement('div'),
+                    context = Context.create();
+
+                context.register('foo', 'foo');
+                main = Component.Root(element, context);
+            });
+
+            it('bindWith', function() {
+                var Component = Protoplast.Component.extend({
+
+                    data: null,
+
+                    updateData: {
+                        bindWith: 'data',
+                        value: handler
+                    }
+
+                });
+
+                component = Component.create();
+                main.add(component);
+
+                sinon.assert.calledOnce(handler);
+                sinon.assert.calledWith(handler, null);
+
+                component.data = 'test';
+
+                sinon.assert.calledTwice(handler);
+                sinon.assert.calledWith(handler, 'test');
+            });
+
+            it('bindWith list', function() {
+                var Component = Protoplast.Component.extend({
+
+                    data: null,
+
+                    foobar: null,
+
+                    updateData: {
+                        bindWith: ['data', 'foobar'],
+                        value: handler
+                    }
+
+                });
+
+                component = Component.create();
+                main.add(component);
+
+                sinon.assert.calledTwice(handler);
+                handler.reset();
+
+                component.data = 'test';
+                sinon.assert.calledOnce(handler);
+
+                component.foobar = 'test2';
+                sinon.assert.calledTwice(handler);
+            });
+
+            it('renderWith', function() {
+
+                var createHandler, updateHandler, removeHandler;
+
+                createHandler = sinon.spy();
+                updateHandler = sinon.spy();
+                removeHandler = sinon.spy();
+
+                var Component = Protoplast.Component.extend({
+                    data: {
+                        renderWith: {
+                            renderer: Protoplast.Component,
+                            create: createHandler,
+                            update: updateHandler,
+                            remove: removeHandler
+                        }
+                    }
+                });
+
+                component = Component.create();
+                chai.assert.lengthOf(component.data, 0);
+
+                main.add(component);
+
+                component.data.add('test');
+                sinon.assert.calledOnce(createHandler);
+            });
+
+        });
     });
 
-});
+    describe('utils', function() {
 
-describe('utils', function() {
+        describe('render list', function() {
 
-    describe('render list', function() {
+            var create, update, remove, host, TestRenderer, renderList;
 
-        var create, update, remove, host, TestRenderer, renderList;
+            beforeEach(function() {
+                create = sinon.stub();
+                update = sinon.stub();
+                remove = sinon.stub();
+                TestRenderer = Protoplast.extend();
+                host = {};
 
-        beforeEach(function() {
-            create = sinon.stub();
-            update = sinon.stub();
-            remove = sinon.stub();
-            TestRenderer = Protoplast.extend();
-            host = {};
+                renderList = Protoplast.utils.createRendererFunction(host, {
+                    create: create,
+                    update: update,
+                    remove: remove,
+                    renderer: TestRenderer,
+                    property: 'testProperty'
+                });
+            });
 
-            renderList = Protoplast.utils.createRendererFunction(host, {
-                create: create,
-                update: update,
-                remove: remove,
-                renderer: TestRenderer,
-                property: 'testProperty'
+            it('creates new renderers', function() {
+                host.children = [];
+                renderList(Collection.create([1,2,3]));
+                sinon.assert.calledThrice(create);
+                sinon.assert.notCalled(update);
+                sinon.assert.notCalled(remove);
+
+                sinon.assert.calledWith(create, host, 1, TestRenderer, 'testProperty');
+                sinon.assert.calledWith(create, host, 2, TestRenderer, 'testProperty');
+                sinon.assert.calledWith(create, host, 3, TestRenderer, 'testProperty');
+            });
+
+            it('updates existing renderers', function() {
+                host.children = ['A','B','C'];
+                renderList(Collection.create([3,2,1]));
+                sinon.assert.notCalled(create);
+                sinon.assert.calledThrice(update);
+                sinon.assert.notCalled(remove);
+
+                sinon.assert.calledWith(update, 'A', 3, 'testProperty');
+                sinon.assert.calledWith(update, 'B', 2, 'testProperty');
+                sinon.assert.calledWith(update, 'C', 1, 'testProperty');
+            });
+
+            it('removes obsolete renderers', function() {
+                host.children = ['A','B','C'];
+                renderList(Collection.create([3,2]));
+                sinon.assert.notCalled(create);
+                sinon.assert.calledTwice(update);
+                sinon.assert.calledOnce(remove);
+
+                sinon.assert.calledWith(remove, host, 'C');
             });
         });
-
-        it('creates new renderers', function() {
-            host.children = [];
-            renderList(Collection.create([1,2,3]));
-            sinon.assert.calledThrice(create);
-            sinon.assert.notCalled(update);
-            sinon.assert.notCalled(remove);
-
-            sinon.assert.calledWith(create, host, 1, TestRenderer, 'testProperty');
-            sinon.assert.calledWith(create, host, 2, TestRenderer, 'testProperty');
-            sinon.assert.calledWith(create, host, 3, TestRenderer, 'testProperty');
-        });
-
-        it('updates existing renderers', function() {
-            host.children = ['A','B','C'];
-            renderList(Collection.create([3,2,1]));
-            sinon.assert.notCalled(create);
-            sinon.assert.calledThrice(update);
-            sinon.assert.notCalled(remove);
-
-            sinon.assert.calledWith(update, 'A', 3, 'testProperty');
-            sinon.assert.calledWith(update, 'B', 2, 'testProperty');
-            sinon.assert.calledWith(update, 'C', 1, 'testProperty');
-        });
-
-        it('removes obsolete renderers', function() {
-            host.children = ['A','B','C'];
-            renderList(Collection.create([3,2]));
-            sinon.assert.notCalled(create);
-            sinon.assert.calledTwice(update);
-            sinon.assert.calledOnce(remove);
-
-            sinon.assert.calledWith(remove, host, 'C');
-        });
     });
-
-
 });

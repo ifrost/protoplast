@@ -1,4 +1,5 @@
 var Context = require('./di'),
+    Collection = require('./collection'),
     Object = require('./object'),
     utils = require('./utils');
 
@@ -53,6 +54,8 @@ var Component = Object.extend({
             throw new Error('Component should have only one root element');
         }
         this.root = domWrapper.firstChild;
+
+        this.processInstance();
     },
 
     /**
@@ -69,6 +72,33 @@ var Component = Object.extend({
                     processor.process(this, element, value);
                 }
             }, this);
+        }
+    },
+
+    /**
+     * Process instance applying shortcuts defined in metadata
+     */
+    processInstance: function() {
+        utils.meta(this, 'renderWith', function(property) {
+            this[property] = Collection.create(this[property] || []);
+        }.bind(this));
+    },
+
+    processBinding: {
+        injectInit: true,
+        value: function() {
+            var properties;
+
+            utils.meta(this, 'bindWith', function(property, meta) {
+                properties = utils.isPrimitive(meta) ? [meta] : meta;
+                properties.forEach(function(propertyToBind) {
+                    utils.bind(this, propertyToBind, this[property]);
+                }, this);
+            }.bind(this));
+
+            utils.meta(this, 'renderWith', function(property, meta) {
+                utils.renderList(this, property, meta)
+            }.bind(this));
         }
     },
 
