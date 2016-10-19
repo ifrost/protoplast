@@ -341,6 +341,38 @@ describe('Protoplast', function() {
             chai.assert.equal(b.setterValue, 11);
         });
 
+        it('extracts meta data', function() {
+            
+            var handler = sinon.spy();
+            
+            var Base = Protoplast.extend({
+                
+                foo: {
+                    foo: 'FOO',
+                    foobar: 'FOO.FOOBAR'
+                },
+                
+                bar: {
+                    bar: 'BAR',
+                    foobar: 'BAR.FOOBAR'
+                }
+                
+            });
+            
+            var base = Base.create();
+            
+            Protoplast.utils.meta(base, 'foo', handler);
+            sinon.assert.calledOnce(handler);
+            sinon.assert.calledWith(handler, 'foo', 'FOO');
+            
+            handler.reset();
+
+            Protoplast.utils.meta(base, 'foobar', handler);
+            sinon.assert.calledTwice(handler);
+            sinon.assert.calledWith(handler, 'foo', 'FOO.FOOBAR');
+            sinon.assert.calledWith(handler, 'bar', 'BAR.FOOBAR');
+        });
+        
     });
 
 });

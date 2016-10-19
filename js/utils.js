@@ -10,6 +10,7 @@ module.exports = {
     isPrimitive: common.isPrimitive,
     mixin: common.mixin,
     uniqueId: common.uniqueId,
+    meta: common.meta,
 
     resolveProperty: binding.resolveProperty,
     bind: binding.bind,
