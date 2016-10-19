@@ -474,7 +474,7 @@ describe('utils', function() {
                 update: update,
                 remove: remove,
                 renderer: TestRenderer,
-                rendererDataProperty: 'testProperty'
+                property: 'testProperty'
             });
         });
 

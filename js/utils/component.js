@@ -50,7 +50,7 @@ var createRendererFunction = function(host, opts) {
     opts.create = opts.create || renderListDefaultOptions.create;
     opts.remove = opts.remove || renderListDefaultOptions.remove;
     opts.update = opts.update || renderListDefaultOptions.update;
-    opts.rendererDataProperty = opts.rendererDataProperty || 'data';
+    opts.property = opts.property || 'data';
     if (!opts.renderer) {
         throw new Error('Renderer is required')
     }
@@ -61,10 +61,10 @@ var createRendererFunction = function(host, opts) {
 
         for (var i = 0; i < max; i++) {
             if (children[i] && list.toArray()[i]) {
-                opts.update(children[i], list.toArray()[i], opts.rendererDataProperty);
+                opts.update(children[i], list.toArray()[i], opts.property);
             }
             else if (!children[i]) {
-                opts.create(this, list.toArray()[i], opts.renderer, opts.rendererDataProperty);
+                opts.create(this, list.toArray()[i], opts.renderer, opts.property);
             }
             else if (!list.toArray()[i]) {
                 opts.remove(this, children[i]);

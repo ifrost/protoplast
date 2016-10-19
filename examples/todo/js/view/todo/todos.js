@@ -17,7 +17,7 @@
             
             window.Protoplast.utils.renderList(this, 'visibleTodos', {
                 renderer: window.TodoView,
-                rendererDataProperty: 'data',
+                property: 'data',
                 remove: function(parent, child) {
                     child.fadeOut(function() {
                         parent.remove(child);
