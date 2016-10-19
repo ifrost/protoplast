@@ -127,6 +127,7 @@ module.exports = {
     isPrimitive: common.isPrimitive,
     mixin: common.mixin,
     uniqueId: common.uniqueId,
+    meta: common.meta,
 
     resolveProperty: binding.resolveProperty,
     bind: binding.bind,
@@ -315,7 +316,7 @@ function uniqueId(prefix) {
 function createObject(proto, args) {
     var instance = Object.create(proto);
     if (instance.$meta.constructors) {
-        instance.$meta.constructors.forEach(function(constructor){
+        instance.$meta.constructors.forEach(function(constructor) {
             constructor.apply(instance, args);
         });
     }
@@ -385,13 +386,22 @@ function mixin(instance, mixins) {
     return instance;
 }
 
+function meta(instance, metaProperty, handler) {
+    for (var property in instance.$meta.properties[metaProperty]) {
+        if (instance.$meta.properties[metaProperty].hasOwnProperty(property)) {
+            handler(property, instance.$meta.properties[metaProperty][property]);
+        }
+    }
+}
+
 module.exports = {
     createObject: createObject,
     merge: merge,
     isLiteral: isLiteral,
     isPrimitive: isPrimitive,
     mixin: mixin,
-    uniqueId: uniqueId
+    uniqueId: uniqueId,
+    meta: meta
 };
 },{}],5:[function(require,module,exports){
 var binding = require('./binding');
@@ -446,7 +456,7 @@ var createRendererFunction = function(host, opts) {
     opts.create = opts.create || renderListDefaultOptions.create;
     opts.remove = opts.remove || renderListDefaultOptions.remove;
     opts.update = opts.update || renderListDefaultOptions.update;
-    opts.rendererDataProperty = opts.rendererDataProperty || 'data';
+    opts.property = opts.property || 'data';
     if (!opts.renderer) {
         throw new Error('Renderer is required')
     }
@@ -457,10 +467,10 @@ var createRendererFunction = function(host, opts) {
 
         for (var i = 0; i < max; i++) {
             if (children[i] && list.toArray()[i]) {
-                opts.update(children[i], list.toArray()[i], opts.rendererDataProperty);
+                opts.update(children[i], list.toArray()[i], opts.property);
             }
             else if (!children[i]) {
-                opts.create(this, list.toArray()[i], opts.renderer, opts.rendererDataProperty);
+                opts.create(this, list.toArray()[i], opts.renderer, opts.property);
             }
             else if (!list.toArray()[i]) {
                 opts.remove(this, children[i]);

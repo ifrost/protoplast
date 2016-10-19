@@ -199,6 +199,7 @@ var Collection = Model.extend({
 module.exports = Collection;
 },{"./model":7}],3:[function(require,module,exports){
 var Context = require('./di'),
+    Collection = require('./collection'),
     Object = require('./object'),
     utils = require('./utils');
 
@@ -253,6 +254,8 @@ var Component = Object.extend({
             throw new Error('Component should have only one root element');
         }
         this.root = domWrapper.firstChild;
+
+        this.processInstance();
     },
 
     /**
@@ -269,6 +272,33 @@ var Component = Object.extend({
                     processor.process(this, element, value);
                 }
             }, this);
+        }
+    },
+
+    /**
+     * Process instance applying shortcuts defined in metadata
+     */
+    processInstance: function() {
+        utils.meta(this, 'renderWith', function(property) {
+            this[property] = Collection.create(this[property] || []);
+        }.bind(this));
+    },
+
+    processBinding: {
+        injectInit: true,
+        value: function() {
+            var properties;
+
+            utils.meta(this, 'bindWith', function(property, meta) {
+                properties = utils.isPrimitive(meta) ? [meta] : meta;
+                properties.forEach(function(propertyToBind) {
+                    utils.bind(this, propertyToBind, this[property]);
+                }, this);
+            }.bind(this));
+
+            utils.meta(this, 'renderWith', function(property, meta) {
+                utils.renderList(this, property, meta)
+            }.bind(this));
         }
     },
 
@@ -418,7 +448,7 @@ Component.Mount = function(tag, Component, context) {
 module.exports = Component;
 
 
-},{"./di":5,"./object":8,"./utils":10}],4:[function(require,module,exports){
+},{"./collection":2,"./di":5,"./object":8,"./utils":10}],4:[function(require,module,exports){
 /**
  * Collection of constructors
  */
@@ -599,7 +629,7 @@ var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher'),
     utils = require('./utils');
 
-function defineComputedProperty(name, desc) {
+function defineComputedProperty(name, desc, isLazy) {
     var calc = desc.value;
 
     delete desc.value;
@@ -613,10 +643,23 @@ function defineComputedProperty(name, desc) {
         return this['_' + name];
     };
 
-    desc.set = function() {
-        var old = this['_' + name];
-        this['_' + name] = undefined;
-        this.dispatch(name + '_changed', undefined, old);
+    if (isLazy) {
+        desc.set = function() {
+            var old = this['_' + name];
+            this['_' + name] = undefined;
+            this.dispatch(name + '_changed', undefined, old);
+        }
+    }
+    else {
+        desc.set = function() {
+            var value, old;
+            old = this['_' + name];
+            this['_' + name] = undefined;
+            value = this[name];
+            if (value !== old) {
+                this.dispatch(name + '_changed', value, old);
+            }
+        }
     }
 }
 
@@ -660,7 +703,8 @@ var Model = Protoplast.extend([Dispatcher], {
     $defineProperty: function(property, desc) {
 
         if (this.$meta.properties.computed && this.$meta.properties.computed[property]) {
-            defineComputedProperty(property, desc);
+            var isLazy = this.$meta.properties.lazy && this.$meta.properties.lazy[property];
+            defineComputedProperty(property, desc, isLazy);
         }
         else if (!desc.get || ['number', 'boolean', 'string'].indexOf(typeof(desc.value)) !== -1) {
             defineBindableProperty(property, desc, this);
@@ -828,6 +872,7 @@ module.exports = {
     isPrimitive: common.isPrimitive,
     mixin: common.mixin,
     uniqueId: common.uniqueId,
+    meta: common.meta,
 
     resolveProperty: binding.resolveProperty,
     bind: binding.bind,
@@ -1016,7 +1061,7 @@ function uniqueId(prefix) {
 function createObject(proto, args) {
     var instance = Object.create(proto);
     if (instance.$meta.constructors) {
-        instance.$meta.constructors.forEach(function(constructor){
+        instance.$meta.constructors.forEach(function(constructor) {
             constructor.apply(instance, args);
         });
     }
@@ -1086,13 +1131,22 @@ function mixin(instance, mixins) {
     return instance;
 }
 
+function meta(instance, metaProperty, handler) {
+    for (var property in instance.$meta.properties[metaProperty]) {
+        if (instance.$meta.properties[metaProperty].hasOwnProperty(property)) {
+            handler(property, instance.$meta.properties[metaProperty][property]);
+        }
+    }
+}
+
 module.exports = {
     createObject: createObject,
     merge: merge,
     isLiteral: isLiteral,
     isPrimitive: isPrimitive,
     mixin: mixin,
-    uniqueId: uniqueId
+    uniqueId: uniqueId,
+    meta: meta
 };
 },{}],13:[function(require,module,exports){
 var binding = require('./binding');
@@ -1147,7 +1201,7 @@ var createRendererFunction = function(host, opts) {
     opts.create = opts.create || renderListDefaultOptions.create;
     opts.remove = opts.remove || renderListDefaultOptions.remove;
     opts.update = opts.update || renderListDefaultOptions.update;
-    opts.rendererDataProperty = opts.rendererDataProperty || 'data';
+    opts.property = opts.property || 'data';
     if (!opts.renderer) {
         throw new Error('Renderer is required')
     }
@@ -1158,10 +1212,10 @@ var createRendererFunction = function(host, opts) {
 
         for (var i = 0; i < max; i++) {
             if (children[i] && list.toArray()[i]) {
-                opts.update(children[i], list.toArray()[i], opts.rendererDataProperty);
+                opts.update(children[i], list.toArray()[i], opts.property);
             }
             else if (!children[i]) {
-                opts.create(this, list.toArray()[i], opts.renderer, opts.rendererDataProperty);
+                opts.create(this, list.toArray()[i], opts.renderer, opts.property);
             }
             else if (!list.toArray()[i]) {
                 opts.remove(this, children[i]);
