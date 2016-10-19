@@ -2,7 +2,7 @@ var Protoplast = require('./protoplast'),
     Dispatcher = require('./dispatcher'),
     utils = require('./utils');
 
-function defineComputedProperty(name, desc) {
+function defineComputedProperty(name, desc, isLazy) {
     var calc = desc.value;
 
     delete desc.value;
@@ -16,10 +16,23 @@ function defineComputedProperty(name, desc) {
         return this['_' + name];
     };
 
-    desc.set = function() {
-        var old = this['_' + name];
-        this['_' + name] = undefined;
-        this.dispatch(name + '_changed', undefined, old);
+    if (isLazy) {
+        desc.set = function() {
+            var old = this['_' + name];
+            this['_' + name] = undefined;
+            this.dispatch(name + '_changed', undefined, old);
+        }
+    }
+    else {
+        desc.set = function() {
+            var value, old;
+            old = this['_' + name];
+            this['_' + name] = undefined;
+            value = this[name];
+            if (value !== old) {
+                this.dispatch(name + '_changed', value, old);
+            }
+        }
     }
 }
 
@@ -63,7 +76,8 @@ var Model = Protoplast.extend([Dispatcher], {
     $defineProperty: function(property, desc) {
 
         if (this.$meta.properties.computed && this.$meta.properties.computed[property]) {
-            defineComputedProperty(property, desc);
+            var isLazy = this.$meta.properties.lazy && this.$meta.properties.lazy[property];
+            defineComputedProperty(property, desc, isLazy);
         }
         else if (!desc.get || ['number', 'boolean', 'string'].indexOf(typeof(desc.value)) !== -1) {
             defineBindableProperty(property, desc, this);

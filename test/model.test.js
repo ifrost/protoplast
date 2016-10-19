@@ -88,8 +88,7 @@ describe('Model', function() {
         sinon.assert.notCalled(invalid)
     });
 
-    it('dispatches changed event when computed property value is cleared (new value = undefined)', function() {
-
+    it('dispatches changed event when lazy computed property value is cleared (new value = undefined)', function() {
 
         var TestModel = Model.extend({
 
@@ -97,6 +96,7 @@ describe('Model', function() {
 
             foo: {
                 computed: ['bar'],
+                lazy: true,
                 value: function() {
                     return this.bar * 2;
                 }
@@ -120,6 +120,38 @@ describe('Model', function() {
         sinon.assert.calledTwice(changeHandler);
         sinon.assert.calledWith(changeHandler, undefined, 2);
     });
+
+    it('dispatches changed event when computed property value changes', function() {
+
+        var TestModel = Model.extend({
+
+            bar: null,
+
+            foo: {
+                computed: ['bar'],
+                value: function() {
+                    return this.bar * 2;
+                }
+            }
+        });
+
+        var test = TestModel.create();
+
+        var changeHandler = sinon.spy();
+
+        test.on('foo_changed', changeHandler);
+
+        sinon.assert.notCalled(changeHandler);
+        test.bar = 1;
+        sinon.assert.calledOnce(changeHandler);
+        sinon.assert.calledWith(changeHandler, 1 * 2, null * 2); // old value is undefined because property was not computed
+
+        test.bar = 2; // new value is calculated automatically
+
+        sinon.assert.calledTwice(changeHandler);
+        sinon.assert.calledWith(changeHandler, 2 * 2, 1 * 2);
+    });
+
 
     it('clears binding handlers', function() {
 
@@ -241,6 +273,86 @@ describe('Model', function() {
 
             var john = ExtPerson.create('John', 'Baker', 'London');
 
+            chai.assert.strictEqual(calcCounter, 2);
+            chai.assert.strictEqual(john.info, 'John address: Baker, London');
+            chai.assert.strictEqual(calcCounter, 2);
+
+            john.address.street = 'West';
+            chai.assert.strictEqual(calcCounter, 3);
+
+            chai.assert.strictEqual(john.info, 'John address: West, London');
+
+            john.address = Address.create('East', 'Liverpool');
+            chai.assert.strictEqual(john.info, 'John address: East, Liverpool');
+        });
+
+        it('binding to computed properties', function() {
+
+            var calcCounter = 0;
+
+            var ExtPerson = Person.extend({
+
+                info: {
+                    computed: ['address.city', 'address.street'],
+                    value: function() {
+                        calcCounter++;
+                        return this.name + ' address: ' + this.address.street + ', ' + this.address.city;
+                    }
+                }
+
+            });
+
+            var Container = Model.extend({
+                person: null
+            });
+
+            var Destination = Model.extend({
+                johnInfo: null
+            });
+
+            var john = ExtPerson.create('John', 'Baker', 'London');
+            var container = Container.create();
+            var destination = Destination.create();
+            var handler = sinon.stub();
+
+            chai.assert.strictEqual(calcCounter, 2);
+            Protoplast.utils.bind(container, 'person.info', handler);
+            chai.assert.strictEqual(calcCounter, 2);
+            Protoplast.utils.bindProperty(container, 'person.info', destination, 'johnInfo');
+            chai.assert.strictEqual(calcCounter, 2);
+
+            container.person = john;
+            chai.assert.strictEqual(calcCounter, 2);
+            sinon.assert.calledOnce(handler);
+            sinon.assert.calledWith(handler, 'John address: Baker, London');
+            chai.assert.strictEqual(destination.johnInfo, 'John address: Baker, London');
+            chai.assert.strictEqual(calcCounter, 2);
+
+            john.address.city = 'Sydney';
+            chai.assert.strictEqual(calcCounter, 3);
+            sinon.assert.calledTwice(handler);
+            sinon.assert.calledWith(handler, 'John address: Baker, Sydney');
+        });
+
+        it('lazy computed property', function() {
+
+            var calcCounter = 0;
+
+            var ExtPerson = Person.extend({
+
+                info: {
+                    computed: ['address.city', 'address.street'],
+                    lazy: true,
+                    value: function() {
+                        calcCounter++;
+                        return this.name + ' address: ' + this.address.street + ', ' + this.address.city;
+                    }
+                }
+
+            });
+
+            var john = ExtPerson.create('John', 'Baker', 'London');
+
             chai.assert.strictEqual(calcCounter, 0);
             chai.assert.strictEqual(john.info, 'John address: Baker, London');
             chai.assert.strictEqual(calcCounter, 1);
@@ -257,7 +369,7 @@ describe('Model', function() {
 
         });
 
-        it('binding to computed properties', function() {
+        it('binding to lazy computed properties', function() {
 
             var calcCounter = 0;
 
@@ -265,6 +377,7 @@ describe('Model', function() {
 
                 info: {
                     computed: ['address.city', 'address.street'],
+                    lazy: true,
                     value: function() {
                         calcCounter++;
                         return this.name + ' address: ' + this.address.street + ', ' + this.address.city;
@@ -297,6 +410,54 @@ describe('Model', function() {
             sinon.assert.calledWith(handler, 'John address: Baker, London');
             chai.assert.strictEqual(destination.johnInfo, 'John address: Baker, London');
             chai.assert.strictEqual(calcCounter, 1);
+        });
+
+        describe('computed property not triggered with the same value', function() {
+
+            var handler, Foo, foo;
+
+            beforeEach(function() {
+                handler = sinon.stub();
+
+                Foo = Model.extend({
+                    foo: false,
+                    bar: false,
+                    fooAndBar: {
+                        computed: ['foo', 'bar'],
+                        value: function() {
+                            return this.foo && this.bar;
+                        }
+                    }
+                });
+
+                foo = Foo.create();
+            });
+
+            it('bind', function() {
+                Protoplast.utils.bind(foo, 'fooAndBar', handler);
+                sinon.assert.calledOnce(handler);
+                sinon.assert.calledWith(handler, false);
+
+                foo.foo = true;
+                sinon.assert.calledOnce(handler);
+
+                foo.bar = true;
+                sinon.assert.calledTwice(handler);
+                sinon.assert.calledWith(handler, true);
+            });
+
+            it('bindSetter', function() {
+                Protoplast.utils.bindSetter(foo, 'fooAndBar', handler);
+                sinon.assert.calledOnce(handler);
+                sinon.assert.calledWith(handler, false);
+
+                foo.foo = true;
+                sinon.assert.calledOnce(handler);
+
+                foo.bar = true;
+                sinon.assert.calledTwice(handler);
+                sinon.assert.calledWith(handler, true);
+            });
         });
 
         describe('watchers', function() {
