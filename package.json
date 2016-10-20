@@ -6,6 +6,7 @@
   "scripts": {
     "test": "mocha test/protoplast.test.js",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha test/protoplast.test.js -- -R spec",
+    "report_coverage": "codecov",
     "build_test": "browserify --debug test/protoplast.test.js -o test/protoplast.test.browser.js",
     "build_main": "browserify -s p main.js -o dist/protoplast.js",
     "build_lean": "browserify -s p js/protoplast.js -o dist/protoplast.lean.js",
@@ -28,6 +29,7 @@
   "homepage": "https://github.com/ifrost/protoplast#readme",
   "devDependencies": {
     "chai": "^3.4.0",
+    "codecov": "^1.0.1",
     "jsdom": "^6.5.1",
     "mocha": "^2.3.3",
     "sinon": "^1.17.2"
