@@ -26,6 +26,8 @@ var Component = Object.extend({
             this.processRoot();
         }
     },
+    
+    parent: null,
 
     children: {
         get: function() {
@@ -163,6 +165,10 @@ var Component = Object.extend({
         if (!child.root) {
             throw new Error('Child component should have root property');
         }
+        if (child.parent) {
+            child.parent.remove(child);
+        }
+        child.parent = this;
         this._children.push(child);
         this.root.appendChild(child.root);
         if (this.__fastinject__) {

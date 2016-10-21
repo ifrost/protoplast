@@ -343,6 +343,22 @@ describe('Components Dependency Injection', function() {
         sinon.assert.calledOnce(componentInit);
     });
 
+    it('removes component before attaching to a new parent', function() {
+
+        var parentA, parentB, component;
+
+        parentA = Component.create();
+        parentB = Component.create();
+        component = Component.create();
+
+        parentA.add(component);
+        parentB.add(component);
+
+        chai.assert.strictEqual(component.parent, parentB);
+        chai.assert.lengthOf(parentA.children, 0);
+        chai.assert.lengthOf(parentB.children, 1);
+    });
+
     describe('Component features', function() {
 
         describe('Presenter', function() {
