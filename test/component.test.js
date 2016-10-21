@@ -6,7 +6,6 @@ var chai = require('chai'),
     Collection = Protoplast.Collection,
     Context = Protoplast.Context;
 
-
 describe('Component', function() {
 
     beforeEach(function(done) {
@@ -566,7 +565,78 @@ describe('Components Dependency Injection', function() {
 
     describe('utils', function() {
 
-        describe('render list', function() {
+        describe('default render list', function() {
+
+            var create, update, remove, host, TestRenderer, renderList;
+
+            beforeEach(function() {
+
+                sinon.spy(Protoplast.utils.renderListDefaults, 'create');
+                sinon.spy(Protoplast.utils.renderListDefaults, 'update');
+                sinon.spy(Protoplast.utils.renderListDefaults, 'remove');
+
+                create = Protoplast.utils.renderListDefaults.create;
+                update = Protoplast.utils.renderListDefaults.update;
+                remove = Protoplast.utils.renderListDefaults.remove;
+
+                TestRenderer = Protoplast.Component.extend();
+                host = {
+                    add: sinon.spy(),
+                    remove: sinon.spy()
+                };
+
+                renderList = Protoplast.utils.createRendererFunction(host, {
+                    renderer: TestRenderer,
+                    property: 'testProperty'
+                });
+            });
+
+            afterEach(function() {
+                Protoplast.utils.renderListDefaults.create.restore();
+                Protoplast.utils.renderListDefaults.update.restore();
+                Protoplast.utils.renderListDefaults.remove.restore();
+            });
+
+            it('creates new renderers', function() {
+                host.children = [];
+                renderList(Collection.create([1,2,3]));
+                sinon.assert.calledThrice(create);
+                sinon.assert.notCalled(update);
+                sinon.assert.notCalled(remove);
+
+                sinon.assert.calledWith(create, host, 1, TestRenderer, 'testProperty');
+                sinon.assert.calledWith(create, host, 2, TestRenderer, 'testProperty');
+                sinon.assert.calledWith(create, host, 3, TestRenderer, 'testProperty');
+
+                sinon.assert.calledThrice(host.add);
+            });
+
+            it('updates existing renderers', function() {
+                host.children = ['A','B','C'];
+                renderList(Collection.create([3,2,1]));
+                sinon.assert.notCalled(create);
+                sinon.assert.calledThrice(update);
+                sinon.assert.notCalled(remove);
+
+                sinon.assert.calledWith(update, 'A', 3, 'testProperty');
+                sinon.assert.calledWith(update, 'B', 2, 'testProperty');
+                sinon.assert.calledWith(update, 'C', 1, 'testProperty');
+            });
+
+            it('removes obsolete renderers', function() {
+                host.children = ['A','B','C'];
+                renderList(Collection.create([3,2]));
+                sinon.assert.notCalled(create);
+                sinon.assert.calledTwice(update);
+                sinon.assert.calledOnce(remove);
+
+                sinon.assert.calledWith(remove, host, 'C');
+
+                sinon.assert.calledOnce(host.remove);
+            });
+        });
+
+        describe('custom render list', function() {
 
             var create, update, remove, host, TestRenderer, renderList;
 
