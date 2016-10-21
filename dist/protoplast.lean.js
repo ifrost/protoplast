@@ -137,6 +137,7 @@ module.exports = {
 
     renderList: component.renderList,
     createRendererFunction: component.createRendererFunction,
+    renderListDefaults: component.renderListDefaults,
     domProcessors: {
         injectElement: component.domProcessors.injectElement,
         createComponents: component.domProcessors.createComponents
