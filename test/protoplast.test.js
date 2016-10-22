@@ -279,6 +279,7 @@ describe('Protoplast', function() {
     });
 
     describe('Inheritance', function() {
+
         it('creates a simple prototype', function() {
 
             var Base, base, Sub, sub;
@@ -294,6 +295,8 @@ describe('Protoplast', function() {
 
             chai.assert.equal(base.value, 10);
             chai.assert.equal(sub.value, 10);
+
+            chai.assert.ok(Base.isPrototypeOf(sub));
         });
 
         it('inherits all properties', function() {
