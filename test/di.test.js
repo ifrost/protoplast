@@ -36,6 +36,47 @@ describe('Dependency Injection', function() {
 
     });
 
+    it('injects dependencies by prototype', function() {
+        var Foo, Bar, foo, bar;
+
+        Foo = Protoplast.extend({});
+
+        Bar = Protoplast.extend({
+            foo: {
+                inject: Foo
+            }
+        });
+
+        var context = Context.create();
+
+        context.register(foo = Foo.create());
+        context.register(bar = Bar.create());
+        context.build();
+
+        chai.assert.equal(bar.foo, foo);
+    });
+
+    it('injects dependencies by any prototype in chain', function() {
+        var Base, Foo, Bar, foo, bar;
+
+        Base = Protoplast.extend({});
+        Foo = Base.extend({});
+
+        Bar = Protoplast.extend({
+            foo: {
+                inject: Base
+            }
+        });
+
+        var context = Context.create();
+
+        context.register(foo = Foo.create());
+        context.register(bar = Bar.create());
+        context.build();
+
+        chai.assert.equal(bar.foo, foo);
+    });
+
     it('inherits dependencies config from the base prototype', function() {
 
         var Foo, Foo2, Bar, foo, bar;
