@@ -99,7 +99,7 @@ Protoplast.extend = function(mixins, description) {
     meta = utils.merge(meta, mixinsMeta);
     // mix base prototype meta to the current meta
     proto.$meta = utils.merge(meta, this.$meta);
-
+    
     // define properties
     propertyDefinitions.forEach(function(definition) {
         var property = definition.property,

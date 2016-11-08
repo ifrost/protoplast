@@ -542,22 +542,45 @@ var Context = Protoplast.extend({
         
     },
 
-    process: function(obj) {
+    _injectDependencies: function(obj) {
+        var injectId;
         if (obj.$meta && obj.$meta.properties && obj.$meta.properties.inject) {
             Object.keys(obj.$meta.properties.inject).forEach(function(property){
-                obj[property] = this._objects[obj.$meta.properties.inject[property]];
+                injectId = obj.$meta.properties.inject[property];
+                if (this._objects[injectId]) {
+                    obj[property] = this._objects[injectId];
+                }
+                else if (injectId.isPrototypeOf) {
+                    this._unknows.forEach(function(dependency) {
+                        if (injectId.isPrototypeOf(dependency)) {
+                            obj[property] = dependency;
+                        }
+                    }, this)
+                }
             }, this);
         }
+    },
+
+    _runInitMethods: function(obj) {
         if (obj.$meta && obj.$meta.properties && obj.$meta.properties.injectInit) {
             Object.keys(obj.$meta.properties.injectInit).forEach(function(handler){
                 obj[handler]();
             }, this);
         }
+    },
+
+    _initialiseSubscriptions: function(obj) {
         if (obj.$meta && obj.$meta.properties && obj.$meta.properties.sub) {
             Object.keys(obj.$meta.properties.sub).forEach(function(handler){
                 this._objects.sub.call(obj, obj.$meta.properties.sub[handler]).add(obj[handler]);
             }, this);
         }
+    },
+
+    process: function(obj) {
+        this._injectDependencies(obj);
+        this._runInitMethods(obj);
+        this._initialiseSubscriptions(obj);
     },
 
     /**
@@ -850,7 +873,7 @@ Protoplast.extend = function(mixins, description) {
     meta = utils.merge(meta, mixinsMeta);
     // mix base prototype meta to the current meta
     proto.$meta = utils.merge(meta, this.$meta);
-
+    
     // define properties
     propertyDefinitions.forEach(function(definition) {
         var property = definition.property,
