@@ -1141,7 +1141,7 @@ function merge(destination, source) {
  */
 function mix(destination, source) {
     for (var property in source) {
-        if (property.substr(0, 2) !== '__') {
+        if (property.substr(0, 2) !== '__' && !(property in destination)) {
             destination[property] = source[property];
         }
     }
