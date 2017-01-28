@@ -836,9 +836,9 @@ Protoplast.extend = function(mixins, description) {
         } else {
             desc = description[property];
 
-            // default value to null
+            // default value to undefined
             if (!(property in this) && !desc.set && !desc.get && !desc.value) {
-                desc.value = null;
+                desc.value = undefined;
             }
 
             for (var d in desc) {
