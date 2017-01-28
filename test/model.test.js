@@ -422,6 +422,8 @@ describe('Model', function() {
                 Foo = Model.extend({
                     foo: false,
                     bar: false,
+                    notDefined: undefined,
+                    defined: null,
                     fooAndBar: {
                         computed: ['foo', 'bar'],
                         value: function() {
@@ -457,6 +459,21 @@ describe('Model', function() {
                 foo.bar = true;
                 sinon.assert.calledTwice(handler);
                 sinon.assert.calledWith(handler, true);
+            });
+
+            it('initial binding called when property is defined', function() {
+                Protoplast.utils.bindSetter(foo, 'defined', handler);
+                sinon.assert.called(handler);
+                sinon.assert.calledWith(handler, null);
+            });
+
+            it('initial binding not called when property is undefined', function() {
+                Protoplast.utils.bindSetter(foo, 'notDefined', handler);
+                sinon.assert.notCalled(handler);
+
+                foo.notDefined = null;
+                sinon.assert.calledOnce(handler);
+                sinon.assert.calledWith(handler, null);
             });
         });
 

@@ -19,11 +19,16 @@ var resolveProperty = function(host, chain, handler) {
 
 var bindSetter = function(host, chain, handler, context) {
     var props = chain.split('.'),
-        context = context || {};
+        currentValue;
+
+    context = context || {};
 
     if (props.length === 1) {
         host.on(chain + '_changed', handler, context);
-        handler(host[chain]);
+        currentValue = host[chain];
+        if (currentValue !== undefined) {
+            handler(host[chain]);
+        }
     }
     else {
         var subHost = host[props[0]];
