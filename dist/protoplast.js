@@ -541,7 +541,7 @@ var Context = Protoplast.extend({
         }.bind(this);
         
     },
-
+    
     _injectDependencies: function(obj) {
         var injectId;
         if (obj.$meta && obj.$meta.properties && obj.$meta.properties.inject) {
@@ -561,9 +561,32 @@ var Context = Protoplast.extend({
         }
     },
 
+    /**
+     * Runs method for each object in context
+     * @param method
+     * @private
+     */
+    _runOnAll: function(method) {
+        Object.keys(this._objects).forEach(function(id) {
+            var instance = this._objects[id];
+            method(instance);
+        }, this);
+        this._unknows.forEach(function(instance){
+            method(instance);
+        }, this);
+    },
+
     _runInitMethods: function(obj) {
         if (obj.$meta && obj.$meta.properties && obj.$meta.properties.injectInit) {
             Object.keys(obj.$meta.properties.injectInit).forEach(function(handler){
+                obj[handler]();
+            }, this);
+        }
+    },
+    
+    _runDestroyMethods: function(obj) {
+        if (obj.$meta && obj.$meta.properties && obj.$meta.properties.injectDestroy) {
+            Object.keys(obj.$meta.properties.injectDestroy).forEach(function(handler){
                 obj[handler]();
             }, this);
         }
@@ -584,22 +607,17 @@ var Context = Protoplast.extend({
     },
 
     /**
-     * Defines getters for injected properties. The getter returns instance from the config
-     * @param {Object} instance
-     * @param {Object} config - {property:dependencyId,...}
-     */
-
-    /**
      * Process all objects
      */
     build: function() {
-        Object.keys(this._objects).forEach(function(id) {
-            var instance = this._objects[id];
-            this.process(instance);
-        }, this);
-        this._unknows.forEach(function(instance){
-            this.process(instance);
-        }, this);
+        this._runOnAll(this.process.bind(this));
+    },
+
+    /**
+     * Destroy all objects in the context
+     */
+    destroy: function() {
+        this._runOnAll(this._runDestroyMethods.bind(this));
     }
 
 });
