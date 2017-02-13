@@ -137,4 +137,23 @@ describe('Dependency Injection', function() {
 
         chai.assert.equal(bar.dep.value(), 10);
     });
+    
+    it('destroys injected object', function() {
+
+        var Foo = Protoplast.extend({
+            destroy: {
+                injectDestroy: true,
+                value: sinon.stub()
+            }
+        });
+        
+        var foo = Foo.create();
+
+        var context = Context.create();
+        context.register(foo);
+        context.build();
+        context.destroy();
+        
+        sinon.assert.calledOnce(foo.destroy);
+    });
 });
