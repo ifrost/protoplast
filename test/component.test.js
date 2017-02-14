@@ -209,6 +209,45 @@ describe('Components Dependency Injection', function() {
         chai.assert.strictEqual(child.bar, 'foo');
     });
 
+    it('does destroy components when context is destroyed', function() {
+
+        var element = document.createElement('div'), main,
+            context = Context.create(),
+            childInit = sinon.stub(),
+            childDestroy = sinon.stub();
+
+        context.build();
+        main = Component.Root(element, context);
+
+        var Root = Component.extend({
+            tag: 'div'
+        });
+        var Child = Component.extend({
+            tag: 'span',
+            init: function() {
+                childInit();
+            },
+            destroy: function() {
+                childDestroy();
+            }
+        });
+
+        var root = Root.create();
+        var child = Child.create();
+
+        root.add(child);
+
+        main.add(root);
+        
+        context.destroy();
+
+        sinon.assert.calledOnce(childInit);
+        sinon.assert.notCalled(childDestroy);
+
+        main.remove(root);
+        sinon.assert.calledOnce(childDestroy);
+    });
+
 
     it('initialises component trees after attaching to the parent', function() {
 

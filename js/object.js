@@ -12,6 +12,11 @@ var Object = Model.extend({
         injectInit: true,
         value: function() {}
     },
+    
+    destroy: {
+        injectDestroy: true,
+        value: function() {}
+    },
 
     bind: function(chain, handler) {
         utils.bind(this, chain, handler);

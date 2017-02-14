@@ -345,13 +345,16 @@ var Component = Object.extend({
     /**
      * Destroy the component and all child components
      */
-    destroy: function() {
-        if (this.__presenter__ && this.__presenter__.destroy) {
-            this.__presenter__.destroy();
+    destroy: {
+        injectDestroy: false,
+        value: function() {
+            if (this.__presenter__ && this.__presenter__.destroy) {
+                this.__presenter__.destroy();
+            }
+            this._children.concat().forEach(function(child) {
+                this.remove(child);
+            }, this);
         }
-        this._children.concat().forEach(function(child) {
-            this.remove(child);
-        }, this);
     },
 
     /**
@@ -536,7 +539,7 @@ var Context = Protoplast.extend({
         // fast inject is used to register and process new objects after the config has been built
         // any object registered in the config has this method.
         instance.__fastinject__ = function(obj) {
-            this.register(obj);
+            obj.__fastinject__ = instance.__fastinject__.bind(this);
             this.process(obj);
         }.bind(this);
         
@@ -776,6 +779,11 @@ var Object = Model.extend({
     
     init: {
         injectInit: true,
+        value: function() {}
+    },
+    
+    destroy: {
+        injectDestroy: true,
         value: function() {}
     },
 

@@ -145,13 +145,16 @@ var Component = Object.extend({
     /**
      * Destroy the component and all child components
      */
-    destroy: function() {
-        if (this.__presenter__ && this.__presenter__.destroy) {
-            this.__presenter__.destroy();
+    destroy: {
+        injectDestroy: false,
+        value: function() {
+            if (this.__presenter__ && this.__presenter__.destroy) {
+                this.__presenter__.destroy();
+            }
+            this._children.concat().forEach(function(child) {
+                this.remove(child);
+            }, this);
         }
-        this._children.concat().forEach(function(child) {
-            this.remove(child);
-        }, this);
     },
 
     /**

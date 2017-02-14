@@ -110,7 +110,9 @@ var Context = Protoplast.extend({
     _runDestroyMethods: function(obj) {
         if (obj.$meta && obj.$meta.properties && obj.$meta.properties.injectDestroy) {
             Object.keys(obj.$meta.properties.injectDestroy).forEach(function(handler){
-                obj[handler]();
+                if (obj.$meta.properties.injectDestroy[handler]) {
+                    obj[handler]();
+                }
             }, this);
         }
     },
