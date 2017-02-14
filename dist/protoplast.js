@@ -539,7 +539,7 @@ var Context = Protoplast.extend({
         // fast inject is used to register and process new objects after the config has been built
         // any object registered in the config has this method.
         instance.__fastinject__ = function(obj) {
-            obj.__fastinject__ = instance.__fastinject__.bind(this);
+            this.register(obj);
             this.process(obj);
         }.bind(this);
         
@@ -590,7 +590,9 @@ var Context = Protoplast.extend({
     _runDestroyMethods: function(obj) {
         if (obj.$meta && obj.$meta.properties && obj.$meta.properties.injectDestroy) {
             Object.keys(obj.$meta.properties.injectDestroy).forEach(function(handler){
-                obj[handler]();
+                if (obj.$meta.properties.injectDestroy[handler]) {
+                    obj[handler]();
+                }
             }, this);
         }
     },
