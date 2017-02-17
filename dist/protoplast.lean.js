@@ -201,7 +201,7 @@ var bindSetter = function(host, chain, handler, context) {
         },
         stop: function() {
             resolveProperty(host, chain, function(value) {
-                if (value.off) {
+                if (value && value.off) {
                     value.off(null, null, context);
                 }
             });
