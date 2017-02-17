@@ -615,6 +615,21 @@ describe('Model', function() {
                 chai.assert.lengthOf(helper.handlers(item2), 1);
             });
 
+            it('stopping a watcher on an empty value does not throw exceptions', function() {
+                var Item = Model.extend({
+                    prop: null
+                });
+                
+                var emptyItem = Item.create();
+                
+                var watcher = Protoplast.utils.bind(emptyItem, {
+                    'prop': handler
+                });
+                
+                chai.assert.doesNotThrow(function() {
+                    watcher.stop();
+                });
+            });
         });
 
         describe('collection binding', function() {
