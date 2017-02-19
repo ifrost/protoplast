@@ -735,6 +735,7 @@ function defineBindableProperty(name, desc, proto) {
     proto['_' + name] = initialValue;
 }
 
+// TODO: destroy bindings
 var Model = Protoplast.extend([Dispatcher], {
 
     $create: function() {
@@ -743,7 +744,7 @@ var Model = Protoplast.extend([Dispatcher], {
             if (computed.hasOwnProperty(computedProperty)) {
                 computed[computedProperty].forEach(function(chain) {
                     (function(name){
-                        utils.bind(this, chain, function() {
+                        utils.observe(this, chain, function() {
                             this[name] = undefined;
                         }.bind(this));
                     }.bind(this))(computedProperty);
@@ -936,6 +937,7 @@ module.exports = {
     bindSetter: binding.bindSetter,
     bindProperty: binding.bindProperty,
     bindCollection: binding.bindCollection,
+    observe: binding.observe,
 
     renderList: component.renderList,
     createRendererFunction: component.createRendererFunction,
@@ -968,38 +970,32 @@ var resolveProperty = function(host, chain, handler) {
 
 };
 
-var bindSetter = function(host, chain, handler, context) {
-    var props = chain.split('.'),
-        currentValue;
+var observe = function(host, chain, handler, context) {
+    var props = chain.split('.');
 
     context = context || {};
 
     if (props.length === 1) {
         host.on(chain + '_changed', handler, context);
-        currentValue = host[chain];
-        if (currentValue !== undefined) {
-            handler(host[chain]);
-        }
+        handler();
     }
     else {
         var subHost = host[props[0]];
         var subChain = props.slice(1).join('.');
         if (subHost) {
-            bindSetter(subHost, subChain, function() {
-                resolveProperty(subHost, subChain, handler);
-            }, context);
+            observe(subHost, subChain, handler, context);
         }
         host.on(props[0] + '_changed', function(_, previous) {
             if (previous && previous.on) {
                 previous.off(props[0] + '_changed', handler);
             }
-            bindSetter(host[props[0]], subChain, handler, context);
+            observe(host[props[0]], subChain, handler, context);
         }, context);
     }
 
     return {
         start: function() {
-            bindSetter(host, chain, handler);
+            observe(host, chain, handler);
         },
         stop: function() {
             resolveProperty(host, chain, function(value) {
@@ -1015,6 +1011,16 @@ var bindSetter = function(host, chain, handler, context) {
             }
         }
     }
+};
+
+var bindSetter = function(host, chain, handler, context) {
+    return observe(host, chain, function() {
+        resolveProperty(host, chain, function(value) {
+            if (value !== undefined) {
+                handler(value);
+            }
+        });
+    }, context);
 };
 
 var bindCollection = function(host, sourceChain, handler, context) {
@@ -1100,7 +1106,8 @@ module.exports = {
     bind: bind,
     bindSetter: bindSetter,
     bindProperty: bindProperty,
-    bindCollection: bindCollection
+    bindCollection: bindCollection,
+    observe: observe
 };
 },{}],12:[function(require,module,exports){
 var idCounter = 0;
