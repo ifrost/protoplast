@@ -17,6 +17,7 @@ module.exports = {
     bindSetter: binding.bindSetter,
     bindProperty: binding.bindProperty,
     bindCollection: binding.bindCollection,
+    observe: binding.observe,
 
     renderList: component.renderList,
     createRendererFunction: component.createRendererFunction,

@@ -412,6 +412,57 @@ describe('Model', function() {
             chai.assert.strictEqual(calcCounter, 1);
         });
 
+        it('binding chain of lazy properties', function() {
+
+            var data2Calculated = sinon.stub(),
+                data22Calculated = sinon.stub();
+            
+            var Test = Protoplast.Model.extend({
+                data: null,
+                data2: {
+                    computed: ['data'],
+                    lazy: true,
+                    value: function() {
+                        data2Calculated();
+                        return this.data * 2
+                    }
+                },
+                data22: {
+                    computed: ['data2'],
+                    lazy: true,
+                    value: function() {
+                        data22Calculated();
+                        return this.data2 * 2;
+                    }
+                }
+            });
+
+            var test = Test.create();
+            
+            test.data = 1;
+            
+            sinon.assert.notCalled(data2Calculated);
+            sinon.assert.notCalled(data22Calculated);
+            
+            var value = test.data2;
+
+            sinon.assert.calledOnce(data2Calculated);
+            sinon.assert.notCalled(data22Calculated);
+            chai.assert.strictEqual(value, 2);
+            
+            value = test.data22;
+            sinon.assert.calledOnce(data2Calculated);
+            sinon.assert.calledOnce(data22Calculated);
+            chai.assert.strictEqual(value, 4);
+            
+            test.data = 2;
+            value = test.data22;
+            sinon.assert.calledTwice(data2Calculated);
+            sinon.assert.calledTwice(data22Calculated);
+            chai.assert.strictEqual(value, 8);
+
+        });
+
         describe('computed property not triggered with the same value', function() {
 
             var handler, Foo, foo;

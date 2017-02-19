@@ -56,6 +56,7 @@ function defineBindableProperty(name, desc, proto) {
     proto['_' + name] = initialValue;
 }
 
+// TODO: destroy bindings
 var Model = Protoplast.extend([Dispatcher], {
 
     $create: function() {
@@ -64,7 +65,7 @@ var Model = Protoplast.extend([Dispatcher], {
             if (computed.hasOwnProperty(computedProperty)) {
                 computed[computedProperty].forEach(function(chain) {
                     (function(name){
-                        utils.bind(this, chain, function() {
+                        utils.observe(this, chain, function() {
                             this[name] = undefined;
                         }.bind(this));
                     }.bind(this))(computedProperty);

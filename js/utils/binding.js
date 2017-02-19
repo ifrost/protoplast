@@ -17,38 +17,32 @@ var resolveProperty = function(host, chain, handler) {
 
 };
 
-var bindSetter = function(host, chain, handler, context) {
-    var props = chain.split('.'),
-        currentValue;
+var observe = function(host, chain, handler, context) {
+    var props = chain.split('.');
 
     context = context || {};
 
     if (props.length === 1) {
         host.on(chain + '_changed', handler, context);
-        currentValue = host[chain];
-        if (currentValue !== undefined) {
-            handler(host[chain]);
-        }
+        handler();
     }
     else {
         var subHost = host[props[0]];
         var subChain = props.slice(1).join('.');
         if (subHost) {
-            bindSetter(subHost, subChain, function() {
-                resolveProperty(subHost, subChain, handler);
-            }, context);
+            observe(subHost, subChain, handler, context);
         }
         host.on(props[0] + '_changed', function(_, previous) {
             if (previous && previous.on) {
                 previous.off(props[0] + '_changed', handler);
             }
-            bindSetter(host[props[0]], subChain, handler, context);
+            observe(host[props[0]], subChain, handler, context);
         }, context);
     }
 
     return {
         start: function() {
-            bindSetter(host, chain, handler);
+            observe(host, chain, handler);
         },
         stop: function() {
             resolveProperty(host, chain, function(value) {
@@ -64,6 +58,16 @@ var bindSetter = function(host, chain, handler, context) {
             }
         }
     }
+};
+
+var bindSetter = function(host, chain, handler, context) {
+    return observe(host, chain, function() {
+        resolveProperty(host, chain, function(value) {
+            if (value !== undefined) {
+                handler(value);
+            }
+        });
+    }, context);
 };
 
 var bindCollection = function(host, sourceChain, handler, context) {
@@ -149,5 +153,6 @@ module.exports = {
     bind: bind,
     bindSetter: bindSetter,
     bindProperty: bindProperty,
-    bindCollection: bindCollection
+    bindCollection: bindCollection,
+    observe: observe
 };
