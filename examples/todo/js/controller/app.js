@@ -25,7 +25,10 @@
         visibleTodos: {
             computed: ['todos.todos', 'viewState.state'],
             value: function() {
-                if (this.viewState.state === window.ViewStateModel.UNDONE) {
+                if (!this.todos || !this.viewState) {
+                    return [];
+                }
+                else if (this.viewState.state === window.ViewStateModel.UNDONE) {
                     return this.todos.undone;
                 }
                 else if (this.viewState.state === window.ViewStateModel.DONE) {

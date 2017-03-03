@@ -31,9 +31,6 @@
                 'allChecked': this.updateToggle,
                 'showToggle': this.updateToggleVisibility
             });
-            // window.Protoplast.utils.bind(this.todos, 'done', this.updateToggle);
-            // window.Protoplast.utils.bind(this.todos, 'all', this.updateToggleVisibility);
-            // window.Protoplast.utils.bind(this.todos, 'all', this.updateToggle);
         },
         
         toggle: function () {
@@ -45,7 +42,6 @@
         },
 
         updateToggleVisibility: function() {
-            // this.toggleAll.style('display', this.todos.all.length ? 'block' : 'none');
             this.toggleAll.style('display', this.showToggle ? 'block' : 'none');
         }
 
