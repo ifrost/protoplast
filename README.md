@@ -20,7 +20,6 @@ Vanilla:
     var ClarkKent = Object.create(Object.prototype);
     var Superman = Object.create(ClarkKent);
 
-
 Result: 
 
     ClarkKent.isPrototypeOf(Superman); // true
@@ -42,7 +41,6 @@ Protoplast:
             value: false
         }
     });
-```
 
 Vanilla:
 
