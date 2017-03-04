@@ -144,7 +144,6 @@ Each object can have a constructor function:
 Protoplast
 
     var Person = Protoplast.extend({
-        name: null,
         $create: function(name) {
             this.name = name;
         },
@@ -153,7 +152,6 @@ Protoplast
         }
     });
     var ExtendedPerson = Person.extend({
-        age: null,
         $create: function(name, age) {
             this.age = age;
         },
