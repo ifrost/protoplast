@@ -147,24 +147,51 @@ Protoplast
         name: null,
         $create: function(name) {
             this.name = name;
+        },
+        hello: function() {
+            return 'My name is ' + this.name;
         }
     });
     var ExtendedPerson = Person.extend({
         age: null,
         $create: function(name, age) {
             this.age = age;
+        },
+        hello: function() {
+            return Person.hello.call(this) + " and I'm " + this.age + " year old";
         }
     });
 
     var person = ExtendedPerson.create('John', 20);
-    console.log(person.name, person.age); // -> John, 20 
+    person.hello(); // My name is John and I'm 20 year old
     
 All constructors from parent objects are automatically run before constructor for the current object is executed.
 
 Main difference between `.create` and `.extend`:
 
-* `.extend` creates new object from provided description
-* `.create` creates new object using chain of constructors (starting from base object, down to bottom prototype)
+* `.extend` creates new object from provided description (equivalent of `Object.create`).
+* `.create` creates new object using chain of constructors (starting from base object, down to bottom prototype) (equivalent of `new Constructor()`)
+
+Vanilla JS equivalent of above: 
+
+    function Person(name) {
+        this.name = name;
+    }
+    Person.prototype.hello = function() {
+        return 'My name is ' + this.name; 
+    }
+    
+    function ExtendedPerson(name, age) {
+        Person.call(this, name);
+        this.age = age;
+    }
+    ExtendedPerson.prototype = Object.create(Person.prototype);
+    ExtendedPerson.prototype.hello = function() {
+        return Person.prototype.hello.call(this) + " and I'm " + this.age + " year old";
+    }
+
+    var person = new ExtendedPerson('John', 20);
+    person.hello(); // My name is John and I'm 20 year old
 
 In both cases result is a new object based on given prototype.
 
