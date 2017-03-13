@@ -14,7 +14,7 @@ var injectElement = {
                 component[value] = component.$meta.elementWrapper(component[value]);
             }
             else if (component.$meta.elementWrapperFunctionName) {
-                component[value] = component[component.$meta.cd ](component[value]);
+                component[value] = component[component.$meta.elementWrapperFunctionName](component[value]);
             }
         })(element);
     }
