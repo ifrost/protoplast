@@ -12,7 +12,14 @@ describe('Collection', function() {
 
         collection = Collection.create([1,2]);
         chai.assert.lengthOf(collection, 2);
-
+    });
+    
+    it('returns item at given index', function() {
+        var collection = Collection.create([1,2]);
+        
+        chai.assert.strictEqual(collection.length, 2);
+        chai.assert.strictEqual(collection.get(0), 1);
+        chai.assert.strictEqual(collection.get(1), 2);
     });
 
     it('dispatches changed event when item is removed', function() {
