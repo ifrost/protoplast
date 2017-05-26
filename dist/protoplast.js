@@ -156,6 +156,10 @@ var Collection = Model.extend({
         }
     },
 
+    get: function(index) {
+        return this.array[index];
+    },
+
     indexOf: function() {
         return this.array.indexOf.apply(this.array, arguments);
     },
