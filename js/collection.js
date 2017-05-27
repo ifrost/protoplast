@@ -25,6 +25,10 @@ var Collection = Model.extend({
         this.dispatch('changed', {added: [item], removed: []});
         return result;
     },
+
+    addAll: function(array) {
+        array.forEach(this.add, this);
+    },
     
     remove: function(item) {
         var index = this.array.indexOf(item);

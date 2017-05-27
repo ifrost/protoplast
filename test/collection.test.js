@@ -21,6 +21,17 @@ describe('Collection', function() {
         chai.assert.strictEqual(collection.get(0), 1);
         chai.assert.strictEqual(collection.get(1), 2);
     });
+    
+    it('allows to add many items at once', function() {
+        var collection = Collection.create([1]);
+        
+        collection.addAll([2,3]);
+
+        chai.assert.strictEqual(collection.length, 3);
+        chai.assert.strictEqual(collection.get(0), 1);
+        chai.assert.strictEqual(collection.get(1), 2);
+        chai.assert.strictEqual(collection.get(2), 3);
+    });
 
     it('dispatches changed event when item is removed', function() {
         var handler = sinon.spy();
