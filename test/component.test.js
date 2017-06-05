@@ -86,6 +86,20 @@ describe('Component', function() {
         chai.assert.isNull(childA.root.parentNode);
     });
 
+    it('removes all children', function() {
+        var root = Component.create(),
+            childA = Component.create(),
+            childB = Component.create();
+
+        root.add(childA);
+        root.add(childB);
+
+        root.removeAll(childA);
+
+        chai.assert.isNull(childA.root.parentNode);
+        chai.assert.isNull(childB.root.parentNode);
+    });
+
     it('destroys all children when removing', function() {
         var destroy = sinon.stub(),
             Child = Component.extend({destroy: destroy});

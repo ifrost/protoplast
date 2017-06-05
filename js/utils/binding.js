@@ -70,6 +70,7 @@ var bindSetter = function(host, chain, handler, context) {
     }, context);
 };
 
+// TODO: fails when collection is null
 var bindCollection = function(host, sourceChain, handler, context) {
 
     var previousList = null, previousHandler;

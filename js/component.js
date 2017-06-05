@@ -151,9 +151,7 @@ var Component = Object.extend({
             if (this.__presenter__ && this.__presenter__.destroy) {
                 this.__presenter__.destroy();
             }
-            this._children.concat().forEach(function(child) {
-                this.remove(child);
-            }, this);
+            this.removeAll();
         }
     },
 
@@ -190,6 +188,15 @@ var Component = Object.extend({
             child.root.parentNode.removeChild(child.root);
             child.destroy();
         }
+    },
+
+    /**
+     * Remove all children component
+     */
+    removeAll: function() {
+        this._children.concat().forEach(function(child) {
+            this.remove(child);
+        }, this);
     },
 
     /**
