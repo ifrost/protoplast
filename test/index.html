@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" media="all" href="../node_modules/mocha/mocha.css">
+    <script src="../node_modules/mocha/mocha.js"></script>
+    <script src="../node_modules/chai/chai.js"></script>
+    <script src="../node_modules/sinon/pkg/sinon.js"></script>
+    <script>mocha.setup('bdd')</script>
+
+    <script src="protoplast.test.browser.js"></script>
+
+    <script>
+        onload = function(){
+            mocha.run();
+        };
+    </script>
+</head>
+<body>
+<div id="mocha"><p><a href=".">Index</a></p></div>
+<div id="messages"></div>
+<div id="fixtures"></div>
+</body>
+</html>

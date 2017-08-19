@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "update-protoplast": "cd ../.. && npm run build && cd examples/components && npm install ../.."
+  },
+  "dependencies": {
+    "protoplast": "../.."
+  }
+}
