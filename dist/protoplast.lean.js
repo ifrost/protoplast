@@ -70,18 +70,17 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 31);
+/******/ 	return __webpack_require__(__webpack_require__.s = 1);
 /******/ })
 /************************************************************************/
-/******/ ({
-
-/***/ 25:
+/******/ ([
+/* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var common = __webpack_require__(88),
-    binding = __webpack_require__(49),
-    component = __webpack_require__(89),
-    html = __webpack_require__(90);
+var common = __webpack_require__(5),
+    binding = __webpack_require__(2),
+    component = __webpack_require__(6),
+    html = __webpack_require__(7);
 
 module.exports = {
     createObject: common.createObject,
@@ -112,17 +111,18 @@ module.exports = {
 
 
 /***/ }),
-
-/***/ 31:
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {var utils = __webpack_require__(25);
+/* WEBPACK VAR INJECTION */(function(global) {var utils = __webpack_require__(0);
 
 /**
  * Base protoplast
  */
 var Protoplast = new (function() {
 });
+
+var STANDARD_DESCRIPTOR_PROPERTIES = ["value", "get", "set", "writable", "enumerable", "configurable"];
 
 Protoplast.$meta = {};
 Protoplast.$defineProperty = function(property, desc) {
@@ -185,19 +185,19 @@ Protoplast.extend = function(mixins, description) {
 
             for (var d in desc) {
                 // move all non standard descriptors to meta
-                if (desc.hasOwnProperty(d) && ['value', 'get', 'set', 'writable', 'enumerable', 'configurable'].indexOf(d) === -1) {
+                if (desc.hasOwnProperty(d) && STANDARD_DESCRIPTOR_PROPERTIES.indexOf(d) === -1) {
                     meta.properties[d] = meta.properties[d] || {};
                     meta.properties[d][property] = desc[d];
                     delete desc[d];
                 }
             }
-            if (!desc.hasOwnProperty('writable') && !desc.hasOwnProperty('set') && !desc.hasOwnProperty('get')) {
+            if (!desc.hasOwnProperty("writable") && !desc.hasOwnProperty("set") && !desc.hasOwnProperty("get")) {
                 desc.writable = true;
             }
-            if (!desc.hasOwnProperty('enumerable')) {
+            if (!desc.hasOwnProperty("enumerable")) {
                 desc.enumerable = true;
             }
-            if (!desc.hasOwnProperty('configurable')) {
+            if (!desc.hasOwnProperty("configurable")) {
                 desc.configurable = true;
             }
         }
@@ -229,15 +229,14 @@ Protoplast.extend = function(mixins, description) {
 global.Protoplast = Protoplast;
 module.exports = Protoplast;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
-
-/***/ 49:
+/* 2 */
 /***/ (function(module, exports) {
 
 var resolveProperty = function(host, chain, handler) {
-    var props = chain.split('.');
+    var props = chain.split(".");
 
     if (!chain) {
         handler(host);
@@ -247,7 +246,7 @@ var resolveProperty = function(host, chain, handler) {
     }
     else {
         var subHost = host[props[0]];
-        var subChain = props.slice(1).join('.');
+        var subChain = props.slice(1).join(".");
         if (subHost) {
             resolveProperty(subHost, subChain, handler);
         }
@@ -256,23 +255,23 @@ var resolveProperty = function(host, chain, handler) {
 };
 
 var observe = function(host, chain, handler, context) {
-    var props = chain.split('.');
+    var props = chain.split(".");
 
     context = context || {};
 
     if (props.length === 1) {
-        host.on(chain + '_changed', handler, context);
+        host.on(chain + "_changed", handler, context);
         handler();
     }
     else {
         var subHost = host[props[0]];
-        var subChain = props.slice(1).join('.');
+        var subChain = props.slice(1).join(".");
         if (subHost) {
             observe(subHost, subChain, handler, context);
         }
-        host.on(props[0] + '_changed', function(_, previous) {
+        host.on(props[0] + "_changed", function(_, previous) {
             if (previous && previous.on) {
-                previous.off(props[0] + '_changed', handler);
+                previous.off(props[0] + "_changed", handler);
             }
             observe(host[props[0]], subChain, handler, context);
         }, context);
@@ -290,12 +289,12 @@ var observe = function(host, chain, handler, context) {
             });
             while (props.length) {
                 props.pop();
-                resolveProperty(host, props.join('.'), function(value) {
+                resolveProperty(host, props.join("."), function(value) {
                     value.off(null, null, context);
                 });
             }
         }
-    }
+    };
 };
 
 var bindSetter = function(host, chain, handler, context) {
@@ -319,16 +318,16 @@ var bindCollection = function(host, sourceChain, handler, context) {
         resolveProperty(host, sourceChain, function(list) {
             if (previousList) {
                 if (previousList.off) {
-                    previousList.off('changed', previousHandler);
+                    previousList.off("changed", previousHandler);
                 }
                 previousList = null;
-                previousHandler = null
+                previousHandler = null;
             }
             if (list) {
                 previousList = list;
                 previousHandler = handler.bind(host, list);
                 if (list.on) {
-                    list.on('changed', previousHandler, context);
+                    list.on("changed", previousHandler, context);
                 }
             }
             handler(list);
@@ -366,23 +365,23 @@ var bind = function(host, bindingsOrChain, handler) {
                     watcher.stop();
                 });
             }
-        }
+        };
     }
 };
 
 var bindProperty = function(host, hostChain, dest, destChain) {
 
-    var props = destChain.split('.');
+    var props = destChain.split(".");
     var prop = props.pop();
 
     return bind(host, hostChain, function() {
         resolveProperty(host, hostChain, function(value) {
-            resolveProperty(dest, props.join('.'), function(finalObject) {
+            resolveProperty(dest, props.join("."), function(finalObject) {
                 if (finalObject) {
                     finalObject[prop] = value;
                 }
-            })
-        })
+            });
+        });
     });
 
 };
@@ -397,8 +396,7 @@ module.exports = {
 };
 
 /***/ }),
-
-/***/ 6:
+/* 3 */
 /***/ (function(module, exports) {
 
 var g;
@@ -425,8 +423,8 @@ module.exports = g;
 
 
 /***/ }),
-
-/***/ 88:
+/* 4 */,
+/* 5 */
 /***/ (function(module, exports) {
 
 var idCounter = 0;
@@ -438,7 +436,7 @@ var idCounter = 0;
  */
 function uniqueId(prefix) {
     var id = ++idCounter;
-    return (prefix || '') + id;
+    return (prefix || "") + id;
 }
 
 /**
@@ -458,7 +456,7 @@ function createObject(proto, args) {
 }
 
 function isPrimitive(value) {
-    return ['number', 'boolean', 'string', 'function'].indexOf(typeof(value)) !== -1;
+    return ["number", "boolean", "string", "function"].indexOf(typeof(value)) !== -1;
 }
 
 function isLiteral(value) {
@@ -500,7 +498,7 @@ function merge(destination, source) {
  */
 function mix(destination, source) {
     for (var property in source) {
-        if (property.substr(0, 2) !== '__' && !(property in destination)) {
+        if (property.substr(0, 2) !== "__" && !(property in destination)) {
             destination[property] = source[property];
         }
     }
@@ -539,11 +537,10 @@ module.exports = {
 };
 
 /***/ }),
-
-/***/ 89:
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var binding = __webpack_require__(49);
+var binding = __webpack_require__(2);
 
 /**
  * Inject Element processor. Parses the template for elements with [data-prop] and injects the element to the
@@ -551,7 +548,7 @@ var binding = __webpack_require__(49);
  * setting on the component
  */
 var injectElement = {
-    attribute: 'data-prop',
+    attribute: "data-prop",
     process: function(component, element, value) {
         (function(element){
             component[value] = element;
@@ -571,7 +568,7 @@ var injectElement = {
  * <div data-comp="foo"></div>
  */
 var createComponents = {
-    attribute: 'data-comp',
+    attribute: "data-comp",
     process: function(component, element, value) {
         var child = component[value] = component.$meta.properties.component[value].create();
         component.attach(child, element, element.parentNode);
@@ -598,9 +595,9 @@ var createRendererFunction = function(host, opts) {
     opts.create = opts.create || renderListDefaultOptions.create;
     opts.remove = opts.remove || renderListDefaultOptions.remove;
     opts.update = opts.update || renderListDefaultOptions.update;
-    opts.property = opts.property || 'data';
+    opts.property = opts.property || "data";
     if (!opts.renderer) {
-        throw new Error('Renderer is required')
+        throw new Error("Renderer is required");
     }
 
     return function(list) {
@@ -637,8 +634,7 @@ module.exports = {
 };
 
 /***/ }),
-
-/***/ 90:
+/* 7 */
 /***/ (function(module, exports) {
 
 /**
@@ -659,7 +655,7 @@ var parseHTML = (function() {
     var rxhtmlTag = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi,
         rtagName = /<([\w:]+)/,
         rhtml = /<|&#?\w+;/,
-    // We have to close these tags to support XHTML (#13200)
+        // We have to close these tags to support XHTML (#13200)
         wrapMap = {
             // Support: IE9
             option: [1, "<select multiple='multiple'>", "</select>"],
@@ -717,6 +713,5 @@ module.exports = {
 };
 
 /***/ })
-
-/******/ });
+/******/ ]);
 });
