@@ -504,20 +504,25 @@ var Context = Protoplast.extend({
 
     $create: function() {
         var self = this;
+        this._children = [];
         this._objects = {
-            pub: function(topic, message) {
-                self._dispatcher.dispatch(topic, message);
+            pub: {
+                instance: function(topic, message) {
+                    self._dispatcher.dispatch(topic, message);
+                }
             },
-            sub: function(topic) {
-                var instanceSelf = this;
-                return {
-                    add: function(handler) {
-                        self._dispatcher.on(topic, handler, instanceSelf);
-                    },
-                    remove: function(handler) {
-                        self._dispatcher.off(topic, handler, instanceSelf);
-                    }
-                };
+            sub: {
+                instance: function(topic) {
+                    var instanceSelf = this;
+                    return {
+                        add: function(handler) {
+                            self._dispatcher.on(topic, handler, instanceSelf);
+                        },
+                        remove: function(handler) {
+                            self._dispatcher.off(topic, handler, instanceSelf);
+                        }
+                    };
+                }
             }
         };
         this._unknows = [];
@@ -538,17 +543,28 @@ var Context = Protoplast.extend({
     _unknows: null,
 
     /**
+     * List of children contexts
+     */
+    _children: null,
+
+    /**
      * Registers object in the DI context
      * @param {String} [id]
      * @param {Object} instance
      */
-    register: function(id, instance) {
+    register: function(id, instance, opts) {
         if (arguments.length == 1) {
             instance = id;
-            this._unknows.push(instance);
+            this._unknows.push({
+                instance: instance,
+                readonly: opts && opts.readonly
+            });
         }
         else {
-            this._objects[id] = instance;
+            this._objects[id] = {
+                instance: instance,
+                readonly: opts && opts.readonly
+            }
         }
 
         // fast inject is used to register and process new objects after the config has been built
@@ -557,7 +573,10 @@ var Context = Protoplast.extend({
             this.register(obj);
             this.process(obj);
         }.bind(this);
-        
+
+        this._children.forEach(function(context) {
+            context.register(id, instance, {readonly: true});
+        });
     },
     
     _injectDependencies: function(obj) {
@@ -566,12 +585,16 @@ var Context = Protoplast.extend({
             Object.keys(obj.$meta.properties.inject).forEach(function(property){
                 injectId = obj.$meta.properties.inject[property];
                 if (this._objects[injectId]) {
-                    obj[property] = this._objects[injectId];
+                    obj[property] = this._objects[injectId].instance;
                 }
                 else if (injectId.isPrototypeOf) {
-                    this._unknows.forEach(function(dependency) {
-                        if (injectId.isPrototypeOf(dependency)) {
-                            obj[property] = dependency;
+                    var objects = [];
+                    Object.keys(this._objects).forEach(function(id) {
+                       objects.push(this._objects[id])
+                    }, this);
+                    this._unknows.concat(objects).forEach(function(dependencyDescriptor) {
+                        if (injectId.isPrototypeOf(dependencyDescriptor.instance)) {
+                            obj[property] = dependencyDescriptor.instance;
                         }
                     }, this)
                 }
@@ -585,13 +608,22 @@ var Context = Protoplast.extend({
      * @private
      */
     _runOnAll: function(method) {
-        Object.keys(this._objects).forEach(function(id) {
-            var instance = this._objects[id];
-            method(instance);
-        }, this);
-        this._unknows.forEach(function(instance){
-            method(instance);
-        }, this);
+        Object.keys(this._objects)
+            .filter(function(id) {
+                return !this._objects[id].readonly;
+            }, this)
+            .forEach(function(id) {
+                var instance = this._objects[id].instance;
+                method(instance);
+            }, this);
+
+        this._unknows
+            .filter(function(descriptor) {
+                return !descriptor.readonly;
+            }, this)
+            .forEach(function(descriptor){
+                method(descriptor.instance);
+            }, this);
     },
 
     _runInitMethods: function(obj) {
@@ -615,7 +647,7 @@ var Context = Protoplast.extend({
     _initialiseSubscriptions: function(obj) {
         if (obj.$meta && obj.$meta.properties && obj.$meta.properties.sub) {
             Object.keys(obj.$meta.properties.sub).forEach(function(handler){
-                this._objects.sub.call(obj, obj.$meta.properties.sub[handler]).add(obj[handler]);
+                this._objects.sub.instance.call(obj, obj.$meta.properties.sub[handler]).add(obj[handler]);
             }, this);
         }
     },
@@ -631,6 +663,16 @@ var Context = Protoplast.extend({
      */
     build: function() {
         this._runOnAll(this.process.bind(this));
+    },
+
+    /**
+     * Creates new child context
+     * @returns {Context}
+     */
+    createChildContext: function() {
+        var context = Context.create();
+        this._children.push(context);
+        return context;
     },
 
     /**
