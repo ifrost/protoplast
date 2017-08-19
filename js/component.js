@@ -42,15 +42,8 @@ var Component = Object.extend({
         var domWrapper;
 
         this._children = [];
-
-        if (!this.tag && !this.html) {
-            this.tag = "div";
-        }
-
-        if (this.tag && !this.html) {
-            this.html = "<" + this.tag + "></" + this.tag + ">";
-        }
-
+        this._createRootHtml();
+        
         domWrapper = utils.html.parseHTML(this.html);
         if (domWrapper.childNodes.length > 1) {
             throw new Error("Component should have only one root element");
@@ -59,7 +52,7 @@ var Component = Object.extend({
 
         this.processInstance();
     },
-
+    
     /**
      * Process DOM using defined DOM processors
      */
@@ -186,6 +179,20 @@ var Component = Object.extend({
         }
     },
 
+    /**
+     * Create root html (if not defined) based on "tag" property (defaulting to "div")
+     * @private
+     */
+    _createRootHtml: function() {
+        if (!this.tag && !this.html) {
+            this.tag = "div";
+        }
+
+        if (this.tag && !this.html) {
+            this.html = "<" + this.tag + "></" + this.tag + ">";
+        }
+    },
+    
     /**
      * Remove child component
      * @param {Component} child

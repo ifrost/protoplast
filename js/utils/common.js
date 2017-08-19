@@ -35,8 +35,9 @@ function isLiteral(value) {
 }
 
 /**
- * Merges source object into destination. Arrays are concatenated, primitives taken from the source if not
- * defined and complex object merged recursively
+ * Merge source object into destination
+ * @see mergerProperty
+ *
  * @param destination
  * @param source
  * @returns {Object}
@@ -44,21 +45,68 @@ function isLiteral(value) {
 function merge(destination, source) {
     for (var property in source) {
         if (source.hasOwnProperty(property)) {
-            if (source[property] instanceof Array) {
-                destination[property] = source[property].concat(destination[property] || []);
-            }
-            else if (isPrimitive(source[property]) || !isLiteral(source[property])) {
-                if (!destination.hasOwnProperty(property)) {
-                    destination[property] = source[property];
-                }
-            }
-            else {
-                destination[property] = destination[property] || {};
-                merge(destination[property], source[property]);
-            }
+            mergeProperty(destination, source, property);
         }
     }
     return destination;
+}
+
+/**
+ * Merge a single property
+ *
+ * Arrays are concatenated, primitives taken from the source if not
+ * defined and complex object merged recursively
+ *
+ * @param {Object} destination
+ * @param {Object} source
+ * @param {String} property
+ */
+function mergeProperty(destination, source, property) {
+    if (source[property] instanceof Array) {
+        mergeAsArray(destination, source, property);
+    }
+    else if (isPrimitive(source[property]) || !isLiteral(source[property])) {
+        overrideIfNotExists(destination, source, property);
+    }
+    else {
+        mergeAsObject(destination, source, property);
+    }
+}
+
+/**
+ * Merges arrays by concatenating them
+ *
+ * @param {Object} destination
+ * @param {Object} source
+ * @param {String} property
+ */
+function mergeAsArray(destination, source, property) {
+    destination[property] = source[property].concat(destination[property] || []);
+}
+
+/**
+ * Sets the property from source if it wasn't defined in destination
+ *
+ * @param {Object} destination
+ * @param {Object} source
+ * @param {String} property
+ */
+function overrideIfNotExists(destination, source, property) {
+    if (!destination.hasOwnProperty(property)) {
+        destination[property] = source[property];
+    }
+}
+
+/**
+ * Merges object recursively using merge function
+ *
+ * @param {Object} destination
+ * @param {Object} source
+ * @param {String} property
+ */
+function mergeAsObject(destination, source, property) {
+    destination[property] = destination[property] || {};
+    merge(destination[property], source[property]);
 }
 
 /**
