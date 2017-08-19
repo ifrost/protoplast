@@ -138,6 +138,50 @@ describe('Dependency Injection', function() {
         chai.assert.equal(bar.dep.value(), 10);
     });
     
+    it('creates child contexts', function() {
+       
+        var Base = Protoplast.extend({
+            child: {
+                inject: 'child'
+            }
+        });
+        
+        var Child = Protoplast.extend({
+            base: {
+                inject: 'base'
+            }
+        });
+
+        var GrandChild = Protoplast.extend({
+            base: {
+                inject: Base
+            }
+        });
+        
+        var baseContext = Context.create();
+        var childContext = baseContext.createChildContext();
+        var simple = Protoplast.create();
+        var grandChildContext = childContext.createChildContext();
+
+        var base = Base.create();
+        var child = Child.create();
+        var grandChild = GrandChild.create();
+
+        baseContext.register('base', base);
+        childContext.register('child', child);
+        grandChildContext.register(simple);
+
+        baseContext.build();
+        childContext.build();
+        grandChildContext.build();
+        
+        simple.__fastinject__(grandChild);
+
+        chai.assert.isUndefined(base.child, child);
+        chai.assert.strictEqual(child.base, base);
+        chai.assert.strictEqual(grandChild.base, base);
+    });
+    
     it('destroys injected object', function() {
 
         var Foo = Protoplast.extend({
