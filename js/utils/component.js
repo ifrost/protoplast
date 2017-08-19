@@ -47,6 +47,7 @@ var renderListDefaultOptions = {
     }
 };
 
+/*eslint-disable complexity */
 var validateRenderingOptions = function(opts) {
     opts = opts || {};
     opts.create = opts.create || renderListDefaultOptions.create;
@@ -58,6 +59,7 @@ var validateRenderingOptions = function(opts) {
     }
     return opts;
 };
+/*eslint-enable complexity */
 
 var createRendererFunction = function(host, opts) {
 

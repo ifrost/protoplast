@@ -16,24 +16,21 @@ Protoplast.create = function() {
     return utils.createObject(this, arguments);
 };
 
-/**
- * Creates new factory function
- * @param [mixins]     list of mixins to merge with
- * @param description  object description
- * @returns {Object}
- */
-Protoplast.extend = function(mixins, description) {
-    var proto = Object.create(this), meta, mixinsMeta, desc;
-
+function getArgs(mixins, description) {
     // normalise parameters
     if (!(mixins instanceof Array)) {
         description = mixins;
         mixins = [];
     }
-    description = description || {};
-    mixins = mixins || [];
 
-    meta = description.$meta || {};
+    return {
+        description: description || {},
+        mixins: mixins || []
+    };
+}
+
+function defineMetaDataObject(description) {
+    var meta = description.$meta || {};
     meta.properties = meta.properties || {};
 
     // $meta section of the description has to be deleted
@@ -41,17 +38,54 @@ Protoplast.extend = function(mixins, description) {
     // All entries but $meta and $create are treated as
     // property definitions
     delete description.$meta;
+    
+    return meta;
+}
 
+function process$create(meta, description) {
     // $create is a shortcut for adding a constructor to constructors list
     if (description.$create !== undefined) {
         meta.constructors = meta.constructors || [];
         meta.constructors.push(description.$create);
         delete description.$create;
     }
+}
 
-    // mix-in all the mixins to the current prototype
-    proto = utils.mixin(proto, mixins);
+function validateDescriptionValue(property, desc) {
+    // default value to undefined
+    if (!(property in this) && !desc.set && !desc.get && !desc.value) {
+        desc.value = undefined;
+    }
 
+    return desc;
+}
+
+function validateDescription(desc) {
+    if (!desc.hasOwnProperty("writable") && !desc.hasOwnProperty("set") && !desc.hasOwnProperty("get")) {
+        desc.writable = true;
+    }
+    if (!desc.hasOwnProperty("enumerable")) {
+        desc.enumerable = true;
+    }
+    if (!desc.hasOwnProperty("configurable")) {
+        desc.configurable = true;
+    }
+    
+    return desc;
+}
+
+function defineCustomMetaData(meta, metaKey, property, desc) {
+    // move all non standard descriptors to meta
+    if (desc.hasOwnProperty(metaKey) && STANDARD_DESCRIPTOR_PROPERTIES.indexOf(metaKey) === -1) {
+        meta.properties[metaKey] = meta.properties[metaKey] || {};
+        meta.properties[metaKey][property] = desc[metaKey];
+        delete desc[metaKey];
+    }
+}
+
+function createPropertyDefinitions(meta, description) {
+    var desc;
+    
     // create description for all properties (properties are defined at the end)
     var propertyDefinitions = [];
 
@@ -62,35 +96,42 @@ Protoplast.extend = function(mixins, description) {
         } else {
             desc = description[property];
 
-            // default value to undefined
-            if (!(property in this) && !desc.set && !desc.get && !desc.value) {
-                desc.value = undefined;
-            }
+            validateDescriptionValue(property, desc);
 
-            for (var d in desc) {
-                // move all non standard descriptors to meta
-                if (desc.hasOwnProperty(d) && STANDARD_DESCRIPTOR_PROPERTIES.indexOf(d) === -1) {
-                    meta.properties[d] = meta.properties[d] || {};
-                    meta.properties[d][property] = desc[d];
-                    delete desc[d];
-                }
+            for (var metaKey in desc) {
+                defineCustomMetaData(meta, metaKey, property, desc);
             }
-            if (!desc.hasOwnProperty("writable") && !desc.hasOwnProperty("set") && !desc.hasOwnProperty("get")) {
-                desc.writable = true;
-            }
-            if (!desc.hasOwnProperty("enumerable")) {
-                desc.enumerable = true;
-            }
-            if (!desc.hasOwnProperty("configurable")) {
-                desc.configurable = true;
-            }
+            
+            validateDescription(desc);
         }
         propertyDefinitions.push({
             property: property,
             desc: desc
         });
     }
+    
+    return propertyDefinitions;
+}
 
+/**
+ * Creates new factory function
+ * @param [mixins]     list of mixins to merge with
+ * @param description  object description
+ * @returns {Object}
+ */
+Protoplast.extend = function(mixins, description) {
+    var proto = Object.create(this), meta, mixinsMeta, args = getArgs(mixins, description);
+
+    mixins = args.mixins;
+    description = args.description;
+    meta = defineMetaDataObject(description);
+    process$create(meta, description);
+
+    // mix-in all the mixins to the current prototype
+    proto = utils.mixin(proto, mixins);
+
+    var propertyDefinitions = createPropertyDefinitions(meta, description);
+    
     // mix meta data from the mixins into one object
     mixinsMeta = (mixins || []).reduce(function(current, next) {
         return utils.merge(current, next.$meta);
