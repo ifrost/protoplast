@@ -7,11 +7,11 @@
 
     "quotes": ["error", "double"],
 
-    "complexity": ["error", { "max": 20 }],
+    "complexity": ["error", { "max": 5 }],
     "max-depth": ["error", { "max": 4 }],
     "max-nested-callbacks": ["error", { "max": 4 }],
     "max-params": ["error", { "max": 4 }],
-    "max-statements": ["error", { "max": 40 }],
+    "max-statements": ["error", { "max": 20 }],
     "max-len": ["error", { "code": 120 }]
   },
   "env": {
