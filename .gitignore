@@ -1,5 +1,11 @@
 node_modules/
 coverage/
+docs/code/
+local/
+tmp/
+.idea/
+
+changelog.txt
 npm-debug.log
 
 examples/playground/

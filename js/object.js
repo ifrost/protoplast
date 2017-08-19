@@ -1,6 +1,6 @@
-var constructors = require('./constructors'),
-    utils = require('./utils'),
-    Model = require('./model');
+var constructors = require("./constructors"),
+    utils = require("./utils"),
+    Model = require("./model");
 
 var Object = Model.extend({
     

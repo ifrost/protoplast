@@ -1,4 +1,4 @@
-var Model = require('./model');
+var Model = require("./model");
 
 var CollectionView = Model.extend({
 
@@ -22,7 +22,7 @@ var CollectionView = Model.extend({
         this._filters = [];
         this._sort = [];
 
-        this._source.on('changed', this._invalidate, this);
+        this._source.on("changed", this._invalidate, this);
 
         this.refresh = this.refresh.bind(this);
 
@@ -77,7 +77,7 @@ var CollectionView = Model.extend({
         event.removed.forEach(function(item) {
             if (filterOrSort.properties) {
                 filterOrSort.properties.forEach(function(property) {
-                    item.off(property + '_changed', this.refresh, this);
+                    item.off(property + "_changed", this.refresh, this);
                 }, this);
             }
         }, this);
@@ -85,7 +85,7 @@ var CollectionView = Model.extend({
         event.added.forEach(function(item) {
             if (filterOrSort.properties) {
                 filterOrSort.properties.forEach(function(property) {
-                    item.on(property + '_changed', this.refresh, this);
+                    item.on(property + "_changed", this.refresh, this);
                 }, this);
             }
         }, this);
@@ -94,7 +94,7 @@ var CollectionView = Model.extend({
     _invalidate: function(event) {
 
         if (!event) {
-            event = {added: this._source.toArray(), removed: this._source.toArray()}
+            event = {added: this._source.toArray(), removed: this._source.toArray()};
         }
 
         this._current = this._source.toArray().concat();
@@ -134,7 +134,7 @@ var CollectionView = Model.extend({
             this._hiddenSelected = null;
         }
         
-        this.dispatch('changed');
+        this.dispatch("changed");
     }
 
 });

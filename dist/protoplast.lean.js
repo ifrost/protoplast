@@ -1,6 +1,122 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.p = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-(function (global){
-var utils = require('./utils');
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory();
+	else if(typeof define === 'function' && define.amd)
+		define([], factory);
+	else if(typeof exports === 'object')
+		exports["Protoplast"] = factory();
+	else
+		root["Protoplast"] = factory();
+})(this, function() {
+return /******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+/******/
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId]) {
+/******/ 			return installedModules[moduleId].exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+/******/
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/
+/******/
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+/******/
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+/******/
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, {
+/******/ 				configurable: false,
+/******/ 				enumerable: true,
+/******/ 				get: getter
+/******/ 			});
+/******/ 		}
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+/******/
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = 31);
+/******/ })
+/************************************************************************/
+/******/ ({
+
+/***/ 25:
+/***/ (function(module, exports, __webpack_require__) {
+
+var common = __webpack_require__(88),
+    binding = __webpack_require__(49),
+    component = __webpack_require__(89),
+    html = __webpack_require__(90);
+
+module.exports = {
+    createObject: common.createObject,
+    merge: common.merge,
+    isLiteral: common.isLiteral,
+    isPrimitive: common.isPrimitive,
+    mixin: common.mixin,
+    uniqueId: common.uniqueId,
+    meta: common.meta,
+
+    resolveProperty: binding.resolveProperty,
+    bind: binding.bind,
+    bindSetter: binding.bindSetter,
+    bindProperty: binding.bindProperty,
+    bindCollection: binding.bindCollection,
+    observe: binding.observe,
+
+    renderList: component.renderList,
+    createRendererFunction: component.createRendererFunction,
+    renderListDefaults: component.renderListDefaults,
+    domProcessors: {
+        injectElement: component.domProcessors.injectElement,
+        createComponents: component.domProcessors.createComponents
+    },
+    
+    html: html
+};
+
+
+/***/ }),
+
+/***/ 31:
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {var utils = __webpack_require__(25);
 
 /**
  * Base protoplast
@@ -113,41 +229,13 @@ Protoplast.extend = function(mixins, description) {
 global.Protoplast = Protoplast;
 module.exports = Protoplast;
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./utils":2}],2:[function(require,module,exports){
-var common = require('./utils/common'),
-    binding = require('./utils/binding'),
-    component = require('./utils/component'),
-    html = require('./utils/html');
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
 
-module.exports = {
-    createObject: common.createObject,
-    merge: common.merge,
-    isLiteral: common.isLiteral,
-    isPrimitive: common.isPrimitive,
-    mixin: common.mixin,
-    uniqueId: common.uniqueId,
-    meta: common.meta,
+/***/ }),
 
-    resolveProperty: binding.resolveProperty,
-    bind: binding.bind,
-    bindSetter: binding.bindSetter,
-    bindProperty: binding.bindProperty,
-    bindCollection: binding.bindCollection,
-    observe: binding.observe,
+/***/ 49:
+/***/ (function(module, exports) {
 
-    renderList: component.renderList,
-    createRendererFunction: component.createRendererFunction,
-    renderListDefaults: component.renderListDefaults,
-    domProcessors: {
-        injectElement: component.domProcessors.injectElement,
-        createComponents: component.domProcessors.createComponents
-    },
-    
-    html: html
-};
-
-},{"./utils/binding":3,"./utils/common":4,"./utils/component":5,"./utils/html":6}],3:[function(require,module,exports){
 var resolveProperty = function(host, chain, handler) {
     var props = chain.split('.');
 
@@ -307,7 +395,40 @@ module.exports = {
     bindCollection: bindCollection,
     observe: observe
 };
-},{}],4:[function(require,module,exports){
+
+/***/ }),
+
+/***/ 6:
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
+
+/***/ 88:
+/***/ (function(module, exports) {
+
 var idCounter = 0;
 
 /**
@@ -416,8 +537,13 @@ module.exports = {
     uniqueId: uniqueId,
     meta: meta
 };
-},{}],5:[function(require,module,exports){
-var binding = require('./binding');
+
+/***/ }),
+
+/***/ 89:
+/***/ (function(module, exports, __webpack_require__) {
+
+var binding = __webpack_require__(49);
 
 /**
  * Inject Element processor. Parses the template for elements with [data-prop] and injects the element to the
@@ -509,7 +635,12 @@ module.exports = {
         createComponents: createComponents
     }
 };
-},{"./binding":3}],6:[function(require,module,exports){
+
+/***/ }),
+
+/***/ 90:
+/***/ (function(module, exports) {
+
 /**
  * Source: https://gist.github.com/Munawwar/6e6362dbdf77c7865a99
  *
@@ -584,5 +715,8 @@ var parseHTML = (function() {
 module.exports = {
     parseHTML: parseHTML
 };
-},{}]},{},[1])(1)
+
+/***/ })
+
+/******/ });
 });

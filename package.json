@@ -1,38 +1,40 @@
 {
-  "name": "protoplast",
-  "version": "2.0.0",
-  "description": "",
-  "main": "main.js",
-  "scripts": {
-    "test": "mocha test/protoplast.test.js",
-    "coverage": "istanbul cover node_modules/mocha/bin/_mocha test/protoplast.test.js -- -R spec",
-    "report_coverage": "codecov",
-    "build_test": "browserify --debug test/protoplast.test.js -o test/protoplast.test.browser.js",
-    "build_main": "browserify -s p main.js -o dist/protoplast.js",
-    "build_lean": "browserify -s p js/protoplast.js -o dist/protoplast.lean.js",
-    "uglify": "uglifyjs dist/protoplast.js -o dist/protoplast.min.js -c -m",
-    "uglify_lean": "uglifyjs dist/protoplast.lean.js -o dist/protoplast.lean.min.js -c -m",
-    "build": "npm run build_test && npm run build_main && npm run build_lean && npm run uglify && npm run uglify_lean",
-    "preversion": "npm test",
-    "version": "npm run build && git add .",
-    "postversion": "git push && git push --tags && npm publish"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://ifrost@github.com/ifrost/protoplast.git"
-  },
-  "author": "Piotr Jamroz <pm.jamroz@gmail.com> (https://about.me/piotr.jamroz)",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/ifrost/protoplast/issues"
-  },
-  "homepage": "https://github.com/ifrost/protoplast#readme",
-  "devDependencies": {
-    "chai": "^3.4.0",
-    "codecov": "^1.0.1",
-    "istanbul": "^0.4.5",
-    "jsdom": "^6.5.1",
-    "mocha": "^2.3.3",
-    "sinon": "^1.17.2"
-  }
+    "name": "protoplast",
+    "version": "2.0.0",
+    "description": "prototypal inheritance with meta-data",
+    "main": "main.js",
+    "scripts": {
+        "build": "webpack",
+        "codecov": "codecov",
+        "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec",
+        "doc": "jsdoc -c jsdoc.conf.json -R README.md -P package.json -t node_modules/docdash -u docs/tutorials",
+        "eslint": "eslint --format=table js/**/*.js",
+        "postversion": "git push && git push --tags",
+        "preversion": "git fetch --tags && node scripts/changelog.js https://github.com/ifrost/protoplast console",
+        "test": "mocha --recursive",
+        "debug": "mocha --watch --reporter spec --inspect test/protoplast.test.js",
+        "version": "npm run build && git add ."
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://ifrost@github.com/ifrost/protoplast.git"
+    },
+    "author": "Piotr Jamroz <pm.jamroz@gmail.com> (https://about.me/piotr.jamroz)",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/ifrost/protoplast/issues"
+    },
+    "homepage": "https://github.com/ifrost/protoplast#readme",
+    "devDependencies": {
+        "chai": "^4.0.2",
+        "codecov": "^2.2.0",
+        "docdash": "^0.4.0",
+        "eslint": "^4.0.0",
+        "istanbul": "^0.4.5",
+        "jsdoc": "^3.4.3",
+        "jsdom": "^11.1.0",
+        "mocha": "^3.4.2",
+        "sinon": "^3.0.0",
+        "webpack": "^3.0.0"
+    }
 }

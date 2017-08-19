@@ -1,6 +1,6 @@
-var Protoplast = require('./protoplast'),
-    Dispatcher = require('./dispatcher'),
-    utils = require('./utils');
+var Protoplast = require("./protoplast"),
+    Dispatcher = require("./dispatcher"),
+    utils = require("./utils");
 
 function defineComputedProperty(name, desc, isLazy) {
     var calc = desc.value;
@@ -10,29 +10,29 @@ function defineComputedProperty(name, desc, isLazy) {
     delete desc.enumerable;
 
     desc.get = function() {
-        if (this['_' + name] === undefined) {
-            this['_' + name] = calc.call(this);
+        if (this["_" + name] === undefined) {
+            this["_" + name] = calc.call(this);
         }
-        return this['_' + name];
+        return this["_" + name];
     };
 
     if (isLazy) {
         desc.set = function() {
-            var old = this['_' + name];
-            this['_' + name] = undefined;
-            this.dispatch(name + '_changed', undefined, old);
-        }
+            var old = this["_" + name];
+            this["_" + name] = undefined;
+            this.dispatch(name + "_changed", undefined, old);
+        };
     }
     else {
         desc.set = function() {
             var value, old;
-            old = this['_' + name];
-            this['_' + name] = undefined;
+            old = this["_" + name];
+            this["_" + name] = undefined;
             value = this[name];
             if (value !== old) {
-                this.dispatch(name + '_changed', value, old);
+                this.dispatch(name + "_changed", value, old);
             }
-        }
+        };
     }
 }
 
@@ -44,16 +44,16 @@ function defineBindableProperty(name, desc, proto) {
     delete desc.enumerable;
 
     desc.get = function() {
-        return this['_' + name];
+        return this["_" + name];
     };
     desc.set = function(value) {
-        if (value !== this['_' + name]) {
-            var old = this['_' + name];
-            this['_' + name] = value;
-            this.dispatch(name + '_changed', value, old);
+        if (value !== this["_" + name]) {
+            var old = this["_" + name];
+            this["_" + name] = value;
+            this.dispatch(name + "_changed", value, old);
         }
     };
-    proto['_' + name] = initialValue;
+    proto["_" + name] = initialValue;
 }
 
 // TODO: destroy bindings
@@ -80,7 +80,7 @@ var Model = Protoplast.extend([Dispatcher], {
             var isLazy = this.$meta.properties.lazy && this.$meta.properties.lazy[property];
             defineComputedProperty(property, desc, isLazy);
         }
-        else if (!desc.get || ['number', 'boolean', 'string'].indexOf(typeof(desc.value)) !== -1) {
+        else if (!desc.get || ["number", "boolean", "string"].indexOf(typeof(desc.value)) !== -1) {
             defineBindableProperty(property, desc, this);
         }
 

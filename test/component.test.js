@@ -8,11 +8,8 @@ var chai = require('chai'),
 
 describe('Component', function() {
 
-    beforeEach(function(done) {
-        jsdom.env('<html><body></body></html>', function(err, window) {
-            global.document = window.document;
-            done();
-        })
+    beforeEach(function() {
+        global.document = new jsdom.JSDOM('<html><body></body></html>').window.document;
     });
 
     it('creates a component with default DIV tag', function() {
@@ -177,11 +174,8 @@ describe('Component', function() {
 
 describe('Components Dependency Injection', function() {
 
-    beforeEach(function(done) {
-        jsdom.env('<html><body></body></html>', function(err, window) {
-            global.document = window.document;
-            done();
-        })
+    beforeEach(function() {
+        global.document = new jsdom.JSDOM('<html><body></body></html>').window.document;
     });
 
     it('injects all dependencies to children element with __fastinject__', function() {

@@ -1,4 +1,4 @@
-var binding = require('./binding');
+var binding = require("./binding");
 
 /**
  * Inject Element processor. Parses the template for elements with [data-prop] and injects the element to the
@@ -6,7 +6,7 @@ var binding = require('./binding');
  * setting on the component
  */
 var injectElement = {
-    attribute: 'data-prop',
+    attribute: "data-prop",
     process: function(component, element, value) {
         (function(element){
             component[value] = element;
@@ -26,7 +26,7 @@ var injectElement = {
  * <div data-comp="foo"></div>
  */
 var createComponents = {
-    attribute: 'data-comp',
+    attribute: "data-comp",
     process: function(component, element, value) {
         var child = component[value] = component.$meta.properties.component[value].create();
         component.attach(child, element, element.parentNode);
@@ -53,9 +53,9 @@ var createRendererFunction = function(host, opts) {
     opts.create = opts.create || renderListDefaultOptions.create;
     opts.remove = opts.remove || renderListDefaultOptions.remove;
     opts.update = opts.update || renderListDefaultOptions.update;
-    opts.property = opts.property || 'data';
+    opts.property = opts.property || "data";
     if (!opts.renderer) {
-        throw new Error('Renderer is required')
+        throw new Error("Renderer is required");
     }
 
     return function(list) {

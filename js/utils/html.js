@@ -16,7 +16,7 @@ var parseHTML = (function() {
     var rxhtmlTag = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi,
         rtagName = /<([\w:]+)/,
         rhtml = /<|&#?\w+;/,
-    // We have to close these tags to support XHTML (#13200)
+        // We have to close these tags to support XHTML (#13200)
         wrapMap = {
             // Support: IE9
             option: [1, "<select multiple='multiple'>", "</select>"],

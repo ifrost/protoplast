@@ -1,4 +1,4 @@
-var Model = require('./model');
+var Model = require("./model");
 
 var Collection = Model.extend({
 
@@ -22,7 +22,7 @@ var Collection = Model.extend({
 
     add: function(item) {
         var result = this.array.push(item);
-        this.dispatch('changed', {added: [item], removed: []});
+        this.dispatch("changed", {added: [item], removed: []});
         return result;
     },
 
@@ -34,7 +34,7 @@ var Collection = Model.extend({
         var index = this.array.indexOf(item);
         if (index !== -1) {
             this.array.splice(index, 1);
-            this.dispatch('changed', {added: [], removed: [item]});
+            this.dispatch("changed", {added: [], removed: [item]});
         }
     },
 

@@ -1,7 +1,7 @@
-var Context = require('./di'),
-    Collection = require('./collection'),
-    Object = require('./object'),
-    utils = require('./utils');
+var Context = require("./di"),
+    Collection = require("./collection"),
+    Object = require("./object"),
+    utils = require("./utils");
 
 /**
  * Creates a simple component tree-like architecture for the view layer. Used with DI
@@ -13,9 +13,9 @@ var Component = Object.extend({
         domProcessors: [utils.domProcessors.createComponents, utils.domProcessors.injectElement]
     },
     
-    tag: '',
+    tag: "",
 
-    html: '',
+    html: "",
 
     root: {
         get: function() {
@@ -31,7 +31,7 @@ var Component = Object.extend({
 
     children: {
         get: function() {
-            return this._children
+            return this._children;
         }
     },
 
@@ -44,16 +44,16 @@ var Component = Object.extend({
         this._children = [];
 
         if (!this.tag && !this.html) {
-            this.tag = 'div';
+            this.tag = "div";
         }
 
         if (this.tag && !this.html) {
-            this.html = '<' + this.tag + '></' + this.tag + '>';
+            this.html = "<" + this.tag + "></" + this.tag + ">";
         }
 
         domWrapper = utils.html.parseHTML(this.html);
         if (domWrapper.childNodes.length > 1) {
-            throw new Error('Component should have only one root element');
+            throw new Error("Component should have only one root element");
         }
         this.root = domWrapper.firstChild;
 
@@ -67,7 +67,7 @@ var Component = Object.extend({
         var i, elements, element, value;
         if (this._root) {
             (this.$meta.domProcessors || []).forEach(function(processor) {
-                elements =  this._root.querySelectorAll('[' + processor.attribute + ']');
+                elements =  this._root.querySelectorAll("[" + processor.attribute + "]");
                 for (i = 0; i < elements.length; i++) {
                     element = elements[i];
                     value = element.getAttribute(processor.attribute);
@@ -81,7 +81,7 @@ var Component = Object.extend({
      * Process instance applying shortcuts defined in metadata
      */
     processInstance: function() {
-        utils.meta(this, 'renderWith', function(property) {
+        utils.meta(this, "renderWith", function(property) {
             this[property] = Collection.create(this[property] || []);
         }.bind(this));
     },
@@ -91,15 +91,15 @@ var Component = Object.extend({
         value: function() {
             var properties;
 
-            utils.meta(this, 'bindWith', function(property, meta) {
+            utils.meta(this, "bindWith", function(property, meta) {
                 properties = utils.isPrimitive(meta) ? [meta] : meta;
                 properties.forEach(function(propertyToBind) {
                     utils.bind(this, propertyToBind, this[property]);
                 }, this);
             }.bind(this));
 
-            utils.meta(this, 'renderWith', function(property, meta) {
-                utils.renderList(this, property, meta)
+            utils.meta(this, "renderWith", function(property, meta) {
+                utils.renderList(this, property, meta);
             }.bind(this));
         }
     },
@@ -108,7 +108,7 @@ var Component = Object.extend({
      * @type {Function}
      */
     __fastinject__: {
-        get: function() {return this.___fastinject___},
+        get: function() {return this.___fastinject___;},
         set: function(value) {
             if (!this.___fastinject___) {
                 this.___fastinject___ = value;
@@ -160,12 +160,7 @@ var Component = Object.extend({
      * @param {Component} child
      */
     add: function(child) {
-        if (!child) {
-            throw new Error('Child component cannot be null');
-        }
-        if (!child.root) {
-            throw new Error('Child component should have root property');
-        }
+        this._validateChild(child);
         if (child.parent) {
             child.parent.remove(child);
         }
@@ -175,6 +170,20 @@ var Component = Object.extend({
         if (this.__fastinject__) {
             this.__fastinject__(child);
         } // otherwise it will be injected when __fastinject__ is set
+    },
+
+    /**
+     * Validates if child is correctly defined
+     * @param {Component} child
+     * @private
+     */
+    _validateChild: function(child) {
+        if (!child) {
+            throw new Error("Child component cannot be null");
+        }
+        if (!child.root) {
+            throw new Error("Child component should have root property");
+        }
     },
 
     /**

@@ -1,10 +1,12 @@
-var utils = require('./utils');
+var utils = require("./utils");
 
 /**
  * Base protoplast
  */
 var Protoplast = new (function() {
 });
+
+var STANDARD_DESCRIPTOR_PROPERTIES = ["value", "get", "set", "writable", "enumerable", "configurable"];
 
 Protoplast.$meta = {};
 Protoplast.$defineProperty = function(property, desc) {
@@ -67,19 +69,19 @@ Protoplast.extend = function(mixins, description) {
 
             for (var d in desc) {
                 // move all non standard descriptors to meta
-                if (desc.hasOwnProperty(d) && ['value', 'get', 'set', 'writable', 'enumerable', 'configurable'].indexOf(d) === -1) {
+                if (desc.hasOwnProperty(d) && STANDARD_DESCRIPTOR_PROPERTIES.indexOf(d) === -1) {
                     meta.properties[d] = meta.properties[d] || {};
                     meta.properties[d][property] = desc[d];
                     delete desc[d];
                 }
             }
-            if (!desc.hasOwnProperty('writable') && !desc.hasOwnProperty('set') && !desc.hasOwnProperty('get')) {
+            if (!desc.hasOwnProperty("writable") && !desc.hasOwnProperty("set") && !desc.hasOwnProperty("get")) {
                 desc.writable = true;
             }
-            if (!desc.hasOwnProperty('enumerable')) {
+            if (!desc.hasOwnProperty("enumerable")) {
                 desc.enumerable = true;
             }
-            if (!desc.hasOwnProperty('configurable')) {
+            if (!desc.hasOwnProperty("configurable")) {
                 desc.configurable = true;
             }
         }

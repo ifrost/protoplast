@@ -1,5 +1,5 @@
 var resolveProperty = function(host, chain, handler) {
-    var props = chain.split('.');
+    var props = chain.split(".");
 
     if (!chain) {
         handler(host);
@@ -9,7 +9,7 @@ var resolveProperty = function(host, chain, handler) {
     }
     else {
         var subHost = host[props[0]];
-        var subChain = props.slice(1).join('.');
+        var subChain = props.slice(1).join(".");
         if (subHost) {
             resolveProperty(subHost, subChain, handler);
         }
@@ -18,23 +18,23 @@ var resolveProperty = function(host, chain, handler) {
 };
 
 var observe = function(host, chain, handler, context) {
-    var props = chain.split('.');
+    var props = chain.split(".");
 
     context = context || {};
 
     if (props.length === 1) {
-        host.on(chain + '_changed', handler, context);
+        host.on(chain + "_changed", handler, context);
         handler();
     }
     else {
         var subHost = host[props[0]];
-        var subChain = props.slice(1).join('.');
+        var subChain = props.slice(1).join(".");
         if (subHost) {
             observe(subHost, subChain, handler, context);
         }
-        host.on(props[0] + '_changed', function(_, previous) {
+        host.on(props[0] + "_changed", function(_, previous) {
             if (previous && previous.on) {
-                previous.off(props[0] + '_changed', handler);
+                previous.off(props[0] + "_changed", handler);
             }
             observe(host[props[0]], subChain, handler, context);
         }, context);
@@ -52,12 +52,12 @@ var observe = function(host, chain, handler, context) {
             });
             while (props.length) {
                 props.pop();
-                resolveProperty(host, props.join('.'), function(value) {
+                resolveProperty(host, props.join("."), function(value) {
                     value.off(null, null, context);
                 });
             }
         }
-    }
+    };
 };
 
 var bindSetter = function(host, chain, handler, context) {
@@ -81,16 +81,16 @@ var bindCollection = function(host, sourceChain, handler, context) {
         resolveProperty(host, sourceChain, function(list) {
             if (previousList) {
                 if (previousList.off) {
-                    previousList.off('changed', previousHandler);
+                    previousList.off("changed", previousHandler);
                 }
                 previousList = null;
-                previousHandler = null
+                previousHandler = null;
             }
             if (list) {
                 previousList = list;
                 previousHandler = handler.bind(host, list);
                 if (list.on) {
-                    list.on('changed', previousHandler, context);
+                    list.on("changed", previousHandler, context);
                 }
             }
             handler(list);
@@ -128,23 +128,23 @@ var bind = function(host, bindingsOrChain, handler) {
                     watcher.stop();
                 });
             }
-        }
+        };
     }
 };
 
 var bindProperty = function(host, hostChain, dest, destChain) {
 
-    var props = destChain.split('.');
+    var props = destChain.split(".");
     var prop = props.pop();
 
     return bind(host, hostChain, function() {
         resolveProperty(host, hostChain, function(value) {
-            resolveProperty(dest, props.join('.'), function(finalObject) {
+            resolveProperty(dest, props.join("."), function(finalObject) {
                 if (finalObject) {
                     finalObject[prop] = value;
                 }
-            })
-        })
+            });
+        });
     });
 
 };

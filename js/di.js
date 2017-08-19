@@ -1,5 +1,5 @@
-var Protoplast = require('./protoplast'),
-    Dispatcher = require('./dispatcher');
+var Protoplast = require("./protoplast"),
+    Dispatcher = require("./dispatcher");
 
 /**
  * Dependency Injection context builder
@@ -58,7 +58,7 @@ var Context = Protoplast.extend({
      * @param {Object} instance
      */
     register: function(id, instance, opts) {
-        if (arguments.length == 1) {
+        if (arguments.length === 1) {
             instance = id;
             this._unknows.push({
                 instance: instance,
@@ -69,7 +69,7 @@ var Context = Protoplast.extend({
             this._objects[id] = {
                 instance: instance,
                 readonly: opts && opts.readonly
-            }
+            };
         }
 
         // fast inject is used to register and process new objects after the config has been built
@@ -95,13 +95,13 @@ var Context = Protoplast.extend({
                 else if (injectId.isPrototypeOf) {
                     var objects = [];
                     Object.keys(this._objects).forEach(function(id) {
-                       objects.push(this._objects[id])
+                        objects.push(this._objects[id]);
                     }, this);
                     this._unknows.concat(objects).forEach(function(dependencyDescriptor) {
                         if (injectId.isPrototypeOf(dependencyDescriptor.instance)) {
                             obj[property] = dependencyDescriptor.instance;
                         }
-                    }, this)
+                    }, this);
                 }
             }, this);
         }

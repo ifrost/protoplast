@@ -1,7 +1,7 @@
-var common = require('./utils/common'),
-    binding = require('./utils/binding'),
-    component = require('./utils/component'),
-    html = require('./utils/html');
+var common = require("./utils/common"),
+    binding = require("./utils/binding"),
+    component = require("./utils/component"),
+    html = require("./utils/html");
 
 module.exports = {
     createObject: common.createObject,

@@ -7,7 +7,7 @@ var idCounter = 0;
  */
 function uniqueId(prefix) {
     var id = ++idCounter;
-    return (prefix || '') + id;
+    return (prefix || "") + id;
 }
 
 /**
@@ -27,7 +27,7 @@ function createObject(proto, args) {
 }
 
 function isPrimitive(value) {
-    return ['number', 'boolean', 'string', 'function'].indexOf(typeof(value)) !== -1;
+    return ["number", "boolean", "string", "function"].indexOf(typeof(value)) !== -1;
 }
 
 function isLiteral(value) {
@@ -69,7 +69,7 @@ function merge(destination, source) {
  */
 function mix(destination, source) {
     for (var property in source) {
-        if (property.substr(0, 2) !== '__' && !(property in destination)) {
+        if (property.substr(0, 2) !== "__" && !(property in destination)) {
             destination[property] = source[property];
         }
     }
