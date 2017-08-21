@@ -47,8 +47,8 @@ var renderListDefaultOptions = {
     }
 };
 
-var createRendererFunction = function(host, opts) {
-
+/*eslint-disable complexity */
+var validateRenderingOptions = function(opts) {
     opts = opts || {};
     opts.create = opts.create || renderListDefaultOptions.create;
     opts.remove = opts.remove || renderListDefaultOptions.remove;
@@ -57,6 +57,13 @@ var createRendererFunction = function(host, opts) {
     if (!opts.renderer) {
         throw new Error("Renderer is required");
     }
+    return opts;
+};
+/*eslint-enable complexity */
+
+var createRendererFunction = function(host, opts) {
+
+    opts = validateRenderingOptions(opts);
 
     return function(list) {
         var max = Math.max(this.children.length, list.length),
