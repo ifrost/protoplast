@@ -132,24 +132,21 @@ Protoplast.create = function() {
     return utils.createObject(this, arguments);
 };
 
-/**
- * Creates new factory function
- * @param [mixins]     list of mixins to merge with
- * @param description  object description
- * @returns {Object}
- */
-Protoplast.extend = function(mixins, description) {
-    var proto = Object.create(this), meta, mixinsMeta, desc;
-
+function getArgs(mixins, description) {
     // normalise parameters
     if (!(mixins instanceof Array)) {
         description = mixins;
         mixins = [];
     }
-    description = description || {};
-    mixins = mixins || [];
 
-    meta = description.$meta || {};
+    return {
+        description: description || {},
+        mixins: mixins || []
+    };
+}
+
+function defineMetaDataObject(description) {
+    var meta = description.$meta || {};
     meta.properties = meta.properties || {};
 
     // $meta section of the description has to be deleted
@@ -157,17 +154,54 @@ Protoplast.extend = function(mixins, description) {
     // All entries but $meta and $create are treated as
     // property definitions
     delete description.$meta;
+    
+    return meta;
+}
 
+function process$create(meta, description) {
     // $create is a shortcut for adding a constructor to constructors list
     if (description.$create !== undefined) {
         meta.constructors = meta.constructors || [];
         meta.constructors.push(description.$create);
         delete description.$create;
     }
+}
 
-    // mix-in all the mixins to the current prototype
-    proto = utils.mixin(proto, mixins);
+function validateDescriptionValue(property, desc) {
+    // default value to undefined
+    if (!(property in this) && !desc.set && !desc.get && !desc.value) {
+        desc.value = undefined;
+    }
 
+    return desc;
+}
+
+function validateDescription(desc) {
+    if (!desc.hasOwnProperty("writable") && !desc.hasOwnProperty("set") && !desc.hasOwnProperty("get")) {
+        desc.writable = true;
+    }
+    if (!desc.hasOwnProperty("enumerable")) {
+        desc.enumerable = true;
+    }
+    if (!desc.hasOwnProperty("configurable")) {
+        desc.configurable = true;
+    }
+    
+    return desc;
+}
+
+function defineCustomMetaData(meta, metaKey, property, desc) {
+    // move all non standard descriptors to meta
+    if (desc.hasOwnProperty(metaKey) && STANDARD_DESCRIPTOR_PROPERTIES.indexOf(metaKey) === -1) {
+        meta.properties[metaKey] = meta.properties[metaKey] || {};
+        meta.properties[metaKey][property] = desc[metaKey];
+        delete desc[metaKey];
+    }
+}
+
+function createPropertyDefinitions(meta, description) {
+    var desc;
+    
     // create description for all properties (properties are defined at the end)
     var propertyDefinitions = [];
 
@@ -178,35 +212,42 @@ Protoplast.extend = function(mixins, description) {
         } else {
             desc = description[property];
 
-            // default value to undefined
-            if (!(property in this) && !desc.set && !desc.get && !desc.value) {
-                desc.value = undefined;
-            }
+            validateDescriptionValue(property, desc);
 
-            for (var d in desc) {
-                // move all non standard descriptors to meta
-                if (desc.hasOwnProperty(d) && STANDARD_DESCRIPTOR_PROPERTIES.indexOf(d) === -1) {
-                    meta.properties[d] = meta.properties[d] || {};
-                    meta.properties[d][property] = desc[d];
-                    delete desc[d];
-                }
+            for (var metaKey in desc) {
+                defineCustomMetaData(meta, metaKey, property, desc);
             }
-            if (!desc.hasOwnProperty("writable") && !desc.hasOwnProperty("set") && !desc.hasOwnProperty("get")) {
-                desc.writable = true;
-            }
-            if (!desc.hasOwnProperty("enumerable")) {
-                desc.enumerable = true;
-            }
-            if (!desc.hasOwnProperty("configurable")) {
-                desc.configurable = true;
-            }
+            
+            validateDescription(desc);
         }
         propertyDefinitions.push({
             property: property,
             desc: desc
         });
     }
+    
+    return propertyDefinitions;
+}
 
+/**
+ * Creates new factory function
+ * @param [mixins]     list of mixins to merge with
+ * @param description  object description
+ * @returns {Object}
+ */
+Protoplast.extend = function(mixins, description) {
+    var proto = Object.create(this), meta, mixinsMeta, args = getArgs(mixins, description);
+
+    mixins = args.mixins;
+    description = args.description;
+    meta = defineMetaDataObject(description);
+    process$create(meta, description);
+
+    // mix-in all the mixins to the current prototype
+    proto = utils.mixin(proto, mixins);
+
+    var propertyDefinitions = createPropertyDefinitions(meta, description);
+    
     // mix meta data from the mixins into one object
     mixinsMeta = (mixins || []).reduce(function(current, next) {
         return utils.merge(current, next.$meta);
@@ -560,8 +601,9 @@ function isLiteral(value) {
 }
 
 /**
- * Merges source object into destination. Arrays are concatenated, primitives taken from the source if not
- * defined and complex object merged recursively
+ * Merge source object into destination
+ * @see mergerProperty
+ *
  * @param destination
  * @param source
  * @returns {Object}
@@ -569,21 +611,68 @@ function isLiteral(value) {
 function merge(destination, source) {
     for (var property in source) {
         if (source.hasOwnProperty(property)) {
-            if (source[property] instanceof Array) {
-                destination[property] = source[property].concat(destination[property] || []);
-            }
-            else if (isPrimitive(source[property]) || !isLiteral(source[property])) {
-                if (!destination.hasOwnProperty(property)) {
-                    destination[property] = source[property];
-                }
-            }
-            else {
-                destination[property] = destination[property] || {};
-                merge(destination[property], source[property]);
-            }
+            mergeProperty(destination, source, property);
         }
     }
     return destination;
+}
+
+/**
+ * Merge a single property
+ *
+ * Arrays are concatenated, primitives taken from the source if not
+ * defined and complex object merged recursively
+ *
+ * @param {Object} destination
+ * @param {Object} source
+ * @param {String} property
+ */
+function mergeProperty(destination, source, property) {
+    if (source[property] instanceof Array) {
+        mergeAsArray(destination, source, property);
+    }
+    else if (isPrimitive(source[property]) || !isLiteral(source[property])) {
+        overrideIfNotExists(destination, source, property);
+    }
+    else {
+        mergeAsObject(destination, source, property);
+    }
+}
+
+/**
+ * Merges arrays by concatenating them
+ *
+ * @param {Object} destination
+ * @param {Object} source
+ * @param {String} property
+ */
+function mergeAsArray(destination, source, property) {
+    destination[property] = source[property].concat(destination[property] || []);
+}
+
+/**
+ * Sets the property from source if it wasn't defined in destination
+ *
+ * @param {Object} destination
+ * @param {Object} source
+ * @param {String} property
+ */
+function overrideIfNotExists(destination, source, property) {
+    if (!destination.hasOwnProperty(property)) {
+        destination[property] = source[property];
+    }
+}
+
+/**
+ * Merges object recursively using merge function
+ *
+ * @param {Object} destination
+ * @param {Object} source
+ * @param {String} property
+ */
+function mergeAsObject(destination, source, property) {
+    destination[property] = destination[property] || {};
+    merge(destination[property], source[property]);
 }
 
 /**
@@ -685,8 +774,8 @@ var renderListDefaultOptions = {
     }
 };
 
-var createRendererFunction = function(host, opts) {
-
+/*eslint-disable complexity */
+var validateRenderingOptions = function(opts) {
     opts = opts || {};
     opts.create = opts.create || renderListDefaultOptions.create;
     opts.remove = opts.remove || renderListDefaultOptions.remove;
@@ -695,6 +784,13 @@ var createRendererFunction = function(host, opts) {
     if (!opts.renderer) {
         throw new Error("Renderer is required");
     }
+    return opts;
+};
+/*eslint-enable complexity */
+
+var createRendererFunction = function(host, opts) {
+
+    opts = validateRenderingOptions(opts);
 
     return function(list) {
         var max = Math.max(this.children.length, list.length),
@@ -1421,15 +1517,8 @@ var Component = Object.extend({
         var domWrapper;
 
         this._children = [];
-
-        if (!this.tag && !this.html) {
-            this.tag = "div";
-        }
-
-        if (this.tag && !this.html) {
-            this.html = "<" + this.tag + "></" + this.tag + ">";
-        }
-
+        this._createRootHtml();
+        
         domWrapper = utils.html.parseHTML(this.html);
         if (domWrapper.childNodes.length > 1) {
             throw new Error("Component should have only one root element");
@@ -1438,7 +1527,7 @@ var Component = Object.extend({
 
         this.processInstance();
     },
-
+    
     /**
      * Process DOM using defined DOM processors
      */
@@ -1565,6 +1654,20 @@ var Component = Object.extend({
         }
     },
 
+    /**
+     * Create root html (if not defined) based on "tag" property (defaulting to "div")
+     * @private
+     */
+    _createRootHtml: function() {
+        if (!this.tag && !this.html) {
+            this.tag = "div";
+        }
+
+        if (this.tag && !this.html) {
+            this.html = "<" + this.tag + "></" + this.tag + ">";
+        }
+    },
+    
     /**
      * Remove child component
      * @param {Component} child
