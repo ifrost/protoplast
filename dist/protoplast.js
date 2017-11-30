@@ -7,7 +7,7 @@
 		exports["Protoplast"] = factory();
 	else
 		root["Protoplast"] = factory();
-})(this, function() {
+})(typeof self !== 'undefined' ? self : this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
