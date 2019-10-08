@@ -1,13 +1,18 @@
-const path = require('path');
+const path = require('path'),
+      commonConfig = require('./webpack.common.config');
 
-module.exports = {
+const config = {
     entry: {
-        'dist/protoplast': './main.js',
-        'dist/protoplast.lean': './js/protoplast.js'
+        'protoplast': './main.js',
+        'protoplast.lean': './js/protoplast.js'
     },
+    devtool: 'inline-source-map',
     output: {
         filename: '[name].js',
+        path: path.resolve(__dirname, 'dist'),
         libraryTarget: "umd",
         library: 'Protoplast'
     }
 };
+
+module.exports = { ...commonConfig, ...config }
